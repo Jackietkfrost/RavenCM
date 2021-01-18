@@ -1,0 +1,167 @@
+[
+    {
+        "name": "Air Domain",
+        "descr": "You can manipulate lightning, mist, and wind- resistant to electricity damage.",
+        "id": 0
+    },
+    {
+        "name": "Animal Domain",
+        "descr": "You can speak with and befriend animals with ease.",
+        "id": 1
+    },
+    {
+        "name": "Artifice Domain",
+        "descr": "You can repair damage to objects, animate objects with life, and create creatures from nothing.",
+        "id": 2
+    },
+    {
+        "name": "Chaos Domain",
+        "descr": "Your touch infuses life and weapons with chaos, and you revel in all things anarchic.",
+        "id": 3
+    },
+    {
+        "name": "Charm Domain",
+        "descr": "You can baffle and befuddle foes with a touch or a smile, and your beauty and grace are divine.",
+        "id": 4
+    },
+    {
+        "name": "Community Domain",
+        "descr": "Your touch can heal wounds and your presence instills unity and strengthens emotional bonds.",
+        "id": 5
+    },
+    {
+        "name": "Darkness Domain",
+        "descr": "You manipulate shadows and darkness.",
+        "id": 6
+    },
+    {
+        "name": "Death Domain",
+        "descr": "You can cause the living to bleed at a touch, and find comfort in the presence of the dead.",
+        "id": 7
+    },
+    {
+        "name": "Destruction Domain",
+        "descr": "You revel in ruin and devastation, and can deliver particularly destructive attacks.",
+        "id": 8
+    },
+    {
+        "name": "Earth Domain",
+        "descr": "You have mastery over earth, metal, and stone, can fire darts of acid, and command earth creatures.",
+        "id": 9
+    },
+    {
+        "name": "Evil Domain",
+        "descr": "You are sinister and cruel, and have wholly pledged your soul to the cause of evil.",
+        "id": 10
+    },
+    {
+        "name": "Fire Domain",
+        "descr": "You can call forth fire, command creatures of the inferno, and your flesh does not burn.",
+        "id": 11
+    },
+    {
+        "name": "Glory Domain",
+        "descr": "You are infused with the glory of the divine, and are a true foe of the undead.",
+        "id": 12
+    },
+    {
+        "name": "Good Domain",
+        "descr": "You have pledged your life and soul to goodness and purity.",
+        "id": 13
+    },
+    {
+        "name": "Healing Domain",
+        "descr": "Your touch staves off pain and death, and your healing magic is particularly vital and potent.",
+        "id": 14
+    },
+    {
+        "name": "Knowledge Domain",
+        "descr": "You are a scholar and a sage of legends.",
+        "id": 15
+    },
+    {
+        "name": "Law Domain",
+        "descr": "You follow a strict and orgered code of laws, and in so doing, achieve enlightenment.",
+        "id": 16
+    },
+    {
+        "name": "Liberation Domain",
+        "descr": "You are a spirit of freedom and a staunch foe against all who would enslave and oppress.",
+        "id": 17
+    },
+    {
+        "name": "Luck Domain",
+        "descr": "You are infused with luck, and your mere presence can spread good fortune",
+        "id": 18
+    },
+    {
+        "name": "Madness Domain",
+        "descr": "You embrace the madness that lurks deep in your heart, and can unleash it to drive your foes insane or to sacrifice certain abilities to hone others.",
+        "id": 19
+    },
+    {
+        "name": "Magic Domain",
+        "descr": "You are a true student of all things mystical, and see divinity in the purity of magic.",
+        "id": 20
+    },
+    {
+        "name": "Nobility Domain",
+        "descr": "You are a great leader, an inspiration to all who follow the teachings of your faith.",
+        "id": 21
+    },
+    {
+        "name": "Plant Domain",
+        "descr": "You find solace in the green, can grow defensive thorns, and can communicate with plants.",
+        "id": 22
+    },
+    {
+        "name": "Protection Domain",
+        "descr": "Your faith is your greatest source of protection, and you can use that faith to defend others.",
+        "id": 23
+    },
+    {
+        "name": "Repose Domain",
+        "descr": "You see death not as something to be feared, but as a final rest and reward for a life well spent. The taint of undeath is a mockery of what you hold dear.",
+        "id": 24
+    },
+    {
+        "name": "Rune Domain",
+        "descr": "In strange and eldritch runes you find potent magic.",
+        "id": 25
+    },
+    {
+        "name": "Strength Domain",
+        "descr": "In strength andn brawn there is truth- your faith gives you incredible might and power.",
+        "id": 26
+    },
+    {
+        "name": "Sun Domain",
+        "descr": "You see truth in the pure and burning light of the sun, and can call upon its blessing or wrath to work great deeds.",
+        "id": 27
+    },
+    {
+        "name": "Travel Domain",
+        "descr": "You are an explorer and find enlightenment in the simple joy of travel, bet it by foot or conveyance or magic.",
+        "id": 28
+    },
+    {
+        "name": "Trickery Domain",
+        "descr": "You are a master of illusions and deceptions.",
+        "id": 29
+    },
+    {
+        "name": "War Domain",
+        "descr": "You are a crusader for your god, always ready and willing to fight to defend your faith.",
+        "id": 30
+    },
+    {
+        "name": "Water Domain",
+        "descr": "You can manipulate water and mist and ice, conjure creatures of water, and resist cold.",
+        "id": 31
+    },
+    {
+        "name": "Weather Domain",
+        "descr": "With powers over storm and sky, you can call down the wrath of the gods upon the world below.",
+        "id": 32
+    }
+]

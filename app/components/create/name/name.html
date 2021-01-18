@@ -1,0 +1,71 @@
+<div class="md-padding">
+    <h1 layout="row" class="md-display-2" layout-align="center center">Name Your Character</h1>
+    <form name="nameEntryForm">
+        <div layout="column" layout-align="center center">
+            <md-input-container>
+              <label>Name</label>
+              <input type="text" ng-model="nameEntry.name" required md-maxlength="50" autofocus md-no-asterisk>
+            </md-input-container>
+            <div class="md-caption example-names">
+                Examples: <span ng-repeat="nameEx in nameEntry.names">{{ nameEx }}<span ng-if="$index != 3">,</span> </span>
+            </div>
+            <md-radio-group name="sex" ng-model="nameEntry.sex" layout="row" required md-no-asterisk>
+              <md-radio-button value="male">Male</md-radio-button>
+              <md-radio-button value="nonbinary">Non-Binary</md-radio-button>
+              <md-radio-button value="female">Female</md-radio-button>
+              
+            </md-radio-group>
+            <md-input-container>
+                <label>Height</label>
+                <md-select name="height" ng-model="nameEntry.height" required md-no-asterisk>
+                    <md-option ng-repeat="heightOption in nameEntry.heights" value="{{ heightOption }}">
+                        {{ heightOption }}
+                    </md-option>
+                </md-select>
+            </md-input-container>
+            <md-input-container>
+              <label>Weight ({{ nameEntry.minWeight }} - {{ nameEntry.maxWeight }})</label>
+              <input name="weight" type="number" ng-model="nameEntry.weight" min="{{ nameEntry.minWeight }}" max="{{ nameEntry.maxWeight }}" required md-no-asterisk>
+              <div ng-messages="nameEntryForm.weight.$error">
+                  <div ng-message="max min">{{ nameEntry.minWeight }} - {{ nameEntry.maxWeight }} pounds for this race!</div>
+              </div>
+            </md-input-container>
+            <md-input-container>
+                <label>Hair Color</label>
+                <md-select name="hairColor" ng-model="nameEntry.hairColor" required md-no-asterisk>
+                    <md-option value="blonde">Blonde</md-option>
+                    <md-option value="brown">Brown</md-option>
+                    <md-option value="black">Black</md-option>
+                    <md-option value="orange">Orange</md-option>
+                    <md-option value="red">Red</md-option>
+                    <md-option value="blue">Blue</md-option>
+                    <md-option value="purple">Purple</md-option>
+                    <md-option value="pink">Pink</md-option>
+                    <md-option value="green">Green</md-option>
+                    <md-option value="yellow">Yellow</md-option>
+                    <md-option value="white">White</md-option>
+                    <md-option value="bald">Bald</md-option>
+                </md-select>
+            </md-input-container>
+            <md-input-container>
+                <label>Eye Color</label>
+                <md-select name="eyeColor" ng-model="nameEntry.eyeColor" required md-no-asterisk>
+                    <md-option value="brown">Brown</md-option>
+                    <md-option value="blue">Blue</md-option>
+                    <md-option value="green">Green</md-option>
+                    <md-option value="black">Black</md-option>
+                    <md-option value="red">Red</md-option>
+                    <md-option value="purple">Purple</md-option>
+                    <md-option value="yellow">Yellow</md-option>
+                    <md-option value="white">White</md-option>
+                    <md-option value="pink">Pink</md-option>
+                    <md-option value="alternating">Alternating</md-option>
+                </md-select>
+            </md-input-container>
+        </div>
+        <div layout="row">
+            <span flex></span>
+            <md-button class="md-raised md-primary" type="submit" ng-click="nameEntry.submit()" ng-disabled="nameEntryForm.$invalid">Continue</md-button>
+        </div>
+    </form>
+</div>

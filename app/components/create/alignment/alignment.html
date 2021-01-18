@@ -1,0 +1,39 @@
+<div>
+    <h1 class="md-display-2" align="center">Selecting an Alignment</h1>
+    <p class="md-subhead">A creature's general moral and personal attitudes are represented by its alignment: lawful good, neutral good, chaotic good, lawful neutral, neutral, chaotic neutral, lawful evil, neutral evil, or chaotic evil.</p>
+    <p class="md-subhead">Alignment is a tool for developing your character's identity—it is not a straitjacket for restricting your character. Each alignment represents a broad range of personality types or personal philosophies, so two characters of the same alignment can still be quite different from each other. In addition, few people are completely consistent.</p>
+
+    <md-divider></md-divider>
+    <div layout-gt-md="row" layout-align="space-around top">
+        <div flex-gt-md="50" class="alignment-padding">
+            <h1 class="md-display-1" align="center">Good Vs. Evil</h1>
+            <p class="md-subhead" align="justify"><strong>Good:</strong> Good implies altruism, respect for life, and a concern for the dignity of sentient beings. Good characters make personal sacrifices to help others.</p>
+            <p class="md-subhead" align="justify"><strong>Evil:</strong> Evil implies hurting, oppressing, and killing others. Some evil creatures simply have no compassion for others and kill without qualms if doing so is convenient. Others actively pursue evil, killing for sport or out of duty to some evil deity or master.</p>
+            <p class="md-subhead" align="justify"><strong>Neutral:</strong> People who are neutral with respect to good and evil have compunctions against killing the innocent, but may lack the commitment to make sacrifices to protect or help others.</p>
+        </div>
+        <div flex-gt-md="50" class="alignment-padding">
+            <h1 class="md-display-1" align="center">Law Vs. Chaos</h1>
+            <p class="md-subhead" align="justify"><strong>Lawful:</strong> Law implies honor, trustworthiness, obedience to authority, and reliability. On the downside, lawfulness can include closed-mindedness, reactionary adherence to tradition, self-righteousness, and a lack of adaptability. Those who consciously promote lawfulness say that only lawful behavior creates a society in which people can depend on each other and make the right decisions in full confidence that others will act as they should.</p>
+            <p class="md-subhead" align="justify"><strong>Chaos:</strong> Chaos implies freedom, adaptability, and flexibility. On the downside, chaos can include recklessness, resentment toward legitimate authority, arbitrary actions, and irresponsibility. Those who promote chaotic behavior say that only unfettered personal freedom allows people to express themselves fully and lets society benefit from the potential that its individuals have within them.</p>
+            <p class="md-subhead" align="justify"><strong>Neutral:</strong> Someone who is neutral with respect to law and chaos has some respect for authority and feels neither a compulsion to obey nor a compulsion to rebel. She is generally honest, but can be tempted into lying or deceiving others.</p>
+        </div>
+    </div>
+    <br>
+    <form name="alignmentForm">
+        <div layout="column" layout-align = "center center">
+            <md-input-container>
+                <label>Alignment</label>
+                <md-select name="alignmentSelect" ng-model="alignmentCtrl.alignment" required md-no-asterisk>
+                    <md-option ng-repeat="alignmentOption in alignmentCtrl.alignments" value="{{ alignmentOption }}">
+                        {{ alignmentOption }}
+                    </md-option>
+                </md-select>
+            </md-input-container>
+            <div class="md-subhead warning" ng-if="alignmentCtrl.classWarn"><strong>NOTE:</strong> Your current class limits alignment selection.</div>
+        </div>
+        <div layout="row">
+            <span flex></span>
+            <md-button class="md-raised md-primary" type="submit" ng-click="alignmentCtrl.submit()" ng-disabled="alignmentForm.$invalid">Continue</md-button>
+        </div>
+    </form>
+</div>

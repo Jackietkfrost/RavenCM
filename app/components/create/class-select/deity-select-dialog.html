@@ -1,0 +1,72 @@
+<div>
+    <div layout="column" class="md-padding">
+        <h2 class="md-display-2">Choose a Deity</h2>
+        <p class="md-subhead">As a Cleric, you must choose a deity to worship. Each deity rules over several domains that you can choose from. These choices
+        influence your alignment, as well as the skills and spells that your cleric can use.</p>
+
+        <div layout="row" layout-align="space-between center">
+            <div flex="30" layout="row" layout-align="start center">
+                <md-button class="md-raised" ng-disabled="deityId == 0" ng-click="deityId = deityId - 1"><i class="material-icons">chevron_left</i></md-button>
+            </div>
+            <div flex="40">
+                <h1 class="md-display-1" align="center">{{ deities[deityId].name }} <span class="domain-descr">({{ deities[deityId].alignment }})</span></h1>
+            </div>
+            <div flex="30" layout="row" layout-align="end center">
+                <md-button class="md-raised" ng-disabled="deityId == 19" ng-click="deityId = deityId + 1"><i class="material-icons">chevron_right</i></md-button>
+            </div>
+        </div>
+        <p layout="row" class="md-subhead domain-descr" layout-align="center center">
+            "{{ deities[deityId].descr }}""
+        </p>
+
+        <md-divider></md-divider>
+
+        <h2 class="md-display-2">Choose a Domain</h2>
+        <p class="md-subhead">
+            Choose two domains of which your cleric will devote themselves to. Domains influence a Cleric's alignment, and what kind of spells they can cast.
+        </p>
+
+        <!-- Displays all domains, highlights ones that are selected -->
+        <div layout="row" layout-align="center center" class="md-body-1">
+            <strong>Domain options:&nbsp;</strong>
+            <div ng-repeat="domain in domains">
+                <div ng-class="{'domain-id1': domainId1 === $index, 'domain-id2': domainId2 === $index}">{{ domain.name }}&nbsp;&nbsp;&nbsp;</div>
+            </div>
+        </div>
+
+        <div layout="row" layout-align="space-between center">
+            <div flex="30" layout-gt-md="row" layout-align="start center">
+                <md-button class="md-raised" ng-disabled="invalidDomain1NavPrev" ng-click="domainNav('previous', 1)"><i class="material-icons">chevron_left</i></md-button>
+            </div>
+            <div flex="40">
+                <h1 class="md-headline domain-id1" align="center">{{ domains[domainId1].name }}</h1>
+            </div>
+            <div flex="30" layout="row" layout-align="end center">
+                <md-button class="md-raised" ng-disabled="invalidDomain1NavNext" ng-click="domainNav('next', 1)"><i class="material-icons">chevron_right</i></md-button>
+            </div>
+        </div>
+        <p layout="row" layout-align="center center" class="md-subhead domain-descr">
+            "{{ domains[domainId1].descr }}"
+        </p>
+
+        <div layout="row" layout-align="space-between center">
+            <div flex="30" layout="row" layout-align="start center">
+                <md-button class="md-raised" ng-disabled="invalidDomain2NavPrev" ng-click="domainNav('previous', 2)"><i class="material-icons">chevron_left</i></md-button>
+            </div>
+            <div flex="40">
+                <h1 class="md-headline domain-id2" align="center">{{ domains[domainId2].name }}</h1>
+            </div>
+            <div flex="30" layout="row" layout-align="end center">
+                <md-button class="md-raised" ng-disabled="invalidDomain2NavNext" ng-click="domainNav('next', 2)"><i class="material-icons">chevron_right</i></md-button>
+            </div>
+        </div>
+        <p layout="row" layout-align="center center" class="md-subhead domain-descr">
+            "{{ domains[domainId2].descr }}"
+        </p>
+
+        <div layout="row">
+            <span flex></span>
+            <md-button class="md-raised md-primary" ng-click="submit()">Okay</md-button>
+        </div>
+    </div>
+</div>
