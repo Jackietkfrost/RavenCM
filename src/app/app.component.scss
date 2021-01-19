@@ -3,14 +3,47 @@ body{
     border: 1px solid #48545c;
     overflow-y: hidden;
 }
+
+#main {
+  width: 100%;
+  height: calc(100% - 32px);
+  display: block;
+  margin: 0;
+  padding: 0;
+  flex-direction: column;
+  align-items: center;
+  background-image: radial-gradient(farthest-corner at 0px 0px, #192125, #0c0d0e);
+  overflow-y: hidden;
+}
+
+#main #pageNav {
+  display: grid;
+  justify-content: center;
+  grid-template-columns: auto;  
+}
+
+#main #pageNav mat-card-title {
+  display: flex;
+  grid-row: 1;
+  width: 100%;
+  justify-content: center;
+  margin: 8px 0;
+  padding: 0;
+}
+
+#main #pageNav mat-card-actions {
+  display: inline-flex;
+}
+  
 #titlebar {
     display: block;
     // position: fixed;
     height: 32px;
     width: 100%; /*Compensate for body 1px border*/
-    padding: 4px;
+    padding: 0;
 	color: #FFF;
-	box-sizing: border-box;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 #titlebar #drag-region {
@@ -18,12 +51,19 @@ body{
     height: 100%;
     -webkit-app-region: drag;
     display: grid;
-    grid-template-columns: auto 138px;
+    grid-template-columns: 32px auto 138px; //The last value here correlates to the width of the window controls. (width*3)
+    align-content: center;
+}
+
+#titlebar button {
+  display: grid;
+  -webkit-app-region: no-drag;
 }
 
 #window-controls {
     display: grid;
-    grid-template-columns: repeat(3, 46px);
+    grid-column: 3;
+    grid-template-columns: repeat(3, 46px); //if you change the button width, you must change the third columns size in "#titlebar #drag-region" to (width*3)
     // position: absolute;
     top: 0;
     right: 0;
@@ -90,6 +130,15 @@ body{
     display: none;
   }
 
+  mat-nav-list.list-horizontal {
+    padding: 0;
+    .mat-list-item {
+      display: inline-block;
+      height: auto;
+      width: auto;
+    }
+  }
+
   @media (-webkit-device-pixel-ratio: 1.5), (device-pixel-ratio: 1.5),
 (-webkit-device-pixel-ratio: 2), (device-pixel-ratio: 2),
 (-webkit-device-pixel-ratio: 3), (device-pixel-ratio: 3) {
@@ -98,28 +147,63 @@ body{
     height: 10px;
   }
 }
-#main {
-    height: calc(100% - 32px);
-    margin-top: 32px;
-    padding: 20px;
-    overflow-y: auto;
+
+#window-menu {
+  height: 100%;
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  overflow: hidden;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 12px;
+  align-content: center;
+}
+
+#window-menu button {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 32px;
+  height: 100%;
+}
+
+#window-menu button:hover {
+  background-color: #48545c;
+}
+
+mat-menu {
+  max-width: 200px;
+}
+
+::ng-deep .mat-menu-content {
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+}
+
+.mat-menu-item{
+  line-height:35px;
+  height:35px;
 }
 
 #window-title {
-    grid-column: 1;
-    display: flex;
-    align-items: center;
-    margin-left: 8px;
-    overflow: hidden;
-    font-family: "Segoe UI", sans-serif;
-    font-size: 12px;
-  }
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px;
+  overflow: hidden;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 12px;
+}
+
 #window-title span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     line-height: 1.5;
   }
+
 .example-names{
     margin-bottom: 55px;
 }

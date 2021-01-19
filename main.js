@@ -1,8 +1,4 @@
-const electron = require('electron')
-// Module to control application life.
-const app = electron.app
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow
+const { app, BrowserWindow, ipcMain } = require('electron')
 
 const path = require('path')
 const url = require('url')
@@ -16,14 +12,16 @@ function createWindow () {
   mainWindow = new BrowserWindow({
     width: 800, 
     height: 600,
-    frame:false,
-    backgroundColor:'#FFF',
+    minWidth: 480,
+    minHeight: 360,
+    frame: false,
+    backgroundColor: '#FFF',
+    icon: './src/favicon.ico',
     webPreferences: {
-      nodeIntegration:true
+      nodeIntegration: true
     }
   });
-  // maximize window
-  mainWindow.maximize();
+
   // and load the index.html of the app.
 
   mainWindow.loadURL(url.format({
@@ -35,6 +33,15 @@ function createWindow () {
   // Open the DevTools.
   mainWindow.webContents.openDevTools({detach:true})
 
+  //window events
+  mainWindow.on('maximize', function() {
+    mainWindow.webContents.send('win_maximized')
+  })
+
+  mainWindow.on('unmaximize', function() {
+    mainWindow.webContents.send('win_unmaximized')
+  })
+
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
     // Dereference the window object, usually you would store windows
@@ -43,6 +50,23 @@ function createWindow () {
     mainWindow = null
   })
 }
+
+// ipcMain recieve events
+ipcMain.on("win_close", (event, arg) => {
+  mainWindow.close()
+})
+
+ipcMain.on("win_minimize", (event, arg) => {
+  mainWindow.minimize()
+})
+
+ipcMain.on("win_maximize", (event, arg) => {
+  mainWindow.maximize()
+})
+
+ipcMain.on("win_restore", (event, arg) => {
+  mainWindow.restore()
+})
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
