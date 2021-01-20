@@ -1,10 +1,7 @@
-# DnD 5e Char Manager
+# Raven CM
 
-This app was built using the Electron Quick Start app: [Quick Start Guide](http://electron.atom.io/docs/tutorial/quick-start).
-
+This app was built using the Electron.
 Learn more about Electron and its API in the [documentation](http://electron.atom.io/docs/).
-
-This was a modification of Pathfinder-character-manager and given a small overhaul. you can find it [here](https://github.com/AlexVild/pathfinder-character-manager).
 
 ## To Use
 
@@ -15,6 +12,14 @@ To clone and run this repository you'll need [Git](https://git-scm.com), and [No
 npm install
 # Run the app
 npm start
+```
+
+```bash
+# For faster development, run the following command to continously build
+npm run watch
+
+# To launch electron without building (usually in another console)
+npm run electron
 ```
 
 ## The App
