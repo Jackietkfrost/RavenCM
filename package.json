@@ -4,9 +4,11 @@
   "main": "main.js",
   "scripts": {
     "ng": "ng",
-    "start": "ng build --base-href ./ && electron .",
-    "build": "ng build",
-    "test": "electron .",
+    "start": "ng build && electron .",
+	"build": "ng build",
+	"watch": "ng build --watch",
+	"electron": "electron .",
+	"test": "electron .",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
