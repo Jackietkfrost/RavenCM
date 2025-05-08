@@ -1,19 +1,19 @@
 {
-  "name": "vutron",
-  "appId": "com.vutron.vutron",
+  "name": "ravencm",
+  "appId": "com.ravencm",
   "version": "1.0.0",
-  "description": "Quick Start Templates for Vite + Vue 3 + Electron",
-  "homepage": "https://vutron.cdget.com",
-  "author": "CDGet <jooy2.contact@gmail.com>",
+  "description": "character creator for dnd 5e",
+  "homepage": "https://am-x2.com/",
+  "author": "CDGet <contact@amx2.com>",
   "license": "MIT",
   "main": "dist/main/index.js",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/jooy2/vutron.git"
+    "url": "https://github.com/jackietkfrost/RavenCM.git"
   },
   "bugs": {
-    "url": "https://github.com/jooy2/vutron/issues"
+    "url": "https://github.com/jackietkfrost/RavenCMissues"
   },
   "debug": {
     "env": {
