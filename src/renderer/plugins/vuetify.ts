@@ -29,7 +29,7 @@ export default createVuetify({
       dark: {
         dark: true,
         colors: {
-          primary: colors.deepPurple.darken4
+          primary: colors.deepOrange.darken4
         }
       }
     }
