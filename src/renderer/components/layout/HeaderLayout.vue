@@ -1,6 +1,8 @@
 <template>
   <v-app-bar color="primary" density="comfortable" elevation="24">
-    <v-item-group mandatory><v-item>Start</v-item><v-item>Builder</v-item></v-item-group>
+    <v-item-group mandatory class="mx-2"
+      ><v-item class="mr-2">Start</v-item><v-item class="mr-2">Builder</v-item></v-item-group
+    >
     <template #append>
       <v-btn
         :prepend-icon="mdiHome"
@@ -22,8 +24,8 @@
     </template>
   </v-app-bar>
   <v-app-bar color="primary" density="compact" height="50">
-    <v-item-group mandatory>
-      <v-item  :color="isSelected ? 'primary' : ''">Character Collection</v-item>
+    <v-item-group class="mx-2" mandatory>
+      <v-item>Character Collection</v-item>
       <v-item class="mr-2">Sources</v-item>
       <v-item class="mr-2">Additional Sources</v-item></v-item-group
     >
