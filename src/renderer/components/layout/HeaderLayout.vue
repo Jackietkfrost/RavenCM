@@ -73,8 +73,8 @@
     <v-item-group class="mx-2" mandatory v-if="isCurrentRoute('/')">
       <v-item><v-btn>Character Collection</v-btn></v-item>
       <v-item class="mr-2"><v-btn>Sources</v-btn></v-item>
-      <v-item class="mr-2"><v-btn>Additional Sources</v-btn></v-item></v-item-group
-    >
+      <v-item class="mr-2"><v-btn>Additional Sources</v-btn></v-item>
+    </v-item-group>
     <v-item-group class="mx-2" mandatory v-if="isCurrentRoute('/builder')">
       <v-item><v-btn>Race</v-btn></v-item>
       <v-item><v-btn>Class</v-btn></v-item>
