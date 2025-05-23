@@ -12,10 +12,38 @@ export default createRouter({
       }
     },
     {
-      path: '/second',
-      component: () => import('@/renderer/screens/SecondScreen.vue'),
+      path: '/builder',
+      component: () => import('@/renderer/screens/BuildScreen.vue'),
       meta: {
-        titleKey: 'title.second'
+        titleKey: 'title.build'
+      }
+    },
+    {
+      path: '/magic',
+      component: () => import('@/renderer/screens/MagicScreen.vue'),
+      meta: {
+        titleKey: 'title.magic'
+      }
+    },
+    {
+      path: '/equipment',
+      component: () => import('@/renderer/screens/EquipmentScreen.vue'),
+      meta: {
+        titleKey: 'title.equipment'
+      }
+    },
+    {
+      path: '/manager',
+      component: () => import('@/renderer/screens/ManagerScreen.vue'),
+      meta: {
+        titleKey: 'title.manage'
+      }
+    },
+    {
+      path: '/charactersheet',
+      component: () => import('@/renderer/screens/CharacterSheet.vue'),
+      meta: {
+        titleKey: 'title.charactersheet'
       }
     },
     {
