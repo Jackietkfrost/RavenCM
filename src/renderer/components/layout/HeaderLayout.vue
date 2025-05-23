@@ -1,42 +1,113 @@
 <template>
   <v-app-bar color="primary" density="comfortable" elevation="24">
-    <v-item-group mandatory class="mx-2"
-      ><v-item class="mr-2">Start</v-item><v-item class="mr-2">Builder</v-item></v-item-group
-    >
+    <v-item-group mandatory class="mx-2">
+      <v-item class="mr-2">
+        <v-btn
+          :prepend-icon="mdiHome"
+          :class="{ active: isCurrentRoute('/') }"
+          variant="text"
+          @click="handleRoute('/')"
+        >
+          {{ t('title.main') }}
+        </v-btn>
+      </v-item>
+      <v-item class="mr-2">
+        <v-btn
+          :prepend-icon="mdiWrench"
+          variant="text"
+          :class="{ active: isCurrentRoute('/builder') }"
+          @click="handleRoute('/builder')"
+        >
+          {{ t('title.build') }}
+        </v-btn>
+      </v-item>
+      <v-item class="mr-2">
+        <v-btn
+          :prepend-icon="mdiMagicStaff"
+          variant="text"
+          :class="{ active: isCurrentRoute('/magic') }"
+          @click="handleRoute('/magic')"
+        >
+          {{ t('title.magic') }}
+        </v-btn>
+      </v-item>
+      <v-item class="mr-2">
+        <v-btn
+          :prepend-icon="mdiSack"
+          variant="text"
+          :class="{ active: isCurrentRoute('/equipment') }"
+          @click="handleRoute('/equipment')"
+        >
+          {{ t('title.equipment') }}
+        </v-btn>
+      </v-item>
+      <v-item class="mr-2">
+        <v-btn
+          :prepend-icon="mdiAccountCog"
+          variant="text"
+          :class="{ active: isCurrentRoute('/manager') }"
+          @click="handleRoute('/manager')"
+        >
+          {{ t('title.manage') }}
+        </v-btn>
+      </v-item>
+      <v-item class="mr-2">
+        <v-btn
+          :prepend-icon="mdiAccountCard"
+          variant="text"
+          :class="{ active: isCurrentRoute('/charactersheet') }"
+          @click="handleRoute('/charactersheet')"
+        >
+          {{ t('title.charactersheet') }}
+        </v-btn>
+      </v-item>
+    </v-item-group>
     <template #append>
-      <v-btn
-        :prepend-icon="mdiHome"
-        variant="text"
-        :class="{ active: isCurrentRoute('/') }"
-        @click="handleRoute('/')"
-      >
-        {{ t('title.main') }}
+      <v-btn icon @click="handleOpenGitHub">
+        <v-icon :icon="mdiGithub" />
+        <v-tooltip activator="parent" location="bottom">
+          {{ t('menu.github') }}
+        </v-tooltip>
       </v-btn>
-      <v-btn
-        :prepend-icon="mdiFitToScreenOutline"
-        variant="text"
-        :class="{ active: isCurrentRoute('/second') }"
-        @click="handleRoute('/second')"
-      >
-        {{ t('title.builder') }}
+      <v-btn icon @click="handleChangeTheme">
+        <v-icon :icon="mdiBrightness6" />
+        <v-tooltip activator="parent" location="bottom">
+          {{ t('menu.change-theme') }}
+        </v-tooltip>
       </v-btn>
-      <v-btn icon @click="handleOpenGitHub"><v-icon :icon="mdiGithub" /></v-btn>
+      <v-btn icon @click="handleOpenSettings">
+        <v-icon :icon="mdiCog" />
+        <v-tooltip activator="parent" location="bottom">
+          {{ t('menu.settings') }}
+        </v-tooltip>
+      </v-btn>
     </template>
   </v-app-bar>
   <v-app-bar color="primary" density="compact" height="50">
-    <v-item-group class="mx-2" mandatory>
+    <v-item-group class="mx-2" mandatory v-if="isCurrentRoute('/')">
       <v-item>Character Collection</v-item>
       <v-item class="mr-2">Sources</v-item>
       <v-item class="mr-2">Additional Sources</v-item></v-item-group
     >
+    <v-item-group class="mx-2" mandatory v-if="isCurrentRoute('/builder')">
+      <v-item><v-btn>Race</v-btn></v-item>
+      <v-item><v-btn>Class</v-btn></v-item>
+      <v-item><v-btn>Background</v-btn></v-item>
+      <v-item><v-btn>Ability Scores</v-btn></v-item>
+      <v-item><v-btn>Languages</v-btn></v-item>
+      <v-item><v-btn>Proficiency</v-btn></v-item>
+      <v-item><v-btn>Feats</v-btn></v-item>
+    </v-item-group>
   </v-app-bar>
 </template>
 <script setup lang="tsx">
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { mdiFitToScreenOutline, mdiGithub, mdiHome } from '@mdi/js'
+import { mdiGithub, mdiHome, mdiWrench, mdiBrightness6, mdiMagicStaff, mdiSack, mdiAccountCog, mdiAccountCard, mdiCog } from '@mdi/js'
 import { openExternal } from '@/renderer/utils'
+import { useTheme } from 'vuetify'
 
+const theme = useTheme()
 const router = useRouter()
 const route: any = useRoute()
 // const titleKey: string = (route?.meta?.titleKey || 'title.main') as string
@@ -51,8 +122,16 @@ const isCurrentRoute = (path: string): boolean => {
   return path === route.path
 }
 
+const handleChangeTheme = (): void => {
+  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+}
+
 const handleOpenGitHub = async (): Promise<void> => {
   await openExternal('https://github.com/Jackietkfrost/RavenCM')
+}
+
+const handleOpenSettings = (): void => {
+
 }
 </script>
 <style scoped>
