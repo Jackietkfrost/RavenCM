@@ -1,4 +1,9 @@
 <template>
+  <v-app-bar color="primary" density="compact" height="50">
+    <v-btn>Character Collection</v-btn>
+    <v-btn>Sources</v-btn>
+    <v-btn>Additional Sources</v-btn>
+  </v-app-bar>
   <v-container v-if="false">
     <v-row no-gutters class="text-center align-center">
       <v-col cols="12" md="5">
@@ -80,11 +85,13 @@
       <v-col cols="12" class="my-4">
         <h1>No Characters Yet..</h1>
         <h5>You should create your first D&D character to get started</h5>
-        <v-btn color="secondary" :prepend-icon="mdiPlus">{{
+        <v-btn color="secondary" :prepend-icon="mdiPlus" @click="handleCreateCharacter">{{
           t('menu.create-character')
         }}</v-btn></v-col
       >
     </v-row>
+    <CreateCharacterDrawer :drawer="drawer" />
+  </v-container>
   </v-container>
 </template>
 <script setup lang="tsx">
@@ -101,14 +108,16 @@ import {
   mdiGithub,
   mdiPlus
 } from '@mdi/js'
+import CreateCharacterDrawer from './CreateCharacterDrawer.vue'
 
 const { t, locale, availableLocales } = useI18n()
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 const characterStore = useAppStore()
 const theme = useTheme()
 const languages = ref(['en'])
 const appVersion = ref('Unknown')
 const selectedFile = ref('')
+const drawer = ref(characterStore.createCharacter)
 // const text = ref('TEST')
 const messages = ref<string[]>([])
 
@@ -137,6 +146,11 @@ const handleChangeLanguage = (val): void => {
 
 const handleOpenDocumentation = async (): Promise<void> => {
   // await openExternal('')
+  messages.value.push('WIP')
+}
+
+const handleCreateCharacter = async (): Promise<void> => {
+  characterStore.toggleCreateCharacter()
   messages.value.push('WIP')
 }
 
