@@ -23,13 +23,15 @@ export default createVuetify({
       light: {
         dark: false,
         colors: {
-          primary: colors.deepPurple.darken2
+          primary: colors.brown.darken2,
+          background: colors.brown.lighten5
         }
       },
       dark: {
         dark: true,
         colors: {
-          primary: colors.deepOrange.darken4
+          primary: colors.brown.darken4,
+          background: colors.grey.darken4
         }
       }
     }
