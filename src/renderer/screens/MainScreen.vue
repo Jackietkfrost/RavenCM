@@ -85,7 +85,7 @@
       <v-col cols="12" class="my-4">
         <h1>No Characters Yet..</h1>
         <h5>You should create your first D&D character to get started</h5>
-        <v-btn color="secondary" :prepend-icon="mdiPlus" @click="handleCreateCharacter">{{
+        <v-btn color="secondary" :prepend-icon="mdiPlus" @click="handleStartCreateCharacter">{{
           t('menu.create-character')
         }}</v-btn></v-col
       >
@@ -118,7 +118,6 @@ const languages = ref(['en'])
 const appVersion = ref('Unknown')
 const selectedFile = ref('')
 const drawer = ref(characterStore.createCharacter)
-// const text = ref('TEST')
 const messages = ref<string[]>([])
 
 const hasCharacters = ref(false)
@@ -149,9 +148,8 @@ const handleOpenDocumentation = async (): Promise<void> => {
   messages.value.push('WIP')
 }
 
-const handleCreateCharacter = async (): Promise<void> => {
+const handleStartCreateCharacter = async (): Promise<void> => {
   characterStore.toggleCreateCharacter()
-  messages.value.push('WIP')
 }
 
 const handleOpenGitHub = async (): Promise<void> => {
