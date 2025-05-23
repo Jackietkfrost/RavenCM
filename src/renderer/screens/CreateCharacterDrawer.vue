@@ -103,7 +103,7 @@
         <v-btn class="mx-2" @click="characterStore.toggleCreateCharacter" color="error">
           Close
         </v-btn>
-        <v-btn class="mx-2" @click="characterStore.toggleCreateCharacter" color="primary">
+        <v-btn class="mx-2" color="primary" @click="handleCreateCharacter">
           Create Character
         </v-btn>
       </v-container>
@@ -112,6 +112,7 @@
 </template>
 <script setup lang="tsx">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAppStore } from '../store/appStore'
 
 interface Image {
@@ -130,6 +131,11 @@ const abilityGenerationOptions = ref([
   'Standard Array (15, 14, 13, 12, 10, 8)',
   'Point Buy'
 ])
+const router = useRouter()
+
+const handleRoute = (path: string): void => {
+  router.push(path)
+}
 
 const drawer = computed<boolean>({
   get: () => characterStore.createCharacter,
@@ -144,13 +150,16 @@ const items = ref<Image[]>([
   { src: 'https://picsum.photos/200/304' }
 ])
 
-// const getPrevImage = computed(() => {
-//   const prevIndex = model.value - 1
-//   return items.value[(prevIndex + items.value.length) % items.value.length].src
-// })
-
-// const getNextImage = computed(() => {
 //   const nextIndex = model.value + 1
-//   return items.value[nextIndex % items.value.length].src
-// })
+const handleCreateCharacter = async (): Promise<void> => {
+  const data = {
+    name: characterName.value,
+    avatar: items.value[model.value].src,
+    level: startingLevel.value,
+    pronouns: pronouns.value,
+    abilityGenerationOption: abilityGenerationOption.value
+  }
+  characterStore.setCharacter(data)
+  handleRoute('/builder')
+}
 </script>
