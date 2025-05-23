@@ -1,15 +1,22 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
 
-export const useAppStore = defineStore('appstore', () => {
-  const count = ref(0)
+interface State {
+  count: number
+  characters: any
+}
 
-  function increaseCount(amount: number) {
-    count.value += amount
+export const useAppStore = defineStore('appstore', {
+  state: ():State => {
+    return {
+      count: 0,
+      characters: []
+    }
+  },
+  getters:{},
+  actions:{
+    increaseCount(amount: number) {
+    this.count += amount
+  }
   }
 
-  return {
-    count,
-    increaseCount
-  }
 })
