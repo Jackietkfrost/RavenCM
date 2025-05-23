@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container v-if="false">
     <v-row no-gutters class="text-center align-center">
       <v-col cols="12" md="5">
         <img
@@ -72,6 +72,20 @@
       </v-col>
     </v-row>
   </v-container>
+  <v-container v-if="!hasCharacters">
+    <v-row no-gutters class="text-center">
+      <v-col cols="12">
+        <v-icon :icon="mdiAccountGroup" size="250" />
+      </v-col>
+      <v-col cols="12" class="my-4">
+        <h1>No Characters Yet..</h1>
+        <h5>You should create your first D&D character to get started</h5>
+        <v-btn color="secondary" :prepend-icon="mdiPlus">{{
+          t('menu.create-character')
+        }}</v-btn></v-col
+      >
+    </v-row>
+  </v-container>
 </template>
 <script setup lang="tsx">
 import { useI18n } from 'vue-i18n'
@@ -79,7 +93,14 @@ import { useTheme } from 'vuetify'
 import { openExternal, openFile } from '@/renderer/utils'
 import { useAppStore } from '@/renderer/store/appStore'
 import { onMounted, ref } from 'vue'
-import { mdiBrightness6, mdiFileDocument, mdiFolderOpen, mdiGithub } from '@mdi/js'
+import {
+  mdiAccountGroup,
+  mdiBrightness6,
+  mdiFileDocument,
+  mdiFolderOpen,
+  mdiGithub,
+  mdiPlus
+} from '@mdi/js'
 
 const { t, locale, availableLocales } = useI18n()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -90,6 +111,8 @@ const appVersion = ref('Unknown')
 const selectedFile = ref('')
 // const text = ref('TEST')
 const messages = ref<string[]>([])
+
+const hasCharacters = ref(false)
 
 onMounted((): void => {
   languages.value = availableLocales
