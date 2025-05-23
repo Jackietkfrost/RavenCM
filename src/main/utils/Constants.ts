@@ -42,7 +42,7 @@ export default class Constants {
     enabled: false,
     trayWindow: false,
     menu: false,
-    tooltip: 'Vutron App',
+    tooltip: 'Raven Character Manager App',
     margin: { x: 0, y: 0 },
     showAtStartup: false
   }
