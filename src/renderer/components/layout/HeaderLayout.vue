@@ -69,7 +69,7 @@
       </v-btn>
     </template>
   </v-app-bar>
-  <v-app-bar color="primary" density="compact" height="50">
+  <!-- <v-app-bar color="primary" density="compact" height="50">
     <v-item-group class="mx-2" mandatory v-if="isCurrentRoute('/')">
       <v-item><v-btn>Character Collection</v-btn></v-item>
       <v-item class="mr-2"><v-btn>Sources</v-btn></v-item>
@@ -102,7 +102,7 @@
     <v-item-group class="mx-2" mandatory v-if="isCurrentRoute('/charactersheet')">
       <v-item><v-btn class="active">Character Sheet</v-btn></v-item>
     </v-item-group>
-  </v-app-bar>
+  </v-app-bar> -->
 </template>
 <script setup lang="tsx">
 import { useRoute, useRouter } from 'vue-router'
