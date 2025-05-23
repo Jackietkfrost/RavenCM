@@ -67,6 +67,21 @@
           {{ t('menu.settings') }}
         </v-tooltip>
       </v-btn>
+      <v-container v-if="characterStore.character" width="200">
+        <v-row class="justify-center">
+          <v-col cols="6">
+            <h5>{{ characterStore.character.name }}</h5>
+            <h6>Level {{ characterStore.character.level }}</h6>
+            <v-col cols="12">
+              <v-progress-linear></v-progress-linear>
+            </v-col>
+          </v-col>
+          <v-col cols="6" class="d-flex justify-end">
+            <v-avatar :image="characterStore.character.avatar" size="32" />
+          </v-col>
+        </v-row>
+        <v-row> </v-row>
+      </v-container>
     </template>
   </v-app-bar>
   <!-- <v-app-bar color="primary" density="compact" height="50">
@@ -120,7 +135,9 @@ import {
 } from '@mdi/js'
 import { openExternal } from '@/renderer/utils'
 import { useTheme } from 'vuetify'
+import { useAppStore } from '@/renderer/store/appStore'
 
+const characterStore = useAppStore()
 const theme = useTheme()
 const router = useRouter()
 const route: any = useRoute()
