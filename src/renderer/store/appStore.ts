@@ -3,20 +3,26 @@ import { defineStore } from 'pinia'
 interface State {
   count: number
   characters: any
+  createCharacter: boolean
 }
 
 export const useAppStore = defineStore('appstore', {
-  state: ():State => {
+  state: (): State => {
     return {
       count: 0,
-      characters: []
+      characters: [],
+      createCharacter: false
     }
   },
-  getters:{},
-  actions:{
+  getters: {
+    getIsCreatingCharacter: (state) => state.createCharacter
+  },
+  actions: {
     increaseCount(amount: number) {
-    this.count += amount
+      this.count += amount
+    },
+    toggleCreateCharacter() {
+      this.createCharacter = !this.createCharacter
+    }
   }
-  }
-
 })
