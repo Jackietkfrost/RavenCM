@@ -150,7 +150,6 @@ const items = ref<Image[]>([
   { src: 'https://picsum.photos/200/304' }
 ])
 
-//   const nextIndex = model.value + 1
 const handleCreateCharacter = async (): Promise<void> => {
   const data = {
     name: characterName.value,
