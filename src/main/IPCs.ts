@@ -1,6 +1,7 @@
 import { ipcMain, shell, IpcMainEvent, dialog } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as xml2js from 'xml2js'
 import Constants from './utils/Constants'
 
 /*
@@ -21,7 +22,9 @@ export default class IPCs {
     // Open file
     ipcMain.handle('msgOpenFile', async (event: IpcMainEvent, filter: string) => {
       const filters = []
-      if (filter === 'text') {
+      if (filter === 'dnd5e') {
+        filters.push({ name: 'DnD5e', extensions: ['DnD5e'] })
+      } else if (filter === 'text') {
         filters.push({ name: 'Text', extensions: ['txt', 'json'] })
       } else if (filter === 'zip') {
         filters.push({ name: 'Zip', extensions: ['zip'] })
@@ -32,7 +35,7 @@ export default class IPCs {
       })
       return dialogResult
     })
-
+    // Save character
     ipcMain.handle('msgSaveCharacter', async (event: IpcMainEvent, data: any) => {
       console.log(data)
       const characterFolder = 'GameCharacters'
@@ -76,6 +79,28 @@ export default class IPCs {
       fs.writeFileSync(filePath, xmlContent)
 
       console.log(`Character file saved to ${filePath}`)
+    })
+
+    ipcMain.handle('msgGetCharacters', async (event: IpcMainEvent) => {
+      const gameCharactersFolder = path.join(__dirname, 'GameCharacters')
+      const files = await fs.readdirSync(gameCharactersFolder)
+      const characters = []
+
+      files.forEach((file) => {
+        const filePath = path.join(gameCharactersFolder, file)
+        const fileContent = fs.readFileSync(filePath, 'utf8')
+        const parser = new xml2js.Parser()
+        parser.parseString(fileContent, (err, result) => {
+          if (err) {
+            console.error(err)
+          } else {
+            const resultWithUnderscores = JSON.parse(JSON.stringify(result).replace(/-/g, '_'))
+            characters.push(resultWithUnderscores)
+          }
+        })
+      })
+
+      return characters
     })
   }
 }
