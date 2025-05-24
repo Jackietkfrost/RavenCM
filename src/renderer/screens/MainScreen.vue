@@ -1,8 +1,26 @@
 <template>
   <v-app-bar color="primary" density="compact" height="50">
-    <v-btn>Character Collection</v-btn>
-    <v-btn>Sources</v-btn>
-    <v-btn>Additional Sources</v-btn>
+    <v-btn
+      variant="text"
+      :class="{ active: characterStore.currentBuildStage === 'character-collection' }"
+      @click="handlePage('character-collection')"
+    >
+      {{ t('StartScreen.character-collection') }}</v-btn
+    >
+    <v-btn
+      variant="text"
+      :class="{ active: characterStore.currentBuildStage === 'sources' }"
+      @click="handlePage('sources')"
+    >
+      {{ t('StartScreen.sources') }}</v-btn
+    >
+    <v-btn
+      variant="text"
+      :class="{ active: characterStore.currentBuildStage === 'additional-sources' }"
+      @click="handlePage('additional-sources')"
+    >
+      {{ t('StartScreen.additional-sources') }}</v-btn
+    >
   </v-app-bar>
   <v-container v-if="false">
     <v-row no-gutters class="text-center align-center">
@@ -92,6 +110,12 @@
     </v-row>
     <CreateCharacterDrawer :drawer="drawer" />
   </v-container>
+  <v-container>
+    <CharacterCollection
+      v-if="hasCharacters && characterStore.currentStartStage === 'character-collection'"
+    />
+    <SourcesScreen v-if="characterStore.currentStartStage === 'sources'" />
+    <AdditionalContent v-if="characterStore.currentStartStage === 'additional-sources'" />
   </v-container>
 </template>
 <script setup lang="tsx">
@@ -109,30 +133,41 @@ import {
   mdiPlus
 } from '@mdi/js'
 import CreateCharacterDrawer from './CreateCharacterDrawer.vue'
+import CharacterCollection from './startScreens/CharacterCollection.vue'
+import AdditionalContent from './startScreens/AdditionalContent.vue'
+import SourcesScreen from './startScreens/SourcesScreen.vue'
 
 const { t, locale, availableLocales } = useI18n()
 
 const characterStore = useAppStore()
 const theme = useTheme()
 const languages = ref(['en'])
-const appVersion = ref('Unknown')
+// const appVersion = ref('Unknown')
 const selectedFile = ref('')
 const drawer = ref(characterStore.createCharacter)
 const messages = ref<string[]>([])
 
-const hasCharacters = ref(false)
+const hasCharacters = ref(characterStore.getCharacters)
 
 onMounted((): void => {
   languages.value = availableLocales
 
   // Get application version from package.json version string (Using IPC communication)
-  getApplicationVersionFromMainProcess()
+  // getApplicationVersionFromMainProcess()
+  window.mainApi.invoke('msgGetCharacters').then((characters) => {
+    characterStore.characters = characters
+  })
 })
 
-const getApplicationVersionFromMainProcess = (): void => {
-  window.mainApi.invoke('msgRequestGetVersion').then((result: string) => {
-    appVersion.value = result
-  })
+// const getApplicationVersionFromMainProcess = (): void => {
+//   window.mainApi.invoke('msgRequestGetVersion').then((result: string) => {
+//     appVersion.value = result
+//   })
+// }
+
+const handlePage = (value: string): void => {
+  console.log(value)
+  characterStore.currentStartStage = value
 }
 
 const handleChangeTheme = (): void => {
