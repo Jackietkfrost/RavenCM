@@ -1,0 +1,19 @@
+{
+  "desc": {
+    "second-desc": "2番目の画面に移動しました！ ここには何もありません！",
+    "selected-file": "選択したファイル: {filePath}."
+  },
+  "title": {
+    "main": "メイン画面",
+    "second": "2番目の画面",
+    "error": "エラー発生"
+  },
+  "menu": {
+    "change-theme": "テーマの変更",
+    "change-language": "言語の変更",
+    "increase-count": "カウント1増加",
+    "documentation": "文書",
+    "github": "ソースコード",
+    "open-file": "テキストファイルを開く"
+  }
+}

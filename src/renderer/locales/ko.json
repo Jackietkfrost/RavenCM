@@ -1,0 +1,19 @@
+{
+  "desc": {
+    "second-desc": "두번째 화면으로 이동하였습니다! 여기는 아무 것도 없습니다!",
+    "selected-file": "선택한 파일: {filePath}."
+  },
+  "title": {
+    "main": "메인 화면",
+    "second": "두번째 화면",
+    "error": "에러 발생"
+  },
+  "menu": {
+    "change-theme": "테마 변경",
+    "change-language": "언어 변경",
+    "increase-count": "카운트 1 증가",
+    "documentation": "문서",
+    "github": "소스코드",
+    "open-file": "텍스트 파일 열기"
+  }
+}
