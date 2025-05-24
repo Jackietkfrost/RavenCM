@@ -5,7 +5,8 @@ const mainAvailChannels: string[] = [
   'msgRequestGetVersion',
   'msgOpenExternalLink',
   'msgOpenFile',
-  'msgSaveCharacter'
+  'msgSaveCharacter',
+  'msgGetCharacters'
 ]
 const rendererAvailChannels: string[] = []
 
