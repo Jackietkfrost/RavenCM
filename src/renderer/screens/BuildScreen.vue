@@ -44,42 +44,26 @@
     >
   </v-app-bar>
   <v-container>
-    <v-row no-gutters>
-      <v-col cols="11" sm="6">
-        <v-text-field :prepend-inner-icon="mdiMagnify" variant="solo" label="Search"></v-text-field>
-      </v-col>
-      <v-col class="d-flex justify-end" cols="1" sm="6">
-        <v-btn icon>
-          <v-icon :icon="mdiFilterMenuOutline" />
-        </v-btn>
-      </v-col>
-    </v-row>
-    <v-expansion-panels>
-      <v-expansion-panel>
-        <v-expansion-panel-title>
-          <v-row no-gutters>
-            <v-col class="d-flex justify-start" cols="4"> RACE </v-col>
-            <v-col class="text--secondary" cols="8">
-              <v-fade-transition leave-absolute>
-                <v-row style="width: 100%" no-gutters>
-                  <v-col class="d-flex justify-start" cols="6">
-                    {{ characterStore.character?.race ?? '' }}
-                  </v-col>
-                </v-row>
-              </v-fade-transition>
-            </v-col>
-          </v-row>
-        </v-expansion-panel-title>
-        <v-expansion-panel-text> </v-expansion-panel-text>
-      </v-expansion-panel>
-    </v-expansion-panels>
+    <RaceScreen v-if="characterStore.currentBuildStage === 'race'" />
+    <ClassScreen v-if="characterStore.currentBuildStage === 'class'" />
+    <BackgroundScreen v-if="characterStore.currentBuildStage === 'background'" />
+    <AbilityScoresScreen v-if="characterStore.currentBuildStage === 'ability-scores'" />
+    <LanguagesScreen v-if="characterStore.currentBuildStage === 'languages'" />
+    <ProficiencyScreen v-if="characterStore.currentBuildStage === 'proficiency'" />
+    <FeatsScreen v-if="characterStore.currentBuildStage === 'feats'" />
   </v-container>
 </template>
 
 <script setup lang="tsx">
-import { mdiFilterMenuOutline, mdiMagnify } from '@mdi/js'
 import { useAppStore } from '../store/appStore'
 import { useI18n } from 'vue-i18n'
+import RaceScreen from '@/renderer/screens/builderScreens/RaceScreen.vue'
+import ClassScreen from '@/renderer/screens/builderScreens/ClassScreen.vue'
+import BackgroundScreen from '@/renderer/screens/builderScreens/BackgroundScreen.vue'
+import AbilityScoresScreen from '@/renderer/screens/builderScreens/AbilityScoreScreen.vue'
+import LanguagesScreen from '@/renderer/screens/builderScreens/LanguagesScreen.vue'
+import ProficiencyScreen from '@/renderer/screens/builderScreens/ProficiencyScreen.vue'
+import FeatsScreen from '@/renderer/screens/builderScreens/FeatsScreen.vue'
 // import { ref } from 'vue'
 
 const { t } = useI18n()
