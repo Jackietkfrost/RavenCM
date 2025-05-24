@@ -10,6 +10,10 @@ export default class Utils {
   static async openFile(type: string): Promise<any> {
     return window.mainApi.invoke('msgOpenFile', type)
   }
+
+  static async saveCharacter(data: any): Promise<any> {
+    return window.mainApi.invoke('msgSaveCharacter', data)
+  }
 }
 
-export const { getCurrentLocale, openExternal, openFile } = Utils
+export const { getCurrentLocale, openExternal, openFile, saveCharacter } = Utils
