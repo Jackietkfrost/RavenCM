@@ -9,6 +9,9 @@ type CharacterInfo = {
   background?: string
   archetype?: string
   alignment?: string
+  languages?: string
+  proficiency?: string
+  feat?: string
   abilityGenerationOption: string
 }
 interface State {
@@ -16,6 +19,7 @@ interface State {
   character: CharacterInfo | null
   characters: any
   createCharacter: boolean
+  currentStartStage: any
   currentBuildStage: any
   currentMagicStage: any
   currentEquipmentStage: any
@@ -29,6 +33,7 @@ export const useAppStore = defineStore('appstore', {
       character: null,
       characters: [],
       createCharacter: false,
+      currentStartStage: null,
       currentBuildStage: null,
       currentMagicStage: null,
       currentEquipmentStage: null,
@@ -36,7 +41,8 @@ export const useAppStore = defineStore('appstore', {
     }
   },
   getters: {
-    getIsCreatingCharacter: (state) => state.createCharacter
+    getIsCreatingCharacter: (state) => state.createCharacter,
+    getCharacters: (state) => state.characters
   },
   actions: {
     increaseCount(amount: number) {
