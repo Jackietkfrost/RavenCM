@@ -24,14 +24,21 @@
     "open-file": "Open a text file",
     "settings": "Settings"
   },
-  "StartScreen": {},
+  "StartScreen": {
+    "character-collection": "Character Collection",
+    "sources": "sources",
+    "additional-sources": "Additional Sources"
+  },
   "BuildScreen": {
     "race": "Race",
     "class": "Class",
     "background": "Background",
     "ability-scores": "Ability Scores",
+    "language": "Language",
     "languages": "Languages",
-    "proficiency": "Proficiencies",
+    "proficiency": "Proficiency",
+    "proficiencies": "Proficiencies",
+    "feat": "Feat",
     "feats": "Feats"
   },
   "MagicScreen": {},
