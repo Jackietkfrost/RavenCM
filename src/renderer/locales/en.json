@@ -23,5 +23,19 @@
     "github": "Source Code",
     "open-file": "Open a text file",
     "settings": "Settings"
-  }
+  },
+  "StartScreen": {},
+  "BuildScreen": {
+    "race": "Race",
+    "class": "Class",
+    "background": "Background",
+    "ability-scores": "Ability Scores",
+    "languages": "Languages",
+    "proficiency": "Proficiencies",
+    "feats": "Feats"
+  },
+  "MagicScreen": {},
+  "EquipmentScreen": {},
+  "ManageScreen": {},
+  "CharacterSheetScreen": {}
 }
