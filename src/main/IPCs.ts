@@ -81,8 +81,14 @@ export default class IPCs {
       console.log(`Character file saved to ${filePath}`)
     })
 
+    // Get characters saved
     ipcMain.handle('msgGetCharacters', async (event: IpcMainEvent) => {
       const gameCharactersFolder = path.join(__dirname, 'GameCharacters')
+
+      if (!fs.existsSync(gameCharactersFolder)) {
+        return []
+      }
+
       const files = await fs.readdirSync(gameCharactersFolder)
       const characters = []
 
@@ -93,6 +99,7 @@ export default class IPCs {
         parser.parseString(fileContent, (err, result) => {
           if (err) {
             console.error(err)
+            return false
           } else {
             const resultWithUnderscores = JSON.parse(JSON.stringify(result).replace(/-/g, '_'))
             characters.push(resultWithUnderscores)
@@ -102,5 +109,7 @@ export default class IPCs {
 
       return characters
     })
+
+    ipcMain.handle('msgDownloadIndexes', async (event: IpcMainEvent) => {})
   }
 }
