@@ -108,7 +108,6 @@
         }}</v-btn></v-col
       >
     </v-row>
-    <CreateCharacterDrawer :drawer="drawer" />
   </v-container>
   <v-container>
     <CharacterCollection
@@ -132,7 +131,6 @@ import {
   mdiGithub,
   mdiPlus
 } from '@mdi/js'
-import CreateCharacterDrawer from './CreateCharacterDrawer.vue'
 import CharacterCollection from './startScreens/CharacterCollection.vue'
 import AdditionalContent from './startScreens/AdditionalContent.vue'
 import SourcesScreen from './startScreens/SourcesScreen.vue'
@@ -144,10 +142,9 @@ const theme = useTheme()
 const languages = ref(['en'])
 // const appVersion = ref('Unknown')
 const selectedFile = ref('')
-const drawer = ref(characterStore.createCharacter)
 const messages = ref<string[]>([])
 
-const hasCharacters = ref(characterStore.getCharacters)
+const hasCharacters = ref(characterStore.getCharacters.length > 0)
 
 onMounted((): void => {
   languages.value = availableLocales
