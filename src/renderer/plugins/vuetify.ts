@@ -25,6 +25,7 @@ export default createVuetify({
         colors: {
           primary: colors.brown.darken2,
           background: colors.brown.lighten5,
+          button: colors.brown.darken1,
           accordion: colors.brown.lighten4
         }
       },
@@ -32,7 +33,8 @@ export default createVuetify({
         dark: true,
         colors: {
           primary: colors.brown.darken4,
-          background: colors.grey.darken4
+          background: colors.grey.darken4,
+          button: colors.brown.lighten1,
         }
       }
     }
