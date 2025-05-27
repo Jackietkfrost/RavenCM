@@ -1,0 +1,19 @@
+{
+  "desc": {
+    "second-desc": "U bent naar het tweede scherm gegaan! Hier is niks!",
+    "selected-file": "Geselecteerde bestand: {filePath}."
+  },
+  "title": {
+    "main": "Hoofdscherm",
+    "second": "Tweede scherm",
+    "error": "Onbekende Error"
+  },
+  "menu": {
+    "change-theme": "Thema veranderen",
+    "change-language": "Taal wijzigen",
+    "increase-count": "Één stap optellen",
+    "documentation": "Documentatie",
+    "github": "Broncode",
+    "open-file": "Open een bestand"
+  }
+}

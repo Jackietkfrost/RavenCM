@@ -1,0 +1,19 @@
+{
+  "desc": {
+    "second-desc": "您已移至第二个屏幕！ 这里什么都没有！",
+    "selected-file": "选定的文件：{filePath}."
+  },
+  "title": {
+    "main": "主屏幕",
+    "second": "第二屏",
+    "error": "未知错误"
+  },
+  "menu": {
+    "change-theme": "改变主题",
+    "change-language": "改变语言",
+    "increase-count": "计数 1 个增量",
+    "documentation": "文档",
+    "github": "源代码",
+    "open-file": "打开文本文件"
+  }
+}

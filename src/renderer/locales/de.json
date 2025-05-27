@@ -1,0 +1,19 @@
+{
+  "desc": {
+    "second-desc": "Auf den zweiten Bildschirm verschoben! Hier gibt es keine!",
+    "selected-file": "Ausgewählte Datei: {filePath}."
+  },
+  "title": {
+    "main": "Hauptbildschirm",
+    "second": "Zweiter Bildschirm",
+    "error": "Ein Fehler ist aufgetreten"
+  },
+  "menu": {
+    "change-theme": "Thema wechseln",
+    "change-language": "Sprache ändern",
+    "increase-count": "Zählerstand um 1 erhöhen",
+    "documentation": "dokumentieren",
+    "github": "Quellcode",
+    "open-file": "Öffnen Sie eine Textdatei"
+  }
+}

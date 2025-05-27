@@ -1,0 +1,60 @@
+{
+  "desc": {
+    "welcome-title": "Hello World! Everything is ready.",
+    "welcome-desc": "You can now write cross-platform web applications. See changes in real time and build to multiple platforms with one command. If you're not already familiar with it, you can get help from the documentation page below, or run some pre-written example code.",
+    "second-desc": "You have moved to the second screen! There is nothing here!",
+    "selected-file": "Selected file: {filePath}."
+  },
+  "title": {
+    "main": "Start",
+    "build": "Build",
+    "magic": "Magic",
+    "equipment": "Equipment",
+    "manage": "Manage",
+    "charactersheet": "Character Sheet",
+    "error": "Unknown Error"
+  },
+  "menu": {
+    "create-character": "Create Character",
+    "change-theme": "Change Theme",
+    "change-language": "Change Language",
+    "increase-count": "Count 1 increment",
+    "documentation": "Documentation",
+    "github": "Source Code",
+    "open-file": "Open a text file",
+    "settings": "Settings"
+  },
+  "StartScreen": {
+    "character-collection": "Character Collection",
+    "sources": "sources",
+    "additional-sources": "Additional Sources"
+  },
+  "BuildScreen": {
+    "race": "Race",
+    "class": "Class",
+    "background": "Background",
+    "ability-scores": "Ability Scores",
+    "language": "Language",
+    "languages": "Languages",
+    "proficiency": "Proficiency",
+    "proficiencies": "Proficiencies",
+    "feat": "Feat",
+    "feats": "Feats"
+  },
+  "MagicScreen": {},
+  "EquipmentScreen": {
+    "equipment": "Equipment",
+    "inventory": "Inventory",
+    "additional": "Additional Treasures & Quest Items"
+  },
+  "ManageScreen": {
+    "character": "Character",
+    "backstory": "Backstory",
+    "notes": "Notes",
+    "allies": "Allies & Organizations",
+    "attacks": "Attacks & Spellcasting"
+  },
+  "CharacterSheetScreen": {
+    "character-sheet": "Character Sheet"
+  }
+}
