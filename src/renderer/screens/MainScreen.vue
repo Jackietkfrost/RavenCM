@@ -95,23 +95,9 @@
       </v-col>
     </v-row>
   </v-container>
-  <v-container v-if="!hasCharacters">
-    <v-row no-gutters class="text-center">
-      <v-col cols="12">
-        <v-icon :icon="mdiAccountGroup" size="250" />
-      </v-col>
-      <v-col cols="12" class="my-4">
-        <h1>No Characters Yet..</h1>
-        <h5>You should create your first D&D character to get started</h5>
-        <v-btn color="secondary" :prepend-icon="mdiPlus" @click="handleStartCreateCharacter">{{
-          t('menu.create-character')
-        }}</v-btn></v-col
-      >
-    </v-row>
-  </v-container>
   <v-container>
     <CharacterCollection
-      v-if="hasCharacters && characterStore.currentStartStage === 'character-collection'"
+      v-if="characterStore.currentStartStage === 'character-collection'"
     />
     <SourcesScreen v-if="characterStore.currentStartStage === 'sources'" />
     <AdditionalContent v-if="characterStore.currentStartStage === 'additional-sources'" />
@@ -124,12 +110,10 @@ import { openExternal, openFile } from '@/renderer/utils'
 import { useAppStore } from '@/renderer/store/appStore'
 import { onMounted, ref } from 'vue'
 import {
-  mdiAccountGroup,
   mdiBrightness6,
   mdiFileDocument,
   mdiFolderOpen,
   mdiGithub,
-  mdiPlus
 } from '@mdi/js'
 import CharacterCollection from './startScreens/CharacterCollection.vue'
 import AdditionalContent from './startScreens/AdditionalContent.vue'
@@ -144,14 +128,13 @@ const languages = ref(['en'])
 const selectedFile = ref('')
 const messages = ref<string[]>([])
 
-const hasCharacters = ref(characterStore.getCharacters.length > 0)
-
 onMounted((): void => {
   languages.value = availableLocales
 
   // Get application version from package.json version string (Using IPC communication)
   // getApplicationVersionFromMainProcess()
   window.mainApi.invoke('msgGetCharacters').then((characters) => {
+    if (!characters) return
     characterStore.characters = characters
   })
 })
@@ -163,7 +146,6 @@ onMounted((): void => {
 // }
 
 const handlePage = (value: string): void => {
-  console.log(value)
   characterStore.currentStartStage = value
 }
 
@@ -180,9 +162,6 @@ const handleOpenDocumentation = async (): Promise<void> => {
   messages.value.push('WIP')
 }
 
-const handleStartCreateCharacter = async (): Promise<void> => {
-  characterStore.toggleCreateCharacter()
-}
 
 const handleOpenGitHub = async (): Promise<void> => {
   await openExternal('https://github.com/Jackietkfrost/RavenCM')
