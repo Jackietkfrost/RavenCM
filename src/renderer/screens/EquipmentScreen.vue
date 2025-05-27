@@ -1,17 +1,40 @@
+<template>
+  <v-app-bar color="primary" density="compact" height="50">
+    <v-btn
+      variant="text"
+      :class="{ active: characterStore.currentEquipmentStage === 'equipment' }"
+      @click="handlePage('equipment')"
+      >{{ t('EquipmentScreen.equipment') }}</v-btn
+    >
+    <v-btn
+      variant="text"
+      :class="{ active: characterStore.currentBuildStage === 'inventory' }"
+      @click="handlePage('class')"
+      >{{ t('EquipmentScreen.inventory') }}</v-btn
+    >
+    <v-btn
+      variant="text"
+      :class="{ active: characterStore.currentBuildStage === 'additional' }"
+      @click="handlePage('background')"
+      >{{ t('EquipmentScreen.additional') }}</v-btn
+    >
+  </v-app-bar>
+  <v-container fluid>
+    <EquipmentsScreen v-if="characterStore.currentEquipmentStage === 'equipment'" />
+    <InventoryScreen v-else-if="characterStore.currentEquipmentStage === 'inventory'" />
+    <AdditionalScreen v-else-if="characterStore.currentEquipmentStage === 'additional'" />
+  </v-container>
+</template>
 <script setup lang="tsx">
 import { useI18n } from 'vue-i18n'
-import { mdiEmoticonCoolOutline } from '@mdi/js'
+import { useAppStore } from '../store/appStore'
+import EquipmentsScreen from '../screens/equipmentScreens/EquipmentsScreen.vue'
+
+const characterStore = useAppStore()
+
+const handlePage = (page: string) => {
+  characterStore.currentEquipmentStage = page
+}
 
 const { t } = useI18n()
 </script>
-
-<template>
-  <v-container>
-    <v-row no-gutters class="text-center">
-      <v-col cols="12">
-        <v-icon :icon="mdiEmoticonCoolOutline" size="250" color="#009f57" />
-      </v-col>
-      <v-col cols="12" class="my-4">{{ t('desc.second-desc') }}</v-col>
-    </v-row>
-  </v-container>
-</template>
