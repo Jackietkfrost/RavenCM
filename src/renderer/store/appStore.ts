@@ -33,11 +33,11 @@ export const useAppStore = defineStore('appstore', {
       character: null,
       characters: [],
       createCharacter: false,
-      currentStartStage: null,
-      currentBuildStage: null,
-      currentMagicStage: null,
-      currentEquipmentStage: null,
-      currentManageStage: null
+      currentStartStage: 'character-collection',
+      currentBuildStage: 'race',
+      currentMagicStage: 'magic',
+      currentEquipmentStage: 'equipment',
+      currentManageStage: 'character'
     }
   },
   getters: {
@@ -53,6 +53,9 @@ export const useAppStore = defineStore('appstore', {
     },
     setCharacter(data: CharacterInfo) {
       this.character = data
+    },
+    addIndexUrl(url: string) {
+      window.mainApi.invoke('msgDownloadIndex', url)
     }
   }
 })
