@@ -42,7 +42,19 @@
     "feats": "Feats"
   },
   "MagicScreen": {},
-  "EquipmentScreen": {},
-  "ManageScreen": {},
-  "CharacterSheetScreen": {}
+  "EquipmentScreen": {
+    "equipment": "Equipment",
+    "inventory": "Inventory",
+    "additional": "Additional Treasures & Quest Items"
+  },
+  "ManageScreen": {
+    "character": "Character",
+    "backstory": "Backstory",
+    "notes": "Notes",
+    "allies": "Allies & Organizations",
+    "attacks": "Attacks & Spellcasting"
+  },
+  "CharacterSheetScreen": {
+    "character-sheet": "Character Sheet"
+  }
 }
