@@ -1,17 +1,18 @@
 <template>
-  <v-app-bar color="primary" density="compact" height="50">
+  <v-app-bar color="primary" density="compact" height="50" sticky>
     <v-btn>Spells</v-btn>
     <v-btn>Sorceror</v-btn>
     <v-btn>Wizard</v-btn>
   </v-app-bar>
-  <v-container>
+  <v-container fluid>
     <v-row>
       <v-col cols="8">
         <v-data-table-virtual
           :headers="spellsHeaders"
           :items="spellData"
           color="primary"
-          height="500"
+          min-height="100"
+          max-height="500"
           hover
           sticky
         ></v-data-table-virtual>
@@ -46,7 +47,7 @@ import { ref } from 'vue'
 
 const spellsHeaders = ref([
   { title: 'Spell', key: 'Spell' },
-  { title: 'LevelSchool', key: 'LevelSchool' },
+  { title: 'Level & School', key: 'LevelSchool' },
   { title: 'Verbal', key: 'Verbal' },
   { title: 'Somatic', key: 'Somatic' },
   { title: 'Material', key: 'Material' },
@@ -60,28 +61,32 @@ const selectedSpellsHeaders = ref([
   { title: 'Replaced', key: 'Replaced' },
   { title: 'Spellcasting Source', key: 'SpellcastingSource' }
 ])
-const selectedSpells= ref([
+//TODO: Remove these, they are just for testing.
+const selectedSpells = ref([
   {
     SpellType: 'Cantrip (Wizard)',
     SelectedSpell: 'Fire Bolt',
     GainedOnLevel: 1,
     Replaced: false,
-    SpellcastingSource: "Player's Handbook",
+    SpellcastingSource: "Player's Handbook"
   },
   {
     SpellType: 'Cantrip (Wizard)',
     SelectedSpell: 'Animate Skull',
     GainedOnLevel: 1,
     Replaced: false,
-    SpellcastingSource: "Dungeon Master's Guide",
+    SpellcastingSource: "Dungeon Master's Guide"
   },
   {
     SpellType: 'Cantrip (Wizard)',
     SelectedSpell: 'Cheerful Song',
     GainedOnLevel: 1,
     Replaced: false,
-    SpellcastingSource: "Player's Handbook",
-  }])
+    SpellcastingSource: "Player's Handbook"
+  }
+])
+
+//TODO: Remove these, they are just for testing.
 const spellData = ref([
   {
     Spell: 'Magic Missile',
