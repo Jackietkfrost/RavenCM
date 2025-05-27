@@ -17,9 +17,17 @@
       label="Remote Index File URL"
       density="compact"
       variant="outlined"
+      v-model="indexUrl"
     >
       <template #append>
-        <v-btn :prepend-icon="mdiFileDownload" small variant="flat">Upload</v-btn>
+        <v-btn
+          :prepend-icon="mdiFileDownload"
+          color="button"
+          small
+          variant="flat"
+          @click="handleUploadingContent"
+          text="Upload"
+        />
       </template>
     </v-text-field>
     <h2>UPDATE CONTENT FILES</h2>
@@ -32,13 +40,53 @@
       through the index files. Then click 'Update Content Files' to download the latest files new..
       You should place your personal homebrew files in the specific 'custom\user' folder.</p
     >
-    <v-btn :prepend-icon="mdiFolderDownload">Update Content Files</v-btn>
-    <v-btn :prepend-icon="mdiFolderRemove">Clear Downloaded Content</v-btn>
-    <v-btn :prepend-icon="mdiFolderOpen">Content Folder</v-btn>
-    <v-btn :prepend-icon="mdiFolderAccount">User Content Folder</v-btn>
+    <v-btn class="mx-1" color="button" :prepend-icon="mdiFolderDownload"
+      >Update Content Files</v-btn
+    >
+    <v-btn class="mx-1" color="button" :prepend-icon="mdiFolderRemove"
+      >Clear Downloaded Content</v-btn
+    >
+    <v-divider vertical />
+    <v-btn
+      class="mx-1"
+      color="button"
+      :prepend-icon="mdiFolderOpen"
+      @click="handleOpenContentFolder"
+      >Content Folder</v-btn
+    >
+    <v-btn
+      class="mx-1"
+      color="button"
+      :prepend-icon="mdiFolderAccount"
+      @click="handleOpenUserFolder"
+      >User Content Folder</v-btn
+    >
   </v-container>
 </template>
 <script setup lang="tsx">
-import { mdiFileDownload, mdiFolderAccount, mdiFolderDownload, mdiFolderOpen, mdiFolderRemove } from '@mdi/js'
+import { useAppStore } from '@/renderer/store/appStore'
+import {
+  mdiFileDownload,
+  mdiFolderAccount,
+  mdiFolderDownload,
+  mdiFolderOpen,
+  mdiFolderRemove
+} from '@mdi/js'
+import { ref } from 'vue'
+
+const useCharacterStore = useAppStore()
+const indexUrl = ref('')
+
+const handleUploadingContent = () => {
+  useCharacterStore.addIndexUrl(indexUrl.value)
+}
+
+const handleOpenContentFolder = () => {
+  window.mainApi.invoke('msgOpenContentFolder')
+}
+
+const handleOpenUserFolder = () => {
+  window.mainApi.invoke('msgOpenUserFolder')
+}
 </script>
 <style></style>
