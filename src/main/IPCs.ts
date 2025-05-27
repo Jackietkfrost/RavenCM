@@ -2,6 +2,7 @@ import { ipcMain, shell, IpcMainEvent, dialog } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as xml2js from 'xml2js'
+import axios from 'axios'
 import Constants from './utils/Constants'
 
 /*
@@ -110,6 +111,40 @@ export default class IPCs {
       return characters
     })
 
-    ipcMain.handle('msgDownloadIndexes', async (event: IpcMainEvent) => {})
+    // Index Downloader
+    ipcMain.handle('msgDownloadIndex', async (event: IpcMainEvent, url: string) => {
+      const documentsFolder = path.join(process.env.HOME, 'Documents')
+      const ravenCharacterBuilderFolder = path.join(documentsFolder, 'Raven Character Builder')
+      const customFolder = path.join(ravenCharacterBuilderFolder, 'custom')
+
+      fs.mkdirSync(ravenCharacterBuilderFolder, { recursive: true })
+      fs.mkdirSync(customFolder, { recursive: true })
+      console.log('Custom Folder: ', customFolder)
+      const parsedUrl = new URL(url)
+      const indexFileName = path.basename(parsedUrl.pathname)
+
+      axios
+        .get(url)
+        .then((response) => {
+          const indexFileContent = response.data
+          const indexFilePath = path.join(customFolder, indexFileName)
+
+          fs.writeFile(indexFilePath, indexFileContent, (err) => {
+            if (err) {
+              console.error(err)
+            } else {
+            }
+          })
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    })
+
+    ipcMain.on('msgOpenContentFolder', async (event: IpcMainEvent) => {
+      const documentsFolder = path.join(process.env.HOME, 'Documents')
+      const ravenCharacterBuilderFolder = path.join(documentsFolder, 'Raven Character Builder')
+      shell.openPath(ravenCharacterBuilderFolder)
+    })
   }
 }
