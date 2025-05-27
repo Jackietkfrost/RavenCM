@@ -9,9 +9,9 @@ To clone and run this repository you'll need [Git](https://git-scm.com), and [No
 
 ```bash
 # Install dependencies
-npm install
+npm install or npm i, or npm ci (clean install)
 # Run the app
-npm start
+npm run dev
 ```
 
 ```bash
