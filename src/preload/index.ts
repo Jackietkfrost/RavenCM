@@ -10,7 +10,8 @@ const mainAvailChannels: string[] = [
   'msgDownloadIndex',
   'msgparseIndex',
   'msgOpenContentFolder',
-  'msgOpenUserFolder'
+  'msgOpenUserFolder',
+  'msgGetAllRaces'
 ]
 const rendererAvailChannels: string[] = []
 
