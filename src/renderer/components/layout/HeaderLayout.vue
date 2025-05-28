@@ -85,28 +85,6 @@
     </template>
   </v-app-bar>
   <!-- <v-app-bar color="primary" density="compact" height="50">
-    <v-item-group class="mx-2" mandatory v-if="isCurrentRoute('/')">
-      <v-item><v-btn>Character Collection</v-btn></v-item>
-      <v-item class="mr-2"><v-btn>Sources</v-btn></v-item>
-      <v-item class="mr-2"><v-btn>Additional Sources</v-btn></v-item>
-    </v-item-group>
-    <v-item-group class="mx-2" mandatory v-if="isCurrentRoute('/builder')">
-      <v-item><v-btn>Race</v-btn></v-item>
-      <v-item><v-btn>Class</v-btn></v-item>
-      <v-item><v-btn>Background</v-btn></v-item>
-      <v-item><v-btn>Ability Scores</v-btn></v-item>
-      <v-item><v-btn>Languages</v-btn></v-item>
-      <v-item><v-btn>Proficiency</v-btn></v-item>
-      <v-item><v-btn>Feats</v-btn></v-item>
-    </v-item-group>
-    <v-item-group class="mx-2" mandatory v-if="isCurrentRoute('/magic')">
-      <v-item><v-btn>Spells</v-btn></v-item>
-    </v-item-group>
-    <v-item-group class="mx-2" mandatory v-if="isCurrentRoute('/equipment')">
-      <v-item><v-btn>Equipment</v-btn></v-item>
-      <v-item><v-btn>Inventory</v-btn></v-item>
-      <v-item><v-btn>Additional Treasures & Quest Items</v-btn></v-item>
-    </v-item-group>
     <v-item-group class="mx-2" mandatory v-if="isCurrentRoute('/manager')">
       <v-item><v-btn class="active">Character</v-btn></v-item>
       <v-item><v-btn>Backstory</v-btn></v-item>
