@@ -31,7 +31,7 @@
             </v-col>
           </v-row>
         </v-expansion-panel-title>
-        <v-expansion-panel-text> </v-expansion-panel-text>
+        <v-data-table-virtual :headers="headers" :items="items"> </v-data-table-virtual>
       </v-expansion-panel>
     </v-expansion-panels>
   </v-container>
@@ -40,9 +40,15 @@
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
 import { mdiFilterMenuOutline, mdiMagnify } from '@mdi/js'
-
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const characterStore = useAppStore()
+const races = characterStore.races
+const headers = ref([
+  { title: 'Name', key: 'name', align: 'start' as const },
+  { title: 'Source', key: 'source', align: 'end' as const }
+])
+const items = ref(races)
 </script>
