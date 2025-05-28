@@ -23,3 +23,11 @@ const spellData = ref([
   { Spell: 'Dispel Magic', Source: 'Player\'s Handbook' },
 ])
 </script>
+<style scoped>
+.v-btn {
+  opacity: 0.4;
+}
+.active {
+  opacity: 1 !important;
+}
+</style>

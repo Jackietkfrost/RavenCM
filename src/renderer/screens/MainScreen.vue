@@ -2,27 +2,27 @@
   <v-app-bar color="primary" density="compact" height="50">
     <v-btn
       variant="text"
-      :class="{ active: characterStore.currentBuildStage === 'character-collection' }"
+      :class="{ active: isCurrentStage('character-collection') }"
       @click="handlePage('character-collection')"
     >
       {{ t('StartScreen.character-collection') }}</v-btn
     >
     <v-btn
       variant="text"
-      :class="{ active: characterStore.currentBuildStage === 'sources' }"
+      :class="{ active: isCurrentStage('sources') }"
       @click="handlePage('sources')"
     >
       {{ t('StartScreen.sources') }}</v-btn
     >
     <v-btn
       variant="text"
-      :class="{ active: characterStore.currentBuildStage === 'additional-sources' }"
+      :class="{ active: isCurrentStage('additional-sources') }"
       @click="handlePage('additional-sources')"
     >
       {{ t('StartScreen.additional-sources') }}</v-btn
     >
   </v-app-bar>
-  <v-container v-if="false">
+  <!-- <v-container v-if="false">
     <v-row no-gutters class="text-center align-center">
       <v-col cols="12" md="5">
         <img
@@ -94,39 +94,31 @@
         </v-row>
       </v-col>
     </v-row>
-  </v-container>
+  </v-container> -->
   <v-container>
-    <CharacterCollection
-      v-if="characterStore.currentStartStage === 'character-collection'"
-    />
+    <CharacterCollection v-if="characterStore.currentStartStage === 'character-collection'" />
     <SourcesScreen v-if="characterStore.currentStartStage === 'sources'" />
     <AdditionalContent v-if="characterStore.currentStartStage === 'additional-sources'" />
   </v-container>
 </template>
 <script setup lang="tsx">
 import { useI18n } from 'vue-i18n'
-import { useTheme } from 'vuetify'
-import { openExternal, openFile } from '@/renderer/utils'
+// import { useTheme } from 'vuetify'
+// import { openExternal, openFile } from '@/renderer/utils'
 import { useAppStore } from '@/renderer/store/appStore'
 import { onMounted, ref } from 'vue'
-import {
-  mdiBrightness6,
-  mdiFileDocument,
-  mdiFolderOpen,
-  mdiGithub,
-} from '@mdi/js'
 import CharacterCollection from './startScreens/CharacterCollection.vue'
 import AdditionalContent from './startScreens/AdditionalContent.vue'
 import SourcesScreen from './startScreens/SourcesScreen.vue'
 
-const { t, locale, availableLocales } = useI18n()
+const { t, availableLocales } = useI18n()
 
 const characterStore = useAppStore()
-const theme = useTheme()
+// const theme = useTheme()
 const languages = ref(['en'])
 // const appVersion = ref('Unknown')
-const selectedFile = ref('')
-const messages = ref<string[]>([])
+// const selectedFile = ref('')
+// const messages = ref<string[]>([])
 
 onMounted((): void => {
   languages.value = availableLocales
@@ -149,28 +141,39 @@ const handlePage = (value: string): void => {
   characterStore.currentStartStage = value
 }
 
-const handleChangeTheme = (): void => {
-  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
-}
+// const handleChangeTheme = (): void => {
+//   theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+// }
 
-const handleChangeLanguage = (val): void => {
-  locale.value = val
-}
+// const handleChangeLanguage = (val): void => {
+//   locale.value = val
+// }
 
-const handleOpenDocumentation = async (): Promise<void> => {
-  // await openExternal('')
-  messages.value.push('WIP')
-}
+// const handleOpenDocumentation = async (): Promise<void> => {
+//   // await openExternal('')
+//   messages.value.push('WIP')
+// }
 
+// const handleOpenGitHub = async (): Promise<void> => {
+//   await openExternal('https://github.com/Jackietkfrost/RavenCM')
+// }
 
-const handleOpenGitHub = async (): Promise<void> => {
-  await openExternal('https://github.com/Jackietkfrost/RavenCM')
-}
+// const handleOpenFile = async () => {
+//   const dialogResult = await openFile('text')
+//   if (!dialogResult.canceled) {
+//     selectedFile.value = dialogResult.filePaths[0]
+//   }
+// }
 
-const handleOpenFile = async () => {
-  const dialogResult = await openFile('text')
-  if (!dialogResult.canceled) {
-    selectedFile.value = dialogResult.filePaths[0]
-  }
+const isCurrentStage = (stage: string): boolean => {
+  return characterStore.currentStartStage === stage
 }
 </script>
+<style scoped>
+.v-btn {
+  opacity: 0.4;
+}
+.active {
+  opacity: 1 !important;
+}
+</style>

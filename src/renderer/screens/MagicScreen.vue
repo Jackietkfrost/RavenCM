@@ -1,8 +1,8 @@
 <template>
   <v-app-bar color="primary" density="compact" height="50" sticky>
-    <v-btn>Spells</v-btn>
-    <v-btn>Sorceror</v-btn>
-    <v-btn>Wizard</v-btn>
+    <v-btn :class="{ active: isCurrentStage('spells') }">Spells</v-btn>
+    <v-btn :class="{ active: isCurrentStage('sorcery') }">Sorceror</v-btn>
+    <v-btn :class="{ active: isCurrentStage('wizard') }">Wizard</v-btn>
   </v-app-bar>
   <v-container fluid>
     <v-row>
@@ -39,11 +39,16 @@
   </v-container>
 </template>
 <script setup lang="tsx">
+import { ref } from 'vue'
+import { useAppStore } from '../store/appStore'
 // import { useI18n } from 'vue-i18n'
 
 // const { t } = useI18n()
+const characterStore = useAppStore()
 
-import { ref } from 'vue'
+const isCurrentStage = (stage: string): boolean => {
+  return characterStore.currentMagicStage === stage
+}
 
 const spellsHeaders = ref([
   { title: 'Spell', key: 'Spell' },
@@ -250,3 +255,11 @@ const spellData = ref([
   }
 ])
 </script>
+<style scoped>
+.v-btn {
+  opacity: 0.4;
+}
+.active {
+  opacity: 1 !important;
+}
+</style>

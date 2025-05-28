@@ -35,7 +35,7 @@ export const useAppStore = defineStore('appstore', {
       createCharacter: false,
       currentStartStage: 'character-collection',
       currentBuildStage: 'race',
-      currentMagicStage: 'magic',
+      currentMagicStage: 'spells',
       currentEquipmentStage: 'equipment',
       currentManageStage: 'character'
     }
