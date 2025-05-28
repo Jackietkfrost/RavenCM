@@ -112,17 +112,25 @@ export default class IPCs {
     })
 
     // Index Downloader
+    // Index Downloader (Double check for redundancy)
     ipcMain.handle('msgDownloadIndex', async (event: IpcMainEvent, url: string) => {
       const documentsFolder = path.join(process.env.HOME, 'Documents')
       const ravenCharacterBuilderFolder = path.join(documentsFolder, 'Raven Character Builder')
       const customFolder = path.join(ravenCharacterBuilderFolder, 'custom')
 
       fs.mkdirSync(ravenCharacterBuilderFolder, { recursive: true })
-      fs.mkdirSync(customFolder, { recursive: true })
-      console.log('Custom Folder: ', customFolder)
+      // Make the ravenCM and custom directories if they don't exist
+      if (!fs.existsSync(ravenCharacterBuilderFolder)) {
+        fs.mkdirSync(ravenCharacterBuilderFolder, { recursive: true })
+      }
+      if (!fs.existsSync(customFolder)) {
+      }
+
+      // Download the index file
       const parsedUrl = new URL(url)
       const indexFileName = path.basename(parsedUrl.pathname)
 
+      // Gets the index file from the url, and then with the response, we save it to the custom folder.
       axios
         .get(url)
         .then((response) => {
@@ -130,9 +138,87 @@ export default class IPCs {
           const indexFilePath = path.join(customFolder, indexFileName)
 
           fs.writeFile(indexFilePath, indexFileContent, (err) => {
+            // else {
+            //   console.log('Index file downloaded and saved to:', indexFilePath)
+          })
+
+          // Parse XML content and extract URLs
+          const parser = new xml2js.Parser()
+          parser.parseString(indexFileContent, (err, result) => {
             if (err) {
               console.error(err)
             } else {
+              // Make the folder from the index file name
+              const files = result.index.files[0].file
+              const fileName = path.basename(indexFileName, path.extname(indexFileName))
+              const downloadsFolder = path.join(customFolder, fileName)
+
+              if (!fs.existsSync(downloadsFolder)) {
+                fs.mkdirSync(downloadsFolder, { recursive: true })
+              }
+              const urls = files.map((file) => file.$.url)
+
+              // Download files from URLs
+              urls.forEach((url) => {
+                const fileContentUrl = path.basename(url)
+
+                const downloadFilePath = path.join(downloadsFolder, fileContentUrl)
+
+                axios
+                  .get(url)
+                  .then((response) => {
+                    const fileContent = response.data
+                    fs.writeFile(downloadFilePath, fileContent, (err) => {
+                      //   console.log(`Downloaded file saved to: ${downloadFilePath}`)
+                    })
+                    // Check if the downloaded file is an index file
+                    if (path.extname(url) === '.index') {
+                      // Parse the index file and extract URLs
+                      const parser = new xml2js.Parser()
+                      parser.parseString(fileContent, (err, result) => {
+                        if (err) {
+                          console.error(err)
+                        } else {
+                          const files = result.index.files[0].file
+                          const indexFileName = path.basename(url, path.extname(url))
+                          const indexFolder = path.join(downloadsFolder, indexFileName)
+
+                          if (!fs.existsSync(indexFolder)) {
+                            fs.mkdirSync(indexFolder, { recursive: true })
+                          }
+                          const urls = files.map((file) => file.$.url)
+
+                          // Download files from URLs
+                          urls.forEach((url) => {
+                            const fileContentUrl = path.basename(url)
+                            const downloadFilePath = path.join(indexFolder, fileContentUrl)
+
+                            axios
+                              .get(url)
+                              .then((response) => {
+                                const fileContent = response.data
+                                fs.writeFile(downloadFilePath, fileContent, (err) => {
+                                  // else {
+                                  //   console.log(`Downloaded file saved to: ${downloadFilePath}`)
+                                  // }
+
+                                if (path.extname(url) === '.index') {
+                                  // downloadIndex(url, indexFolder)
+                                  console.log("oop?")
+                                }
+                              })
+                              .catch((error) => {
+                                console.error(error)
+                              })
+                          })
+                        }
+                      })
+                    }
+                  })
+                  .catch((error) => {
+                    console.error(error)
+                  })
+              })
             }
           })
         })
