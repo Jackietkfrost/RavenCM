@@ -49,4 +49,8 @@ export default class Constants {
 
   static APP_INDEX_URL_DEV = `${debug.env.VITE_DEV_SERVER_URL}/index.html`
   static APP_INDEX_URL_PROD = join(__dirname, '../index.html')
+
+  static DOCUMENT_FOLDER = join(process.env.HOME, 'Documents')
+  static RAVEN_FOLDER = join(this.DOCUMENT_FOLDER, 'Raven Character Builder')
+  static CUSTOM_FOLDER = join(this.RAVEN_FOLDER, 'Custom')
 }
