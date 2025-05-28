@@ -122,6 +122,7 @@ export default class IPCs {
         fs.mkdirSync(ravenCharacterBuilderFolder, { recursive: true })
       }
       if (!fs.existsSync(customFolder)) {
+        fs.mkdirSync(customFolder, { recursive: true })
       }
 
       // Download the index file
@@ -136,8 +137,12 @@ export default class IPCs {
           const indexFilePath = path.join(customFolder, indexFileName)
 
           fs.writeFile(indexFilePath, indexFileContent, (err) => {
+            if (err) {
+              console.error(err)
+            }
             // else {
             //   console.log('Index file downloaded and saved to:', indexFilePath)
+            // }
           })
 
           // Parse XML content and extract URLs
@@ -154,6 +159,7 @@ export default class IPCs {
               if (!fs.existsSync(downloadsFolder)) {
                 fs.mkdirSync(downloadsFolder, { recursive: true })
               }
+
               const urls = files.map((file) => file.$.url)
 
               // Download files from URLs
@@ -167,8 +173,14 @@ export default class IPCs {
                   .then((response) => {
                     const fileContent = response.data
                     fs.writeFile(downloadFilePath, fileContent, (err) => {
+                      if (err) {
+                        console.error(err)
+                      }
+                      // else {
                       //   console.log(`Downloaded file saved to: ${downloadFilePath}`)
+                      // }
                     })
+
                     // Check if the downloaded file is an index file
                     if (path.extname(url) === '.index') {
                       // Parse the index file and extract URLs
@@ -184,6 +196,7 @@ export default class IPCs {
                           if (!fs.existsSync(indexFolder)) {
                             fs.mkdirSync(indexFolder, { recursive: true })
                           }
+
                           const urls = files.map((file) => file.$.url)
 
                           // Download files from URLs
@@ -196,13 +209,16 @@ export default class IPCs {
                               .then((response) => {
                                 const fileContent = response.data
                                 fs.writeFile(downloadFilePath, fileContent, (err) => {
+                                  if (err) {
+                                    console.error(err)
+                                  }
                                   // else {
                                   //   console.log(`Downloaded file saved to: ${downloadFilePath}`)
                                   // }
+                                })
 
                                 if (path.extname(url) === '.index') {
                                   // downloadIndex(url, indexFolder)
-                                  console.log("oop?")
                                 }
                               })
                               .catch((error) => {
@@ -229,6 +245,10 @@ export default class IPCs {
       const documentsFolder = path.join(process.env.HOME, 'Documents')
       const ravenCharacterBuilderFolder = path.join(documentsFolder, 'Raven Character Builder')
       shell.openPath(ravenCharacterBuilderFolder)
+    })
+
+    ipcMain.on('msgGetAllRaces', async (event: IpcMainEvent, ...args: any[]) => {
+      // TODO: Get all xml files with the word 'race' in the elements type, and return their name, id, source, and description.
     })
   }
 }
