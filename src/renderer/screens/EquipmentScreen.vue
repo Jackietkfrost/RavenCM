@@ -16,8 +16,9 @@
       variant="text"
       :class="{ active: characterStore.currentBuildStage === 'additional' }"
       @click="handlePage('background')"
-      >{{ t('EquipmentScreen.additional') }}</v-btn
     >
+      {{ t('EquipmentScreen.additional') }}
+    </v-btn>
   </v-app-bar>
   <v-container fluid>
     <EquipmentsScreen v-if="characterStore.currentEquipmentStage === 'equipment'" />
