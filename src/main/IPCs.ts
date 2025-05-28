@@ -113,13 +113,13 @@ export default class IPCs {
 
     // Index Downloader (Double check for redundancy)
     ipcMain.handle('msgDownloadIndex', async (event: IpcMainEvent, url: string) => {
-      const documentsFolder = path.join(process.env.HOME, 'Documents')
-      const ravenCharacterBuilderFolder = path.join(documentsFolder, 'Raven Character Builder')
-      const customFolder = path.join(ravenCharacterBuilderFolder, 'custom')
+      const ravenCMFolder = Constants.RAVEN_FOLDER
+      const customFolder = Constants.CUSTOM_FOLDER
 
       // Make the ravenCM and custom directories if they don't exist
-      if (!fs.existsSync(ravenCharacterBuilderFolder)) {
-        fs.mkdirSync(ravenCharacterBuilderFolder, { recursive: true })
+      if (!fs.existsSync(ravenCMFolder)) {
+        // Do we need recursiveness?
+        fs.mkdirSync(ravenCMFolder, { recursive: true })
       }
       if (!fs.existsSync(customFolder)) {
         fs.mkdirSync(customFolder, { recursive: true })
@@ -219,6 +219,7 @@ export default class IPCs {
 
                                 if (path.extname(url) === '.index') {
                                   // downloadIndex(url, indexFolder)
+                                  console.log('oop?')
                                 }
                               })
                               .catch((error) => {
@@ -247,8 +248,44 @@ export default class IPCs {
       shell.openPath(ravenCharacterBuilderFolder)
     })
 
-    ipcMain.on('msgGetAllRaces', async (event: IpcMainEvent, ...args: any[]) => {
-      // TODO: Get all xml files with the word 'race' in the elements type, and return their name, id, source, and description.
+    ipcMain.handle('msgGetAllRaces', async (event: IpcMainEvent) => {
+      const raceElements = []
+      const customFolder = Constants.CUSTOM_FOLDER
+
+      const searchForRaces = (folderPath) => {
+        fs.readdirSync(folderPath).forEach((file) => {
+          const filePath = path.join(folderPath, file)
+          const stat = fs.statSync(filePath)
+          if (stat.isDirectory()) {
+            searchForRaces(filePath)
+          } else if (file.includes('race-') && file.endsWith('.xml')) {
+            const xml = fs.readFileSync(filePath, 'utf8')
+            const parser = new xml2js.Parser()
+            parser.parseString(xml, (err, result) => {
+              if (err) {
+                console.error(err)
+              } else {
+                const elements = result.elements.element
+                elements.forEach((element) => {
+                  if (element.$.type === 'Race') {
+                    const description = element.description.toString()
+                    const raceElement = {
+                      name: element.$.name,
+                      type: element.$.type,
+                      source: element.$.source,
+                      id: element.$.id,
+                      description
+                    }
+                    raceElements.push(raceElement)
+                  }
+                })
+              }
+            })
+          }
+        })
+      }
+      searchForRaces(customFolder)
+      return raceElements
     })
   }
 }
