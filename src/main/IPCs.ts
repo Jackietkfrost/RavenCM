@@ -111,7 +111,6 @@ export default class IPCs {
       return characters
     })
 
-    // Index Downloader
     // Index Downloader (Double check for redundancy)
     ipcMain.handle('msgDownloadIndex', async (event: IpcMainEvent, url: string) => {
       const documentsFolder = path.join(process.env.HOME, 'Documents')
