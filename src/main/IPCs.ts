@@ -117,7 +117,6 @@ export default class IPCs {
       const ravenCharacterBuilderFolder = path.join(documentsFolder, 'Raven Character Builder')
       const customFolder = path.join(ravenCharacterBuilderFolder, 'custom')
 
-      fs.mkdirSync(ravenCharacterBuilderFolder, { recursive: true })
       // Make the ravenCM and custom directories if they don't exist
       if (!fs.existsSync(ravenCharacterBuilderFolder)) {
         fs.mkdirSync(ravenCharacterBuilderFolder, { recursive: true })
