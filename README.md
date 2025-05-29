@@ -2,7 +2,7 @@
 
 This app was built using the Electron.
 Learn more about Electron and its API in the [documentation](http://electron.atom.io/docs/).
-
+If you'd like to be part of the conversation regarding the app, you can join us on our [Discord](https://discord.gg/aqubJy3ugz)!
 ## To Use
 
 To clone and run this repository you'll need [Git](https://git-scm.com), and [Node.js](https://nodejs.org/en/download/) (which comes with [npm](http://npmjs.com)) installed on your computer. From your command line:
