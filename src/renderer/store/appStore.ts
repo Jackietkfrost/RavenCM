@@ -1,32 +1,13 @@
 import { defineStore } from 'pinia'
-type CharacterInfo = {
-  name: string
-  avatar: string | null
-  class: string | null
-  race: string | null
-  pronouns: string | null
-  level: number
-  background: string | null
-  archetype: string | null
-  alignment: string | null
-  languages: string | null
-  proficiency: string | null
-  feat: string | null
-  abilityGenerationOption: string
-}
+import { CharacterInfo, ElementsInfo } from '../utils/dnd-typing'
 
-type RaceInfo = {
-  name: string
-  type: string
-  source: string
-  id: string
-  description: string
-}
+
+
 interface State {
   count: number
   character: CharacterInfo
-  characters: any
-  races: RaceInfo[]
+  characters: CharacterInfo[]
+  elements: ElementsInfo
   createCharacter: boolean
   currentStartStage: any
   currentBuildStage: any
@@ -41,21 +22,31 @@ export const useAppStore = defineStore('appstore', {
       count: 0,
       character: {
         name: '',
-        avatar: null,
-        class: null,
-        race: null,
-        pronouns: null,
+        avatar: '',
+        class: '',
+        race: '',
+        pronouns: '',
         level: 1,
-        background: null,
-        archetype: null,
-        alignment: null,
-        languages: null,
-        proficiency: null,
-        feat: null,
+        background: '',
+        archetype: '',
+        alignment: '',
+        languages: [],
+        proficiency: '',
+        feat: '',
         abilityGenerationOption: ''
       },
       characters: [],
-      races: [],
+      elements: {
+        races: [],
+        classes: [],
+        spells: [],
+        languages: [],
+        items: [],
+        companions: [],
+        feats: [],
+        grants: [],
+        rules: []
+      },
       createCharacter: false,
       currentStartStage: 'character-collection',
       currentBuildStage: 'race',
