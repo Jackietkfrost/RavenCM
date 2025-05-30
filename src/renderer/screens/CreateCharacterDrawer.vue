@@ -156,7 +156,15 @@ const handleCreateCharacter = async (): Promise<void> => {
     avatar: items.value[model.value].src,
     level: startingLevel.value,
     pronouns: pronouns.value,
-    abilityGenerationOption: abilityGenerationOption.value
+    abilityGenerationOption: abilityGenerationOption.value,
+    race: '',
+    class: '',
+    languages: [],
+    feat: '',
+    proficiency: '',
+    background: '',
+    alignment:  '',
+    archetype:  ''
   }
   characterStore.setCharacter(data)
   handleRoute('/builder')
