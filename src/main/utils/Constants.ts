@@ -53,4 +53,40 @@ export default class Constants {
   static DOCUMENT_FOLDER = join(process.env.HOME, 'Documents')
   static RAVEN_FOLDER = join(this.DOCUMENT_FOLDER, 'Raven Character Builder')
   static CUSTOM_FOLDER = join(this.RAVEN_FOLDER, 'Custom')
+
+  static ALL_ELEMENTS = [
+    'Archetype',
+    'Archetype Feature',
+    'Grants',
+    'Magic Item',
+    'Option',
+    'Item',
+    'Weapon',
+    'Proficiency',
+    'Weapon Property',
+    'Support',
+    'Rule',
+    'Ability Score Improvement',
+    'Race',
+    'Racial Trait',
+    'Class Feature',
+    'Source',
+    'Sub Race',
+    'Information',
+    'Vision',
+    'Companion',
+    'Companion Trait',
+    'Companion Action',
+    'Language',
+    'Background',
+    'Background Feature',
+    'Background Variant',
+    'Class',
+    'Deity',
+    'Feat',
+    'Feat Feature',
+    'Armor',
+    'Race Variant',
+    'Spell'
+  ]
 }
