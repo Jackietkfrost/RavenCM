@@ -36,6 +36,7 @@ export default class IPCs {
       })
       return dialogResult
     })
+
     // Save character
     ipcMain.handle('msgSaveCharacter', async (event: IpcMainEvent, data: any) => {
       console.log(data)
@@ -248,6 +249,7 @@ export default class IPCs {
       shell.openPath(ravenCharacterBuilderFolder)
     })
 
+    // Get all races
     ipcMain.handle('msgGetAllRaces', async (event: IpcMainEvent) => {
       const raceElements = []
       const customFolder = Constants.CUSTOM_FOLDER
@@ -286,6 +288,59 @@ export default class IPCs {
       }
       searchForRaces(customFolder)
       return raceElements
+    })
+    ipcMain.handle('msgGetAllElements', async (event: IpcMainEvent) => {
+      const parsedElements = []
+      const allParsedElementTypes: string[] = []
+      const customFolder = Constants.CUSTOM_FOLDER
+
+      const searchForElements = (folderPath) => {
+        fs.readdirSync(folderPath).forEach((file) => {
+          const filePath = path.join(folderPath, file)
+          const stat = fs.statSync(filePath)
+          if (stat.isDirectory()) {
+            searchForElements(filePath)
+          } else {
+            for (const elementType of Constants.ALL_ELEMENTS) {
+              if (file.endsWith('.xml')) {
+                const xml = fs.readFileSync(filePath, 'utf8')
+                const parser = new xml2js.Parser()
+                parser.parseString(xml, (err, result) => {
+                  if (err) {
+                    console.error(err)
+                  } else {
+                    const elements = result.elements.element
+                    elements.forEach((element) => {
+                      if (!allParsedElementTypes.includes(element.$)) {
+                        allParsedElementTypes.push(element.$)
+                        const filePath = path.join(
+                          Constants.CUSTOM_FOLDER,
+                          'parsed_element_types.txt'
+                        )
+                        fs.appendFileSync(filePath, `${element.$}\n`)
+                      }
+                      if (element.$.type === elementType) {
+                        const elementObject = {
+                          name: element.$.name,
+                          type: element.$.type,
+                          source: element.$.source,
+                          id: element.$.id,
+                          description: element.description?.toString() ?? ''
+                        }
+
+                        parsedElements.push(elementObject)
+                      }
+                    })
+                  }
+                })
+              }
+            }
+          }
+        })
+      }
+      searchForElements(customFolder)
+      console.log(allParsedElementTypes)
+      return parsedElements
     })
   }
 }
