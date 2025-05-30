@@ -15,6 +15,7 @@
         </v-btn>
       </v-col>
     </v-row>
+    {{ characterStore.elements }}
     <v-card>
       <v-card-title>
         <v-row no-gutters @click="() => (isExpanded = !isExpanded)">
@@ -30,7 +31,9 @@
               single-line
               persistent-clear
               hide-details
-              :dirty="characterStore.character.race ? characterStore.character.race.length > 0 : false"
+              :dirty="
+                characterStore.character.race ? characterStore.character.race.length > 0 : false
+              "
               @click:clear="onClear"
             ></v-text-field>
           </v-col>
@@ -64,7 +67,7 @@ const { t } = useI18n()
 const characterStore = useAppStore()
 const isExpanded = ref(true)
 const textFieldValue = ref(characterStore.character.race ? characterStore.character.race : '')
-const races = characterStore.races
+const races = ref(characterStore.elements.races)
 const headers = ref([
   { title: 'Name', key: 'name', align: 'start' as const },
   { title: 'Source', key: 'source', align: 'end' as const }
