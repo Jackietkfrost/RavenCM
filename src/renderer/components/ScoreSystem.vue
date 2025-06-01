@@ -14,7 +14,7 @@
   />
 </template>
 <script setup lang="tsx">
-import { defineProps, ref } from 'vue'
+import { ref } from 'vue'
 const moduleValue = ref(10)
 defineProps({
   label: {
