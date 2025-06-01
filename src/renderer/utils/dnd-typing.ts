@@ -8,7 +8,22 @@ export type ElementsInfo = {
   feats: string[]
   grants: string[]
   rules: string[]
+  magicItems: string[]
+  backgrounds: BackgroundInfo[]
+  equipment: string[]
 }
+
+export type ItemInfo = {
+  name: string
+  type: string
+  source: string
+  id: string
+  description: string
+  category: string
+  cost: number
+  slot: string
+}
+
 export type CharacterInfo = {
   name: string
   avatar: string
@@ -16,12 +31,13 @@ export type CharacterInfo = {
   race: string
   pronouns: string
   level: number
-  background: string
+  background: BackgroundInfo
   archetype: string
   alignment: string
-  languages: string[]
+  languages: LanguageInfo[]
   proficiency: string
   feat: string
+  spells: SpellInfo[]
   abilityGenerationOption: string
 }
 
@@ -59,6 +75,13 @@ export type SpellInfo = {
 }
 
 export type LanguageInfo = {
+  name: string
+  description: string
+  source: string
+  id: string
+}
+
+export type BackgroundInfo = {
   name: string
   description: string
   source: string
