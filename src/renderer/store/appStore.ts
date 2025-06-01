@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
 import { CharacterInfo, ElementsInfo } from '../utils/dnd-typing'
 
-
-
 interface State {
   count: number
   character: CharacterInfo
@@ -27,13 +25,19 @@ export const useAppStore = defineStore('appstore', {
         race: '',
         pronouns: '',
         level: 1,
-        background: '',
+        background: {
+          name: '',
+          description: '',
+          id: '',
+          source: ''
+        },
         archetype: '',
         alignment: '',
         languages: [],
         proficiency: '',
         feat: '',
-        abilityGenerationOption: ''
+        abilityGenerationOption: '',
+        spells: []
       },
       characters: [],
       elements: {
@@ -45,7 +49,10 @@ export const useAppStore = defineStore('appstore', {
         companions: [],
         feats: [],
         grants: [],
-        rules: []
+        rules: [],
+        magicItems: [],
+        backgrounds: [],
+        equipment: []
       },
       createCharacter: false,
       currentStartStage: 'character-collection',
