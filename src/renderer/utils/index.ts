@@ -14,6 +14,10 @@ export default class Utils {
   static async saveCharacter(data: any): Promise<any> {
     return window.mainApi.invoke('msgSaveCharacter', data)
   }
+
+  static async getAllElements(data: any): Promise<any> {
+    return window.mainApi.invoke('msgGetAllElements', data)
+  }
 }
 
 export const { getCurrentLocale, openExternal, openFile, saveCharacter } = Utils
