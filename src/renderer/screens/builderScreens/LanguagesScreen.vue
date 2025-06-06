@@ -30,7 +30,11 @@
               single-line
               persistent-clear
               hide-details
-              :dirty="characterStore.character.languages ? characterStore.character.languages.length > 0 : false"
+              :dirty="
+                characterStore.character.languages
+                  ? characterStore.character.languages.length > 0
+                  : false
+              "
               @click:clear="onClear"
             ></v-text-field>
           </v-col>
@@ -63,7 +67,9 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const characterStore = useAppStore()
 const isExpanded = ref(true)
-const textFieldValue = ref(characterStore.character.languages ? characterStore.character.languages : '')
+const textFieldValue = ref(
+  characterStore.character.languages ? characterStore.character.languages : ''
+)
 const languages = ref(characterStore.elements.languages)
 const headers = ref([
   { title: 'Language', key: 'languages', align: 'start' as const },
@@ -78,7 +84,7 @@ const handleDoubleClick = (event: any, { item }: any) => {
 }
 
 const onClear = () => {
-  characterStore.character.languages = ['']
+  characterStore.character.languages = []
 }
 </script>
 <style scoped>
