@@ -15,7 +15,6 @@
         </v-btn>
       </v-col>
     </v-row>
-    {{ characterStore.elements }}
     <v-card>
       <v-card-title>
         <v-row no-gutters @click="() => (isExpanded = !isExpanded)">
