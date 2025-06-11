@@ -11,7 +11,6 @@ const mainAvailChannels: string[] = [
   'msgparseIndex',
   'msgOpenContentFolder',
   'msgOpenUserFolder',
-  'msgGetAllRaces'
   'msgGetAllRaces',
   'msgGetAllElements'
 ]
