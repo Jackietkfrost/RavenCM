@@ -11,6 +11,8 @@ export type ElementsInfo = {
   magicItems: string[]
   backgrounds: BackgroundInfo[]
   equipment: string[]
+  archetypes: string[]
+  archetypeFeatures: string[]
 }
 
 export type ItemInfo = {
