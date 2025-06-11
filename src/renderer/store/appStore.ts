@@ -52,7 +52,9 @@ export const useAppStore = defineStore('appstore', {
         rules: [],
         magicItems: [],
         backgrounds: [],
-        equipment: []
+        equipment: [],
+        archetypes: [],
+        archetypeFeatures: []
       },
       createCharacter: false,
       currentStartStage: 'character-collection',
