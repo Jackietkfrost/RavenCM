@@ -76,8 +76,24 @@ export const useAppStore = defineStore('appstore', {
     setCharacter(data: CharacterInfo) {
       this.character = data
     },
-    addIndexUrl(url: string) {
-      window.mainApi.invoke('msgDownloadIndex', url)
+    async addIndexUrl(url: string) {
+      try {
+        const result = await window.mainApi.invoke('msgDownloadIndex', url)
+        console.log('Download result:', result)
+        
+        if (result.success) {
+          console.log(`✅ ${result.message}`)
+          // You could add a toast notification or update UI state here
+          return result
+        } else {
+          console.error('❌ Download failed:', result.message)
+          // You could show an error notification here
+          return result
+        }
+      } catch (error) {
+        console.error('❌ Error downloading index:', error)
+        return { success: false, message: 'Failed to download index', error: String(error) }
+      }
     }
   }
 })
