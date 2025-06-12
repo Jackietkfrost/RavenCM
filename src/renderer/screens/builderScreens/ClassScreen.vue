@@ -70,7 +70,7 @@ const { t } = useI18n()
 const characterStore = useAppStore()
 const isExpanded = ref(true)
 const textFieldValue = ref(characterStore.character.class ? characterStore.character.class : '')
-const classes = characterStore.classes
+const classes = characterStore.elements.classes
 const headers = ref([
   { title: 'Class', key: 'name', align: 'start' as const },
   { title: '', key: 'description', align: 'center' as const },
