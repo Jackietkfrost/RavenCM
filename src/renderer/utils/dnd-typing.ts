@@ -17,6 +17,7 @@ export type ElementsInfo = {
   weapons?: any[]
   armors?: any[]
   deities?: any[]
+  sources?: any[]
 }
 
 export type ItemInfo = {

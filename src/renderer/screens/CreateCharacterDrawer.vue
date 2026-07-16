@@ -224,7 +224,7 @@
   </v-navigation-drawer>
 </template>
 <script setup lang="tsx">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '../store/appStore'
 import { CharacterInfo } from '../utils/dnd-typing'
@@ -319,4 +319,13 @@ const handleCreateCharacter = async (): Promise<void> => {
   characterStore.setCharacter(data)
   handleRoute('/builder')
 }
+
+onMounted(() => {
+  window.mainApi.invoke('msgGetPortraits').then((portraits: string[]) => {
+    if (portraits && portraits.length > 0) {
+      items.value = portraits.map((src) => ({ src }))
+    }
+    model.value = 0
+  })
+})
 </script>

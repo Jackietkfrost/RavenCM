@@ -108,13 +108,23 @@ export default class IPCs {
                           descriptionText = IPCs.extractText(element.description)
                         }
 
+                        const settersObj: Record<string, string> = {}
+                        if (element.setters && element.setters[0] && element.setters[0].set) {
+                          element.setters[0].set.forEach((set: any) => {
+                            if (set.$ && set.$.name) {
+                              settersObj[set.$.name] = IPCs.extractText(set)
+                            }
+                          })
+                        }
+
                         const elementObject = {
                           name: element.$.name,
                           type: element.$.type,
                           source: element.$.source,
                           id: element.$.id || '',
                           description: descriptionText,
-                          htmlDescription: IPCs.extractRawDescription(xml, element.$.id || '')
+                          htmlDescription: IPCs.extractRawDescription(xml, element.$.id || ''),
+                          setters: settersObj
                         }
 
                         parsedElements.push(elementObject)
@@ -219,28 +229,85 @@ export default class IPCs {
 
     // Get characters saved
     ipcMain.handle('msgGetCharacters', async (event: IpcMainEvent) => {
-      const gameCharactersFolder = path.join(__dirname, 'GameCharacters')
-
-      if (!fs.existsSync(gameCharactersFolder)) {
-        return []
-      }
-
-      const files = await fs.readdirSync(gameCharactersFolder)
+      const folders = [
+        path.join(process.cwd(), 'GameCharacters'),
+        Constants.RAVEN_FOLDER
+      ]
       const characters = []
+      const parsedFiles = new Set<string>()
 
-      files.forEach((file) => {
-        const filePath = path.join(gameCharactersFolder, file)
-        const fileContent = fs.readFileSync(filePath, 'utf8')
-        const parser = new xml2js.Parser()
-        parser.parseString(fileContent, (err, result) => {
-          if (err) {
-            console.error(err)
-            return false
-          } else {
-            const resultWithUnderscores = JSON.parse(JSON.stringify(result).replace(/-/g, '_'))
-            characters.push(resultWithUnderscores)
-          }
-        })
+      folders.forEach((folder) => {
+        if (!fs.existsSync(folder)) return
+        
+        try {
+          const files = fs.readdirSync(folder)
+          files.forEach((file) => {
+            const filePath = path.join(folder, file)
+            const ext = path.extname(file).toLowerCase()
+            if (ext === '.dnd5e') {
+              const stat = fs.statSync(filePath)
+              if (stat.isFile()) {
+                const fileContent = fs.readFileSync(filePath, 'utf8')
+                const parser = new xml2js.Parser()
+                parser.parseString(fileContent, (err, result) => {
+                  if (err) {
+                    console.error(`Error parsing character XML ${filePath}:`, err)
+                  } else if (result && result.character) {
+                    const char = result.character
+                    const displayProps = char['display-properties'] ? char['display-properties'][0] : {}
+                    const infoProps = char.information ? char.information[0] : {}
+                    
+                    let avatar = ''
+                    if (displayProps.portrait && displayProps.portrait[0] && displayProps.portrait[0].base64) {
+                      const b64 = displayProps.portrait[0].base64[0]
+                      if (b64 && typeof b64 === 'string' && b64.trim()) {
+                        avatar = `data:image/jpeg;base64,${b64.trim()}`
+                      }
+                    }
+                    if (!avatar && displayProps.avatar) {
+                      avatar = displayProps.avatar[0]
+                    }
+
+                    const characterObject = {
+                      name: displayProps.name ? displayProps.name[0] : 'Unnamed',
+                      avatar: avatar || '/images/icon-64px.png',
+                      level: displayProps.level ? parseInt(displayProps.level[0], 10) : 1,
+                      race: displayProps.race ? displayProps.race[0] : '',
+                      class: displayProps.class ? displayProps.class[0] : '',
+                      group: infoProps.group ? infoProps.group[0] : 'Characters',
+                      alignment: displayProps.alignment ? displayProps.alignment[0] : '',
+                      background: {
+                        name: displayProps.background ? displayProps.background[0] : '',
+                        description: '',
+                        id: '',
+                        source: ''
+                      },
+                      archetype: displayProps.archetype ? displayProps.archetype[0] : '',
+                      pronouns: displayProps.gender ? displayProps.gender[0] : (char.build && char.build[0].input && char.build[0].input[0].gender ? char.build[0].input[0].gender[0] : 'Male'),
+                      playerName: char.build && char.build[0].input && char.build[0].input[0]['player-name'] ? char.build[0].input[0]['player-name'][0] : '',
+                      experience: char.build && char.build[0].input && char.build[0].input[0].experience ? parseInt(char.build[0].input[0].experience[0], 10) : 0,
+                      abilityGenerationOption: infoProps.generationOption ? infoProps.generationOption[0] : 'Roll 4d6 - Discard Lowest',
+                      languages: [],
+                      feat: '',
+                      proficiency: '',
+                      spells: [],
+                      inventory: [],
+                      equipment: [],
+                      filePath
+                    }
+                    
+                    if (!parsedFiles.has(characterObject.name)) {
+                      characters.push(characterObject)
+                      parsedFiles.add(characterObject.name)
+                    }
+                  }
+                })
+              }
+            }
+          })
+        } catch (e) {
+          console.error(`Error scanning folder ${folder}:`, e)
+        }
       })
 
       return characters
@@ -469,6 +536,38 @@ export default class IPCs {
 
     ipcMain.handle('msgGetAllElements', async (event: IpcMainEvent) => {
       return IPCs.loadElements()
+    })
+
+    // Get local portrait files
+    ipcMain.handle('msgGetPortraits', async (event: IpcMainEvent) => {
+      const portraitsFolder = path.join(Constants.RAVEN_FOLDER, 'Portraits')
+      if (!fs.existsSync(portraitsFolder)) {
+        fs.mkdirSync(portraitsFolder, { recursive: true })
+      }
+      try {
+        const files = fs.readdirSync(portraitsFolder)
+        const images = []
+        files.forEach((file) => {
+          const filePath = path.join(portraitsFolder, file)
+          const ext = path.extname(file).toLowerCase()
+          if (['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(ext)) {
+            const base64 = fs.readFileSync(filePath, 'base64')
+            const mimeType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : `image/${ext.substring(1)}`
+            images.push(`data:${mimeType};base64,${base64}`)
+          }
+        })
+        return images
+      } catch (err) {
+        console.error('Error reading portraits', err)
+        return []
+      }
+    })
+
+    // Show character file in explorer
+    ipcMain.on('msgShowItemInFolder', (event: IpcMainEvent, filePath: string) => {
+      if (filePath && fs.existsSync(filePath)) {
+        shell.showItemInFolder(filePath)
+      }
     })
   }
 }

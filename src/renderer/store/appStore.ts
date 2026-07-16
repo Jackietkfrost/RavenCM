@@ -75,7 +75,8 @@ export const useAppStore = defineStore('appstore', {
         proficiencies: [],
         weapons: [],
         armors: [],
-        deities: []
+        deities: [],
+        sources: []
       },
       createCharacter: false,
       currentStartStage: 'character-collection',

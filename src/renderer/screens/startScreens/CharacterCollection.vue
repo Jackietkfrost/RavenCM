@@ -56,61 +56,176 @@
           </v-btn>
         </div>
 
-        <!-- Character List -->
+        <!-- Character Lists Grouped by Campaign Group -->
         <div v-else>
-          <h3 class="text-subtitle-1 font-weight-bold text-uppercase mb-4 text-primary">
-            Characters
-          </h3>
-          <v-divider class="mb-4" />
-          <v-row>
-            <v-col
-              v-for="character in characterStore.characters"
-              :key="character.name"
-              cols="12"
-              sm="6"
-              md="4"
-            >
-              <v-card class="character-card text-left" outline hover @click="handleSelectCharacter(character)">
-                <v-img
-                  :src="character.avatar || '/images/icon-64px.png'"
-                  height="120"
-                  cover
-                  class="align-end text-white"
-                  style="background-color: rgba(var(--v-theme-surface-variant), 0.2);"
+          <div
+            v-for="(chars, groupName) in groupedCharacters"
+            :key="groupName"
+            class="mb-8"
+          >
+            <h3 class="text-subtitle-1 font-weight-bold text-uppercase mb-2 text-primary">
+              {{ groupName }}
+            </h3>
+            <v-divider class="mb-4" />
+            
+            <v-row>
+              <v-col
+                v-for="character in chars"
+                :key="character.name"
+                cols="12"
+                sm="6"
+                md="4"
+                lg="3"
+              >
+                <v-card
+                  class="character-card position-relative overflow-hidden text-left"
+                  outline
+                  hover
+                  @click="handleSelectCharacter(character)"
+                  @contextmenu.prevent="onContextMenu($event, character)"
                 >
-                  <v-card-title class="bg-black-50 text-truncate py-1 px-3 text-subtitle-1">
-                    {{ character.name }}
-                  </v-card-title>
-                </v-img>
-                <v-card-text class="py-2 px-3">
-                  <div class="text-subtitle-2 text-truncate font-weight-bold">
-                    {{ character.race }} {{ character.class }}
-                  </div>
-                  <div class="text-caption text-medium-emphasis">Level {{ character.level }}</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
+                  <!-- Edit Button top-left -->
+                  <v-btn
+                    icon
+                    size="24"
+                    variant="flat"
+                    color="rgba(0, 0, 0, 0.6)"
+                    class="action-btn edit-btn"
+                    style="position: absolute; top: 4px; left: 4px; z-index: 10; border-radius: 4px; padding: 2px;"
+                    @click.stop
+                  >
+                    <v-icon :icon="mdiPencil" size="14" color="white" />
+                  </v-btn>
+
+                  <!-- Delete Button top-right -->
+                  <v-btn
+                    icon
+                    size="24"
+                    variant="flat"
+                    color="rgba(0, 0, 0, 0.6)"
+                    class="action-btn delete-btn"
+                    style="position: absolute; top: 4px; right: 4px; z-index: 10; border-radius: 4px; padding: 2px;"
+                    @click.stop
+                  >
+                    <v-icon :icon="mdiClose" size="14" color="white" />
+                  </v-btn>
+
+                  <!-- Image and Info bottom bar -->
+                  <v-img
+                    :src="character.avatar || '/images/icon-64px.png'"
+                    height="180"
+                    cover
+                    style="background-color: rgba(var(--v-theme-surface-variant), 0.2);"
+                  >
+                    <div
+                      class="translucent-bottom-bar px-3 py-2 d-flex flex-column justify-center"
+                      style="position: absolute; bottom: 0; left: 0; right: 0; background-color: rgba(0, 0, 0, 0.65); height: 60px;"
+                    >
+                      <div class="text-subtitle-2 font-weight-bold text-uppercase text-truncate yellow-text">
+                        {{ character.name }}
+                      </div>
+                      <div class="text-caption text-uppercase text-truncate cyan-text mt-0.5" style="font-size: 0.72rem; letter-spacing: 0.02em;">
+                        Level {{ character.level }} {{ character.race }} {{ character.class }}
+                      </div>
+                    </div>
+                  </v-img>
+                </v-card>
+              </v-col>
+            </v-row>
+          </div>
         </div>
       </v-col>
     </v-row>
+
+    <!-- Context Menu Activator Target -->
+    <div
+      :style="{
+        position: 'fixed',
+        left: menuX + 'px',
+        top: menuY + 'px',
+        width: '1px',
+        height: '1px',
+        pointerEvents: 'none',
+        zIndex: 9999
+      }"
+      ref="menuActivator"
+    ></div>
+
+    <!-- Context Menu Dropdown -->
+    <v-menu
+      v-model="showMenu"
+      :activator="menuActivator"
+      offset="0"
+    >
+      <v-list density="compact" width="160">
+        <v-list-item disabled>
+          <v-list-item-title>Select</v-list-item-title>
+        </v-list-item>
+        <v-list-item disabled>
+          <v-list-item-title>Modify</v-list-item-title>
+        </v-list-item>
+        <v-list-item disabled>
+          <v-list-item-title>Delete</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="handleShowLocation(selectedCharForMenu)">
+          <v-list-item-title>Show Location</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
   </v-container>
 </template>
 
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
-import { mdiAccountGroup, mdiPlus } from '@mdi/js'
-import { computed } from 'vue'
+import { mdiAccountGroup, mdiPlus, mdiPencil, mdiClose } from '@mdi/js'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const characterStore = useAppStore()
+
 const hasCharacters = computed(() => characterStore.getCharacters.length > 0)
+
+// Context menu state
+const showMenu = ref(false)
+const menuX = ref(0)
+const menuY = ref(0)
+const selectedCharForMenu = ref<any>(null)
+const menuActivator = ref<HTMLElement | null>(null)
+
+// Group characters reactively by their group/campaign attribute
+const groupedCharacters = computed(() => {
+  const groups: Record<string, any[]> = {}
+  characterStore.characters.forEach((char: any) => {
+    const groupName = char.group || 'Characters'
+    if (!groups[groupName]) {
+      groups[groupName] = []
+    }
+    groups[groupName].push(char)
+  })
+  return groups
+})
+
 const handleStartCreateCharacter = async (): Promise<void> => {
   characterStore.toggleCreateCharacter()
 }
+
 const handleSelectCharacter = (character: any) => {
   characterStore.setCharacter(character)
+}
+
+const onContextMenu = (event: MouseEvent, character: any) => {
+  event.preventDefault()
+  selectedCharForMenu.value = character
+  menuX.value = event.clientX
+  menuY.value = event.clientY
+  showMenu.value = true
+}
+
+const handleShowLocation = (character: any) => {
+  if (character && character.filePath) {
+    window.mainApi.send('msgShowItemInFolder', character.filePath)
+  }
 }
 </script>
 
@@ -135,18 +250,31 @@ const handleSelectCharacter = (character: any) => {
   color: rgba(255, 255, 255, 0.7);
 }
 
-.bg-black-50 {
-  background-color: rgba(0, 0, 0, 0.6);
-  width: 100%;
-}
-
 .character-card {
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   transition: all 0.2s ease;
+  border-radius: 4px;
 }
 
 .character-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.yellow-text {
+  color: #ffca28;
+}
+
+.cyan-text {
+  color: #80deea;
+}
+
+.action-btn {
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  transform: scale(1.05);
 }
 </style>

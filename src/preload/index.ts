@@ -13,7 +13,9 @@ const mainAvailChannels: string[] = [
   'msgOpenUserFolder',
   'msgGetAllRaces',
   'msgGetAllClasses',
-  'msgGetAllElements'
+  'msgGetAllElements',
+  'msgGetPortraits',
+  'msgShowItemInFolder'
 ]
 const rendererAvailChannels: string[] = []
 
