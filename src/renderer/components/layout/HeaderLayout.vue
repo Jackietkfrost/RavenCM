@@ -13,6 +13,7 @@
       variant="text"
       :class="{ active: isCurrentRoute('/builder') }"
       @click="handleRoute('/builder')"
+      :disabled="!hasSelectedCharacter"
     >
       {{ t('title.build') }}
     </v-btn>
@@ -21,6 +22,7 @@
       variant="text"
       :class="{ active: isCurrentRoute('/magic') }"
       @click="handleRoute('/magic')"
+      :disabled="!hasSelectedCharacter"
     >
       {{ t('title.magic') }}
     </v-btn>
@@ -29,6 +31,7 @@
       variant="text"
       :class="{ active: isCurrentRoute('/equipment') }"
       @click="handleRoute('/equipment')"
+      :disabled="!hasSelectedCharacter"
     >
       {{ t('title.equipment') }}
     </v-btn>
@@ -37,6 +40,7 @@
       variant="text"
       :class="{ active: isCurrentRoute('/manager') }"
       @click="handleRoute('/manager')"
+      :disabled="!hasSelectedCharacter"
     >
       {{ t('title.manage') }}
     </v-btn>
@@ -45,6 +49,7 @@
       variant="text"
       :class="{ active: isCurrentRoute('/charactersheet') }"
       @click="handleRoute('/charactersheet')"
+      :disabled="!hasSelectedCharacter"
     >
       {{ t('title.charactersheet') }}
     </v-btn>
@@ -67,21 +72,36 @@
           {{ t('menu.settings') }}
         </v-tooltip>
       </v-btn>
-      <v-container v-if="characterStore.character" width="200">
-        <v-row class="justify-center">
-          <v-col cols="6">
-            <h5>{{ characterStore.character.name }}</h5>
-            <h6>Level {{ characterStore.character.level }}</h6>
-            <v-col cols="12">
-              <v-progress-linear></v-progress-linear>
-            </v-col>
+      <!-- Selected Character Info or Create Character Button -->
+      <v-container v-if="hasSelectedCharacter" width="220" class="pa-0 ma-0 ml-2">
+        <v-row no-gutters class="align-center">
+          <v-col cols="8" class="text-right pr-2">
+            <h5 class="text-subtitle-2 font-weight-bold text-truncate" style="line-height: 1.2;">
+              {{ characterStore.character.name }}
+            </h5>
+            <h6 class="text-caption text-grey" style="line-height: 1.2;">
+              Level {{ characterStore.character.level }}
+            </h6>
           </v-col>
-          <v-col cols="6" class="d-flex justify-end">
-            <v-avatar :image="characterStore.character.avatar" size="32" />
+          <v-col cols="4" class="d-flex justify-end">
+            <v-avatar :image="characterStore.character.avatar || '/images/icon-64px.png'" size="36" style="border: 2px solid rgba(var(--v-theme-primary), 0.5);" />
           </v-col>
         </v-row>
-        <v-row> </v-row>
       </v-container>
+      
+      <!-- If no character selected, show Plus button -->
+      <v-btn
+        v-else
+        icon
+        variant="text"
+        class="ml-2 plus-button"
+        @click="characterStore.toggleCreateCharacter()"
+      >
+        <v-icon :icon="mdiPlus" color="success" size="24" />
+        <v-tooltip activator="parent" location="bottom">
+          Create Character
+        </v-tooltip>
+      </v-btn>
     </template>
   </v-app-bar>
   <!-- <v-app-bar color="primary" density="compact" height="50">
@@ -109,11 +129,14 @@ import {
   mdiSack,
   mdiAccountCog,
   mdiAccountCard,
-  mdiCog
+  mdiCog,
+  mdiPlus
 } from '@mdi/js'
 import { openExternal } from '@/renderer/utils'
 import { useTheme } from 'vuetify'
 import { useAppStore } from '@/renderer/store/appStore'
+
+import { computed } from 'vue'
 
 const characterStore = useAppStore()
 const theme = useTheme()
@@ -122,6 +145,10 @@ const route: any = useRoute()
 // const titleKey: string = (route?.meta?.titleKey || 'title.main') as string
 
 const { t } = useI18n()
+
+const hasSelectedCharacter = computed(() => {
+  return !!characterStore.character && !!characterStore.character.name
+})
 
 const handleRoute = (path: string): void => {
   router.push(path)
@@ -132,7 +159,9 @@ const isCurrentRoute = (path: string): boolean => {
 }
 
 const handleChangeTheme = (): void => {
-  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+  const nextTheme = theme.global.current.value.dark ? 'light' : 'dark'
+  theme.global.name.value = nextTheme
+  localStorage.setItem('theme', nextTheme)
 }
 
 const handleOpenGitHub = async (): Promise<void> => {
@@ -147,5 +176,21 @@ const handleOpenSettings = (): void => {}
 }
 .active {
   opacity: 1 !important;
+}
+.plus-button {
+  border: 2px dashed rgba(0, 159, 87, 0.4) !important;
+  background-color: rgba(0, 159, 87, 0.08) !important;
+  border-radius: 50% !important;
+  width: 36px !important;
+  height: 36px !important;
+  opacity: 1 !important;
+  transition: all 0.2s ease;
+  min-width: 0 !important;
+  padding: 0 !important;
+}
+.plus-button:hover {
+  border: 2px solid rgba(0, 159, 87, 0.8) !important;
+  background-color: rgba(0, 159, 87, 0.15) !important;
+  transform: scale(1.05);
 }
 </style>

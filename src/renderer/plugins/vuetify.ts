@@ -5,6 +5,16 @@ import 'vuetify/styles'
 
 import colors from 'vuetify/util/colors'
 
+const getInitialTheme = (): string => {
+  const saved = localStorage.getItem('theme')
+  if (saved) return saved
+
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const theme = prefersDark ? 'dark' : 'light'
+  localStorage.setItem('theme', theme)
+  return theme
+}
+
 export default createVuetify({
   locale: {
     messages: { ko, en, zhHans, zhHant, de, es, ja, fr, ru, pt, nl },
@@ -19,6 +29,7 @@ export default createVuetify({
     }
   },
   theme: {
+    defaultTheme: getInitialTheme(),
     themes: {
       light: {
         dark: false,

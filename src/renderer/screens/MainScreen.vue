@@ -95,7 +95,7 @@
       </v-col>
     </v-row>
   </v-container> -->
-  <v-container>
+  <v-container fluid class="px-6 py-4">
     <CharacterCollection v-if="characterStore.currentStartStage === 'character-collection'" />
     <SourcesScreen v-if="characterStore.currentStartStage === 'sources'" />
     <AdditionalContent v-if="characterStore.currentStartStage === 'additional-sources'" />
@@ -110,27 +110,59 @@ import { onMounted, ref } from 'vue'
 import CharacterCollection from './startScreens/CharacterCollection.vue'
 import AdditionalContent from './startScreens/AdditionalContent.vue'
 import SourcesScreen from './startScreens/SourcesScreen.vue'
+import Constants from '@/renderer/utils/Constants'
 
 const { t, availableLocales } = useI18n()
 
 const characterStore = useAppStore()
 // const theme = useTheme()
 const languages = ref(['en'])
+// const storeElements = ref(characterStore.elements)
 // const appVersion = ref('Unknown')
 // const selectedFile = ref('')
 // const messages = ref<string[]>([])
 
-onMounted((): void => {
-  languages.value = availableLocales
+onMounted(
+  (): void => {
+    languages.value = availableLocales
 
-  // Get application version from package.json version string (Using IPC communication)
-  // getApplicationVersionFromMainProcess()
-  window.mainApi.invoke('msgGetCharacters').then((characters) => {
-    if (!characters) return
-    characterStore.characters = characters
-  })
-})
+    // Get application version from package.json version string (Using IPC communication)
+    // getApplicationVersionFromMainProcess()
+    if (!characterStore.characters || characterStore.characters.length === 0) {
+      window.mainApi.invoke('msgGetCharacters').then((characters) => {
+        if (!characters) return
+        characterStore.characters = characters
+      })
+    }
+    const isElementsLoaded = Object.values(characterStore.elements).some((arr: any) => arr.length > 0)
+    if (!isElementsLoaded) {
+      window.mainApi.invoke('msgGetAllElements').then((elements) => {
+        if (!elements) return
 
+        Object.keys(characterStore.elements).forEach((key) => {
+          const k = key as keyof typeof characterStore.elements
+          characterStore.elements[k] = []
+        })
+
+        elements.forEach((element) => {
+          const elementType = Object.keys(Constants.ELEMENTS_PLURAL).find((key) => {
+            return key.replace(' ', '').toLowerCase() === element.type.replace(' ', '').toLowerCase()
+          })
+          if (elementType) {
+            const pluralName = Constants.ELEMENTS_PLURAL[elementType as keyof typeof Constants.ELEMENTS_PLURAL]
+            const storeKey = (pluralName.split(' ')[0].toLowerCase() + 
+              pluralName.split(' ').slice(1).map((p: string) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('')) as keyof typeof characterStore.elements
+
+            if (characterStore.elements[storeKey]) {
+              characterStore.elements[storeKey].push(element)
+            }
+          }
+        })
+      })
+    }
+  }
+  // }
+)
 // const getApplicationVersionFromMainProcess = (): void => {
 //   window.mainApi.invoke('msgRequestGetVersion').then((result: string) => {
 //     appVersion.value = result

@@ -9,7 +9,141 @@ import Constants from './utils/Constants'
  * IPC Communications
  * */
 export default class IPCs {
+  private static cachedElements: any[] | null = null
+
+  private static extractText(obj: any): string {
+    if (obj === null || obj === undefined) {
+      return ''
+    }
+    if (typeof obj === 'string') {
+      return obj.trim()
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(IPCs.extractText).filter(Boolean).join(' ')
+    }
+    if (typeof obj === 'object') {
+      let text = ''
+      if (obj._) {
+        text += obj._.trim() + ' '
+      }
+      for (const key in obj) {
+        if (key !== '$') {
+          text += IPCs.extractText(obj[key]) + ' '
+        }
+      }
+      return text.trim().replace(/\s+/g, ' ')
+    }
+    return String(obj)
+  }
+
+  private static extractRawDescription(xml: string, elementId: string): string {
+    if (!elementId) return ''
+    const escapedId = elementId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+    const elementRegex = new RegExp(`<element\\b[^>]*?id=["']${escapedId}["'][^>]*?>`, 'i')
+    const match = xml.match(elementRegex)
+    if (!match || match.index === undefined) {
+      return ''
+    }
+
+    const startIdx = match.index + match[0].length
+    const subXml = xml.slice(startIdx)
+    
+    const descStartRegex = /<description\b[^>]*?>/i
+    const descStartMatch = subXml.match(descStartRegex)
+    if (!descStartMatch || descStartMatch.index === undefined) {
+      return ''
+    }
+    
+    const descContentStart = descStartMatch.index + descStartMatch[0].length
+    const descEndIdx = subXml.indexOf('</description>', descContentStart)
+    if (descEndIdx === -1) {
+      return ''
+    }
+    
+    return subXml.slice(descContentStart, descEndIdx).trim()
+  }
+
+  public static loadElements(): any[] {
+    if (this.cachedElements !== null) {
+      return this.cachedElements
+    }
+
+    const parsedElements: any[] = []
+    const customFolder = Constants.CUSTOM_FOLDER
+
+    if (!fs.existsSync(customFolder)) {
+      fs.mkdirSync(customFolder, { recursive: true })
+    }
+
+    const searchForElements = (folderPath: string) => {
+      fs.readdirSync(folderPath).forEach((file: string) => {
+        const filePath = path.join(folderPath, file)
+        const stat = fs.statSync(filePath)
+        if (stat.isDirectory()) {
+          searchForElements(filePath)
+        } else {
+          for (const elementType of Constants.ALL_ELEMENTS) {
+            if (file.endsWith('.xml')) {
+              try {
+                const xml = fs.readFileSync(filePath, 'utf8')
+                const parser = new xml2js.Parser()
+                parser.parseString(xml, (err, result) => {
+                  if (err) {
+                    console.error(err)
+                  } else if (result && result.elements && result.elements.element) {
+                    const elements = result.elements.element
+                    elements.forEach((element: any) => {
+                      if (element.$ && element.$.type === elementType) {
+                        let descriptionText = ''
+                        if (element.setters && element.setters[0] && element.setters[0].set) {
+                          const shortSet = element.setters[0].set.find((s: any) => s.$ && s.$.name === 'short')
+                          if (shortSet) {
+                            descriptionText = IPCs.extractText(shortSet)
+                          }
+                        }
+                        if (!descriptionText && element.sheet && element.sheet[0] && element.sheet[0].description) {
+                          descriptionText = IPCs.extractText(element.sheet[0].description)
+                        }
+                        if (!descriptionText && element.description) {
+                          descriptionText = IPCs.extractText(element.description)
+                        }
+
+                        const elementObject = {
+                          name: element.$.name,
+                          type: element.$.type,
+                          source: element.$.source,
+                          id: element.$.id || '',
+                          description: descriptionText,
+                          htmlDescription: IPCs.extractRawDescription(xml, element.$.id || '')
+                        }
+
+                        parsedElements.push(elementObject)
+                      }
+                    })
+                  }
+                })
+              } catch (e) {
+                console.error(`Error parsing file ${filePath}:`, e)
+              }
+            }
+          }
+        }
+      })
+    }
+
+    try {
+      searchForElements(customFolder)
+    } catch (e) {
+      console.error('Error listing custom folder:', e)
+    }
+
+    this.cachedElements = parsedElements
+    return this.cachedElements
+  }
+
   static initialize(): void {
+    // Load elements once on startup
+    IPCs.loadElements()
     // Get application version
     ipcMain.handle('msgRequestGetVersion', () => {
       return Constants.APP_VERSION
@@ -114,6 +248,7 @@ export default class IPCs {
 
     // Index Downloader (Double check for redundancy)
     ipcMain.handle('msgDownloadIndex', async (event: IpcMainEvent, url: string) => {
+      IPCs.cachedElements = null
       const ravenCMFolder = Constants.RAVEN_FOLDER
       const customFolder = Constants.CUSTOM_FOLDER
 
@@ -249,98 +384,91 @@ export default class IPCs {
       shell.openPath(ravenCharacterBuilderFolder)
     })
 
-    // Get all races
-    ipcMain.handle('msgGetAllRaces', async (event: IpcMainEvent) => {
-      const raceElements = []
-      const customFolder = Constants.CUSTOM_FOLDER
+    // // Get all races
+    // ipcMain.handle('msgGetAllRaces', async (event: IpcMainEvent) => {
+    //   const raceElements = []
+    //   const customFolder = Constants.CUSTOM_FOLDER
 
-      const searchForRaces = (folderPath) => {
-        fs.readdirSync(folderPath).forEach((file) => {
-          const filePath = path.join(folderPath, file)
-          const stat = fs.statSync(filePath)
-          if (stat.isDirectory()) {
-            searchForRaces(filePath)
-          } else if (file.includes('race-') && file.endsWith('.xml')) {
-            const xml = fs.readFileSync(filePath, 'utf8')
-            const parser = new xml2js.Parser()
-            parser.parseString(xml, (err, result) => {
-              if (err) {
-                console.error(err)
-              } else {
-                const elements = result.elements.element
-                elements.forEach((element) => {
-                  if (element.$.type === 'Race') {
-                    const description = element.description.toString()
-                    const raceElement = {
-                      name: element.$.name,
-                      type: element.$.type,
-                      source: element.$.source,
-                      id: element.$.id,
-                      description
-                    }
-                    raceElements.push(raceElement)
-                  }
-                })
-              }
-            })
-          }
-        })
-      }
-      searchForRaces(customFolder)
-      return raceElements
-    })
+    //   const searchForRaces = (folderPath) => {
+    //     fs.readdirSync(folderPath).forEach((file) => {
+    //       const filePath = path.join(folderPath, file)
+    //       const stat = fs.statSync(filePath)
+    //       if (stat.isDirectory()) {
+    //         searchForRaces(filePath)
+    //       } else if (file.includes('race-') && file.endsWith('.xml')) {
+    //         const xml = fs.readFileSync(filePath, 'utf8')
+    //         const parser = new xml2js.Parser()
+    //         parser.parseString(xml, (err, result) => {
+    //           if (err) {
+    //             console.error(err)
+    //           } else {
+    //             const elements = result.elements.element
+    //             elements.forEach((element) => {
+    //               if (element.$.type === 'Race') {
+    //                 const description = element.description.toString()
+    //                 const raceElement = {
+    //                   name: element.$.name,
+    //                   type: element.$.type,
+    //                   source: element.$.source,
+    //                   id: element.$.id,
+    //                   description
+    //                 }
+    //                 raceElements.push(raceElement)
+    //               }
+    //             })
+    //           }
+    //         })
+    //       }
+    //     })
+    //   }
+    //   searchForRaces(customFolder)
+    //   return raceElements
+    // })
+
+    // // Get all classes
+    // ipcMain.handle('msgGetAllClasses', async (event: IpcMainEvent) => {
+    //   const classElements = []
+    //   const customFolder = Constants.CUSTOM_FOLDER
+
+    //   const searchForClasses = (folderPath) => {
+    //     fs.readdirSync(folderPath).forEach((file) => {
+    //       const filePath = path.join(folderPath, file)
+    //       const stat = fs.statSync(filePath)
+    //       if (stat.isDirectory()) {
+    //         searchForClasses(filePath)
+    //       } else if (file.includes('class-') && file.endsWith('.xml')) {
+    //         const xml = fs.readFileSync(filePath, 'utf8')
+    //         const parser = new xml2js.Parser()
+    //         parser.parseString(xml, (err, result) => {
+    //           if (err) {
+    //             console.error(err)
+    //           } else {
+    //             const elements = result.elements.element
+    //             elements.forEach((element) => {
+    //               if (element.$.type === 'Class') {
+    //                 const description = element.description.toString()
+    //                 const classElement = {
+    //                   name: element.$.name,
+    //                   type: element.$.type,
+    //                   source: element.$.source,
+    //                   id: element.$.id,
+    //                   description
+    //                 }
+    //                 classElements.push(classElement)
+    //               }
+    //             })
+    //           }
+    //         })
+    //       }
+    //     })
+    //   }
+    //   searchForClasses(customFolder)
+    //   console.log(classElements)
+    //   return classElements
+    // })
+
     ipcMain.handle('msgGetAllElements', async (event: IpcMainEvent) => {
-      const parsedElements = []
-      const allParsedElementTypes: string[] = []
-      const customFolder = Constants.CUSTOM_FOLDER
-
-      const searchForElements = (folderPath) => {
-        fs.readdirSync(folderPath).forEach((file) => {
-          const filePath = path.join(folderPath, file)
-          const stat = fs.statSync(filePath)
-          if (stat.isDirectory()) {
-            searchForElements(filePath)
-          } else {
-            for (const elementType of Constants.ALL_ELEMENTS) {
-              if (file.endsWith('.xml')) {
-                const xml = fs.readFileSync(filePath, 'utf8')
-                const parser = new xml2js.Parser()
-                parser.parseString(xml, (err, result) => {
-                  if (err) {
-                    console.error(err)
-                  } else {
-                    const elements = result.elements.element
-                    elements.forEach((element) => {
-                      if (!allParsedElementTypes.includes(element.$)) {
-                        allParsedElementTypes.push(element.$)
-                        const filePath = path.join(
-                          Constants.CUSTOM_FOLDER,
-                          'parsed_element_types.txt'
-                        )
-                        fs.appendFileSync(filePath, `${element.$}\n`)
-                      }
-                      if (element.$.type === elementType) {
-                        const elementObject = {
-                          name: element.$.name,
-                          type: element.$.type,
-                          source: element.$.source,
-                          id: element.$.id,
-                          description: element.description?.toString() ?? ''
-                        }
-
-                        parsedElements.push(elementObject)
-                      }
-                    })
-                  }
-                })
-              }
-            }
-          }
-        })
-      }
-      searchForElements(customFolder)
-      console.log(allParsedElementTypes)
-      return parsedElements
+      return IPCs.loadElements()
     })
   }
 }

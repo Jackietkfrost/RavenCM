@@ -37,7 +37,24 @@ export const useAppStore = defineStore('appstore', {
         proficiency: '',
         feat: '',
         abilityGenerationOption: '',
-        spells: []
+        spells: [],
+        averageHitPoints: false,
+        feats: true,
+        multiclassing: true,
+        inventory: [],
+        equipment: [],
+        gender: 'Male',
+        playerName: '',
+        experience: 0,
+        deity: '',
+        age: '',
+        height: '',
+        weight: '',
+        eyes: '',
+        skin: '',
+        hair: '',
+        additionalFeatures: '',
+        armorClass: ''
       },
       characters: [],
       elements: {
@@ -54,7 +71,11 @@ export const useAppStore = defineStore('appstore', {
         backgrounds: [],
         equipment: [],
         archetypes: [],
-        archetypeFeatures: []
+        archetypeFeatures: [],
+        proficiencies: [],
+        weapons: [],
+        armors: [],
+        deities: []
       },
       createCharacter: false,
       currentStartStage: 'character-collection',

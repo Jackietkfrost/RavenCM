@@ -3,16 +3,20 @@ export type ElementsInfo = {
   classes: ClassInfo[]
   spells: SpellInfo[]
   languages: LanguageInfo[]
-  items: string[]
-  companions: string[]
-  feats: string[]
-  grants: string[]
-  rules: string[]
-  magicItems: string[]
+  items: any[]
+  companions: any[]
+  feats: FeatInfo[]
+  grants: any[]
+  rules: any[]
+  magicItems: any[]
   backgrounds: BackgroundInfo[]
-  equipment: string[]
-  archetypes: string[]
-  archetypeFeatures: string[]
+  equipment: any[]
+  archetypes: any[]
+  archetypeFeatures: any[]
+  proficiencies?: ProficiencyInfo[]
+  weapons?: any[]
+  armors?: any[]
+  deities?: any[]
 }
 
 export type ItemInfo = {
@@ -24,6 +28,7 @@ export type ItemInfo = {
   category: string
   cost: number
   slot: string
+  htmlDescription?: string
 }
 
 export type CharacterInfo = {
@@ -41,6 +46,23 @@ export type CharacterInfo = {
   feat: string
   spells: SpellInfo[]
   abilityGenerationOption: string
+  averageHitPoints?: boolean
+  feats?: boolean
+  multiclassing?: boolean
+  inventory?: any[]
+  equipment?: any[]
+  gender?: string
+  playerName?: string
+  experience?: number
+  deity?: string
+  age?: string
+  height?: string
+  weight?: string
+  eyes?: string
+  skin?: string
+  hair?: string
+  additionalFeatures?: string
+  armorClass?: string
 }
 
 export type SubRaceInfo = {
@@ -48,6 +70,7 @@ export type SubRaceInfo = {
   id: string
   type: string
   description: string
+  htmlDescription?: string
 }
 
 export type RaceInfo = {
@@ -57,6 +80,7 @@ export type RaceInfo = {
   id: string
   subraces: SubRaceInfo
   description: string
+  htmlDescription?: string
 }
 
 export type ClassInfo = {
@@ -65,6 +89,7 @@ export type ClassInfo = {
   source: string
   id: string
   description: string
+  htmlDescription?: string
 }
 
 export type SpellInfo = {
@@ -74,6 +99,7 @@ export type SpellInfo = {
   description: string
   source: string
   id: string
+  htmlDescription?: string
 }
 
 export type LanguageInfo = {
@@ -81,6 +107,7 @@ export type LanguageInfo = {
   description: string
   source: string
   id: string
+  htmlDescription?: string
 }
 
 export type BackgroundInfo = {
@@ -88,6 +115,23 @@ export type BackgroundInfo = {
   description: string
   source: string
   id: string
+  htmlDescription?: string
+}
+
+export type ProficiencyInfo = {
+  name: string
+  description: string
+  source: string
+  id: string
+  htmlDescription?: string
+}
+
+export type FeatInfo = {
+  name: string
+  description: string
+  source: string
+  id: string
+  htmlDescription?: string
 }
 
 // type EquipmentInfo = {

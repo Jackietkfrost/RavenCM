@@ -1,63 +1,32 @@
 <template>
   <v-container fluid class="pa-4">
+    <!-- Search Bar -->
     <v-row no-gutters class="mb-4">
-      <v-col cols="11" sm="6">
+      <v-col cols="12" sm="6">
         <v-text-field
           :prepend-inner-icon="mdiMagnify"
           variant="solo"
           density="compact"
-          label="Search"
+          label="Search inventory"
           v-model="searchQuery"
           clearable
           hide-details
         ></v-text-field>
       </v-col>
-      <v-col class="d-flex justify-end" cols="1" sm="6">
-        <v-btn icon variant="text">
-          <v-icon :icon="mdiFilterMenuOutline" />
-        </v-btn>
-      </v-col>
     </v-row>
+
     <v-row>
-      <!-- Left column: Feat list table -->
+      <!-- Left column: Inventory Table -->
       <v-col cols="7">
         <v-card variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
-          <v-card-title class="py-3">
-            <v-row no-gutters @click="() => (isExpanded = !isExpanded)" class="align-center">
-              <v-col class="" cols="4"> {{ t('BuildScreen.feat') }} </v-col>
-              <v-col class="text--secondary" cols="6">
-                <v-text-field
-                  readonly
-                  class="feat-box cursor-pointer"
-                  v-model="textFieldValue"
-                  variant="plain"
-                  density="compact"
-                  clearable
-                  single-line
-                  persistent-clear
-                  hide-details
-                  :dirty="
-                    characterStore.character.feat && characterStore.character.feat.length > 0
-                  "
-                  @click:clear="onClear"
-                ></v-text-field>
-              </v-col>
-              <v-col class="d-flex justify-end" cols="2">
-                <v-icon
-                  :icon="isExpanded ? mdiChevronUp : mdiChevronDown"
-                  class="ml-auto"
-                  @click="() => (isExpanded = !isExpanded)"
-                >
-                  {{ isExpanded ? mdiChevronUp : mdiChevronDown }}
-                </v-icon>
-              </v-col>
-            </v-row>
+          <v-card-title class="text-subtitle-1 font-weight-bold py-2 border-bottom d-flex justify-space-between align-center">
+            <span>Character's Inventory Items</span>
+            <span class="text-caption text-grey">Double-click to remove item</span>
           </v-card-title>
           <v-data-table-virtual
-            v-if="isExpanded"
             :headers="headers"
             :items="filteredItems"
-            :item-value="(item) => item.id"
+            :item-value="(item) => item.instanceId || item.id"
             hover
             fixed-header
             height="calc(100vh - 280px)"
@@ -69,14 +38,14 @@
         </v-card>
       </v-col>
 
-      <!-- Right column: Feat details pane -->
+      <!-- Right column: Item details pane -->
       <v-col cols="5">
         <v-card
           variant="outlined"
           class="d-flex flex-column"
           style="border-color: rgba(128, 128, 128, 0.2); height: calc(100vh - 220px)"
         >
-          <template v-if="selectedFeat">
+          <template v-if="selectedItem">
             <!-- Header section of details pane -->
             <div
               class="d-flex justify-space-between align-center px-4 py-3 border-bottom"
@@ -85,22 +54,27 @@
                 border-bottom: 1px solid rgba(128, 128, 128, 0.2);
               "
             >
-              <div class="text-h5 font-weight-bold text-uppercase" style="letter-spacing: 0.05em">
-                {{ selectedFeat.name }}
+              <div class="d-flex flex-column">
+                <span class="text-h5 font-weight-bold text-uppercase" style="letter-spacing: 0.05em">
+                  {{ selectedItem.name }}
+                </span>
+                <span class="text-caption text-grey">
+                  Category: {{ selectedItem.type }}
+                </span>
               </div>
               <div class="text-caption text-grey">
-                {{ selectedFeat.source }}
+                {{ selectedItem.source }}
               </div>
             </div>
 
             <!-- Scrollable content area -->
             <div class="flex-grow-1 overflow-y-auto px-4 py-4 description-content">
-              <div v-html="selectedFeat.htmlDescription"></div>
+              <div v-html="selectedItem.htmlDescription"></div>
             </div>
           </template>
           <template v-else>
             <div class="d-flex flex-column align-center justify-center fill-height text-grey py-12">
-              <div class="text-subtitle-1">Select a feat to view details</div>
+              <div class="text-subtitle-1">Select an item to view details</div>
             </div>
           </template>
         </v-card>
@@ -111,67 +85,62 @@
 
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
-import { mdiChevronDown, mdiChevronUp, mdiFilterMenuOutline, mdiMagnify } from '@mdi/js'
+import { mdiMagnify } from '@mdi/js'
 import { ref, computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
 const characterStore = useAppStore()
-const isExpanded = ref(true)
-const textFieldValue = ref(characterStore.character.feat ? characterStore.character.feat : '')
-const feats = characterStore.elements.feats
+const searchQuery = ref('')
+const selectedItem = ref<any>(null)
+
 const headers = ref([
-  { title: 'Feat', key: 'name', align: 'start' as const },
+  { title: 'Name', key: 'name', align: 'start' as const },
+  { title: 'Type', key: 'type', align: 'center' as const },
   { title: 'Source', key: 'source', align: 'end' as const }
 ])
-const items = ref(feats)
-const searchQuery = ref('')
-const selectedFeat = ref<any>(null)
+
+const inventoryItems = computed(() => characterStore.character.inventory || [])
 
 const filteredItems = computed(() => {
-  if (!searchQuery.value) return items.value
+  if (!searchQuery.value) return inventoryItems.value
   const query = searchQuery.value.toLowerCase()
-  return items.value.filter(
+  return inventoryItems.value.filter(
     (item: any) =>
       item.name.toLowerCase().includes(query) ||
+      (item.type && item.type.toLowerCase().includes(query)) ||
       (item.source && item.source.toLowerCase().includes(query))
   )
 })
 
 const handleDoubleClick = (event: any, { item }: any) => {
-  characterStore.character.feat = item.name
-  textFieldValue.value = item.name
-  isExpanded.value = !isExpanded.value
+  if (characterStore.character.inventory) {
+    characterStore.character.inventory = characterStore.character.inventory.filter(
+      (i: any) => (i.instanceId || i.id) !== (item.instanceId || item.id)
+    )
+    if (selectedItem.value && (selectedItem.value.instanceId || selectedItem.value.id) === (item.instanceId || item.id)) {
+      selectedItem.value = null
+    }
+  }
 }
 
 const handleRowClick = (event: any, { item }: any) => {
-  selectedFeat.value = item
+  selectedItem.value = item
 }
 
 const rowProps = (data: any) => {
-  const isSelected = selectedFeat.value && selectedFeat.value.id === data.item.id
+  const isSelected = selectedItem.value && (selectedItem.value.instanceId || selectedItem.value.id) === (data.item.instanceId || data.item.id)
   return {
     class: isSelected ? 'v-theme--selected' : ''
   }
 }
 
-const onClear = () => {
-  characterStore.character.feat = ''
-  textFieldValue.value = ''
-}
-
 onMounted(() => {
-  if (items.value && items.value.length > 0) {
-    selectedFeat.value = items.value[0]
+  if (filteredItems.value && filteredItems.value.length > 0) {
+    selectedItem.value = filteredItems.value[0]
   }
 })
 </script>
 
 <style scoped>
-.feat-box {
-  cursor: pointer;
-}
-
 :deep(.v-data-table__tr) {
   cursor: pointer;
 }

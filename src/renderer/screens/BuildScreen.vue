@@ -61,10 +61,21 @@ import AbilityScoresScreen from '@/renderer/screens/builderScreens/AbilityScoreS
 import LanguagesScreen from '@/renderer/screens/builderScreens/LanguagesScreen.vue'
 import ProficiencyScreen from '@/renderer/screens/builderScreens/ProficiencyScreen.vue'
 import FeatsScreen from '@/renderer/screens/builderScreens/FeatsScreen.vue'
+// import { onMounted } from 'vue'
 
 const { t } = useI18n()
 const characterStore = useAppStore()
 
+// onMounted((): void => {
+//   window.mainApi.invoke('msgGetAllRaces').then((races) => {
+//     if (!races) return
+//     characterStore.elements.races = races
+//   })
+//   window.mainApi.invoke('msgGetAllClasses').then((classes) => {
+//     if (!classes) return
+//     characterStore.elements.classes = classes
+//   })
+// })
 
 const handlePage = (value: string): void => {
   console.log(value)

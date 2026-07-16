@@ -8,14 +8,14 @@
     >
     <v-btn
       variant="text"
-      :class="{ active: characterStore.currentBuildStage === 'inventory' }"
-      @click="handlePage('class')"
+      :class="{ active: characterStore.currentEquipmentStage === 'inventory' }"
+      @click="handlePage('inventory')"
       >{{ t('EquipmentScreen.inventory') }}</v-btn
     >
     <v-btn
       variant="text"
-      :class="{ active: characterStore.currentBuildStage === 'additional' }"
-      @click="handlePage('background')"
+      :class="{ active: characterStore.currentEquipmentStage === 'additional' }"
+      @click="handlePage('additional')"
     >
       {{ t('EquipmentScreen.additional') }}
     </v-btn>
@@ -30,6 +30,8 @@
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '../store/appStore'
 import EquipmentsScreen from '../screens/equipmentScreens/EquipmentsScreen.vue'
+import InventoryScreen from '../screens/equipmentScreens/InventoryScreen.vue'
+import AdditionalScreen from '../screens/equipmentScreens/AdditionalScreen.vue'
 
 const characterStore = useAppStore()
 
