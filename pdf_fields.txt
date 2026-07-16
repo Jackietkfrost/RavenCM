@@ -1,0 +1,334 @@
+r: ClassLevel
+r: Background
+r: PlayerName
+r: CharacterName
+r: Race 
+r: Alignment
+r: XP
+r: Inspiration
+r: STR
+r: ProfBonus
+r: AC
+r: Initiative
+r: Speed
+r: PersonalityTraits 
+r: STRmod
+r: HPMax
+r: ST Strength
+r: DEX
+r: HPCurrent
+r: Ideals
+r: DEXmod 
+r: HPTemp
+r: Bonds
+r: CON
+r: HDTotal
+e: Check Box 12
+e: Check Box 13
+e: Check Box 14
+r: CONmod
+e: Check Box 15
+e: Check Box 16
+e: Check Box 17
+r: HD
+r: Flaws
+r: INT
+r: ST Dexterity
+r: ST Constitution
+r: ST Intelligence
+r: ST Wisdom
+r: ST Charisma
+r: Acrobatics
+r: Animal
+r: Athletics
+r: Deception 
+r: History 
+r: Insight
+r: Intimidation
+e: Check Box 11
+e: Check Box 18
+e: Check Box 19
+e: Check Box 20
+e: Check Box 21
+e: Check Box 22
+r: Wpn Name
+r: Wpn1 AtkBonus
+r: Wpn1 Damage
+r: INTmod
+r: Wpn Name 2
+r: Wpn2 AtkBonus 
+r: Wpn2 Damage 
+r: Investigation 
+r: WIS
+r: Wpn Name 3
+r: Wpn3 AtkBonus  
+r: Arcana
+r: Wpn3 Damage 
+r: Perception 
+r: WISmod
+r: CHA
+r: Nature
+r: Performance
+r: Medicine
+r: Religion
+r: Stealth 
+e: Check Box 23
+e: Check Box 24
+e: Check Box 25
+e: Check Box 26
+e: Check Box 27
+e: Check Box 28
+e: Check Box 29
+e: Check Box 30
+e: Check Box 31
+e: Check Box 32
+e: Check Box 33
+e: Check Box 34
+e: Check Box 35
+e: Check Box 36
+e: Check Box 37
+e: Check Box 38
+e: Check Box 39
+e: Check Box 40
+r: Persuasion
+r: SleightofHand
+r: CHamod
+r: Survival
+r: AttacksSpellcasting
+r: Passive
+r: CP
+r: ProficienciesLang
+r: SP
+r: EP
+r: GP
+r: PP
+r: Equipment
+r: Features and Traits
+r: CharacterName 2
+r: Age
+r: Height
+r: Weight
+r: Eyes
+r: Skin
+r: Hair
+r: Faction Symbol Image
+r: Allies
+r: FactionName
+r: Backstory
+r: Feat+Traits
+r: Treasure
+r: CHARACTER IMAGE
+r: Spellcasting Class 2
+r: SpellcastingAbility 2
+r: SpellSaveDC  2
+r: SpellAtkBonus 2
+r: SlotsTotal 19
+r: SlotsRemaining 19
+r: Spells 1014
+r: Spells 1015
+r: Spells 1016
+r: Spells 1017
+r: Spells 1018
+r: Spells 1019
+r: Spells 1020
+r: Spells 1021
+r: Spells 1022
+e: Check Box 314
+e: Check Box 3031
+e: Check Box 3032
+e: Check Box 3033
+e: Check Box 3034
+e: Check Box 3035
+e: Check Box 3036
+e: Check Box 3037
+e: Check Box 3038
+e: Check Box 3039
+e: Check Box 3040
+e: Check Box 321
+e: Check Box 320
+e: Check Box 3060
+e: Check Box 3061
+e: Check Box 3062
+e: Check Box 3063
+e: Check Box 3064
+e: Check Box 3065
+e: Check Box 3066
+e: Check Box 315
+e: Check Box 3041
+r: Spells 1023
+e: Check Box 251
+e: Check Box 309
+e: Check Box 3010
+e: Check Box 3011
+e: Check Box 3012
+e: Check Box 3013
+e: Check Box 3014
+e: Check Box 3015
+e: Check Box 3016
+e: Check Box 3017
+e: Check Box 3018
+e: Check Box 3019
+r: Spells 1024
+r: Spells 1025
+r: Spells 1026
+r: Spells 1027
+r: Spells 1028
+r: Spells 1029
+r: Spells 1030
+r: Spells 1031
+r: Spells 1032
+r: Spells 1033
+r: SlotsTotal 20
+r: SlotsRemaining 20
+r: Spells 1034
+r: Spells 1035
+r: Spells 1036
+r: Spells 1037
+r: Spells 1038
+r: Spells 1039
+r: Spells 1040
+r: Spells 1041
+r: Spells 1042
+r: Spells 1043
+r: Spells 1044
+r: Spells 1045
+r: Spells 1046
+r: SlotsTotal 21
+r: SlotsRemaining 21
+r: Spells 1047
+r: Spells 1048
+r: Spells 1049
+r: Spells 1050
+r: Spells 1051
+r: Spells 1052
+r: Spells 1053
+r: Spells 1054
+r: Spells 1055
+r: Spells 1056
+r: Spells 1057
+r: Spells 1058
+r: Spells 1059
+r: SlotsTotal 22
+r: SlotsRemaining 22
+r: Spells 1060
+r: Spells 1061
+r: Spells 1062
+r: Spells 1063
+r: Spells 1064
+e: Check Box 323
+e: Check Box 322
+e: Check Box 3067
+e: Check Box 3068
+e: Check Box 3069
+e: Check Box 3070
+e: Check Box 3071
+e: Check Box 3072
+e: Check Box 3073
+r: Spells 1065
+r: Spells 1066
+r: Spells 1067
+r: Spells 1068
+r: Spells 1069
+r: Spells 1070
+r: Spells 1071
+e: Check Box 317
+r: Spells 1072
+r: SlotsTotal 23
+r: SlotsRemaining 23
+r: Spells 1073
+r: Spells 1074
+r: Spells 1075
+r: Spells 1076
+r: Spells 1077
+r: Spells 1078
+r: Spells 1079
+r: Spells 1080
+r: Spells 1081
+r: SlotsTotal 24
+r: SlotsRemaining 24
+r: Spells 1082
+r: Spells 1083
+r: Spells 1084
+r: Spells 1085
+r: Spells 1086
+r: Spells 1087
+r: Spells 1088
+r: Spells 1089
+r: Spells 1090
+r: SlotsTotal 25
+r: SlotsRemaining 25
+r: Spells 1091
+r: Spells 1092
+r: Spells 1093
+r: Spells 1094
+r: Spells 1095
+r: Spells 1096
+r: Spells 1097
+r: Spells 1098
+r: Spells 1099
+r: SlotsTotal 26
+r: SlotsRemaining 26
+r: Spells 10100
+r: Spells 10101
+r: Spells 10102
+r: Spells 10103
+e: Check Box 316
+e: Check Box 3042
+e: Check Box 3043
+e: Check Box 3044
+e: Check Box 3045
+e: Check Box 3046
+e: Check Box 3047
+e: Check Box 3048
+e: Check Box 3049
+e: Check Box 3050
+e: Check Box 3051
+e: Check Box 3052
+r: Spells 10104
+e: Check Box 325
+e: Check Box 324
+e: Check Box 3074
+e: Check Box 3075
+e: Check Box 3076
+e: Check Box 3077
+r: Spells 10105
+r: Spells 10106
+e: Check Box 3078
+r: SlotsTotal 27
+r: SlotsRemaining 27
+e: Check Box 313
+e: Check Box 310
+e: Check Box 3020
+e: Check Box 3021
+e: Check Box 3022
+e: Check Box 3023
+e: Check Box 3024
+e: Check Box 3025
+e: Check Box 3026
+e: Check Box 3027
+e: Check Box 3028
+e: Check Box 3029
+e: Check Box 3030
+r: Spells 10107
+r: Spells 10108
+r: Spells 10109
+r: Spells 101010
+r: Spells 101011
+r: Spells 101012
+e: Check Box 319
+e: Check Box 318
+e: Check Box 3053
+e: Check Box 3054
+e: Check Box 3055
+e: Check Box 3056
+e: Check Box 3057
+e: Check Box 3058
+e: Check Box 3059
+e: Check Box 327
+e: Check Box 326
+e: Check Box 3079
+e: Check Box 3080
+e: Check Box 3081
+e: Check Box 3082
+r: Spells 101013
+e: Check Box 3083

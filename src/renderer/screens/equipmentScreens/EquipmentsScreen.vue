@@ -136,7 +136,7 @@ const allItems = computed(() => {
 })
 
 const filteredItems = computed(() => {
-  let list = allItems.value
+  let list = allItems.value.filter((item: any) => characterStore.isSourceActive(item.source))
   const cat = selectedCategoryVal.value[0] || '0'
   
   if (cat !== '0') {

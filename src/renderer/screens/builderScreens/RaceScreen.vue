@@ -131,9 +131,10 @@ const searchQuery = ref('')
 const selectedRace = ref<any>(null)
 
 const filteredItems = computed(() => {
-  if (!searchQuery.value) return items.value
+  const activeOnly = (items.value || []).filter((item: any) => characterStore.isSourceActive(item.source))
+  if (!searchQuery.value) return activeOnly
   const query = searchQuery.value.toLowerCase()
-  return items.value.filter(
+  return activeOnly.filter(
     (item: any) =>
       item.name.toLowerCase().includes(query) ||
       (item.source && item.source.toLowerCase().includes(query))
@@ -162,8 +163,8 @@ const onClear = () => {
 }
 
 onMounted(() => {
-  if (items.value && items.value.length > 0) {
-    selectedRace.value = items.value[0]
+  if (filteredItems.value && filteredItems.value.length > 0) {
+    selectedRace.value = filteredItems.value[0]
   }
 })
 </script>

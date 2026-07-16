@@ -25,13 +25,15 @@
       </v-col>
 
       <v-col cols="12" md="8" class="d-flex justify-end align-center gap-x-4">
-        <v-checkbox
-          label="Apply Source Restrictions"
-          v-model="applyRestrictions"
-          hide-details
-          density="compact"
-          class="mr-4 mt-0"
-        ></v-checkbox>
+        <v-btn
+          color="primary"
+          variant="flat"
+          size="small"
+          class="mr-4 text-none"
+          @click="applyRestrictionsBtn"
+        >
+          Apply Source Restrictions
+        </v-btn>
         <v-checkbox
           label="Restrict Playtest Material"
           v-model="restrictPlaytest"
@@ -229,10 +231,15 @@ const characterStore = useAppStore()
 const selectedCategory = ref('Wizards of the Coast')
 const selectedSource = ref<any>(null)
 
-const applyRestrictions = ref(true)
 const restrictPlaytest = ref(false)
 
 const enabledSources = ref<Record<string, boolean>>({})
+
+const applyRestrictionsBtn = () => {
+  characterStore.activeSources = { ...enabledSources.value }
+  characterStore.validateSelectedElements()
+  saveDefaultSources()
+}
 
 const categories = ['Wizards of the Coast', 'Adventurers League', 'Unearthed Arcana', 'Third Party', 'Homebrew']
 
@@ -353,7 +360,13 @@ watch(filteredSources, (newList) => {
 }, { immediate: true })
 
 onMounted(() => {
-  // Initialize enabledSources state to true for all loaded elements
+  const storeActive = characterStore.activeSources
+  if (storeActive && Object.keys(storeActive).length > 0) {
+    enabledSources.value = { ...storeActive }
+  } else {
+    loadDefaultSources()
+  }
+
   allSources.value.forEach((s: any) => {
     if (enabledSources.value[s.id] === undefined) {
       enabledSources.value[s.id] = true

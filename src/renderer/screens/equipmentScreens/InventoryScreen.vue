@@ -101,9 +101,10 @@ const headers = ref([
 const inventoryItems = computed(() => characterStore.character.inventory || [])
 
 const filteredItems = computed(() => {
-  if (!searchQuery.value) return inventoryItems.value
+  const activeOnly = inventoryItems.value.filter((item: any) => characterStore.isSourceActive(item.source))
+  if (!searchQuery.value) return activeOnly
   const query = searchQuery.value.toLowerCase()
-  return inventoryItems.value.filter(
+  return activeOnly.filter(
     (item: any) =>
       item.name.toLowerCase().includes(query) ||
       (item.type && item.type.toLowerCase().includes(query)) ||

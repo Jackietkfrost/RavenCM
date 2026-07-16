@@ -35,7 +35,7 @@ export const createMainWindow = async (): Promise<BrowserWindow> => {
     height: options.height,
     useContentSize: true,
     webPreferences: Constants.DEFAULT_WEB_PREFERENCES,
-    frame: true
+    frame: false
   }
   const trayOptions: TrayOptions = options.tray?.enabled
     ? {

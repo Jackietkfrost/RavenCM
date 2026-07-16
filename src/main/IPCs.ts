@@ -1,4 +1,4 @@
-import { ipcMain, shell, IpcMainEvent, dialog } from 'electron'
+import { ipcMain, shell, IpcMainEvent, dialog, BrowserWindow } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as xml2js from 'xml2js'
@@ -47,19 +47,19 @@ export default class IPCs {
 
     const startIdx = match.index + match[0].length
     const subXml = xml.slice(startIdx)
-    
+
     const descStartRegex = /<description\b[^>]*?>/i
     const descStartMatch = subXml.match(descStartRegex)
     if (!descStartMatch || descStartMatch.index === undefined) {
       return ''
     }
-    
+
     const descContentStart = descStartMatch.index + descStartMatch[0].length
     const descEndIdx = subXml.indexOf('</description>', descContentStart)
     if (descEndIdx === -1) {
       return ''
     }
-    
+
     return subXml.slice(descContentStart, descEndIdx).trim()
   }
 
@@ -96,12 +96,19 @@ export default class IPCs {
                       if (element.$ && element.$.type === elementType) {
                         let descriptionText = ''
                         if (element.setters && element.setters[0] && element.setters[0].set) {
-                          const shortSet = element.setters[0].set.find((s: any) => s.$ && s.$.name === 'short')
+                          const shortSet = element.setters[0].set.find(
+                            (s: any) => s.$ && s.$.name === 'short'
+                          )
                           if (shortSet) {
                             descriptionText = IPCs.extractText(shortSet)
                           }
                         }
-                        if (!descriptionText && element.sheet && element.sheet[0] && element.sheet[0].description) {
+                        if (
+                          !descriptionText &&
+                          element.sheet &&
+                          element.sheet[0] &&
+                          element.sheet[0].description
+                        ) {
                           descriptionText = IPCs.extractText(element.sheet[0].description)
                         }
                         if (!descriptionText && element.description) {
@@ -152,8 +159,58 @@ export default class IPCs {
   }
 
   static initialize(): void {
+    // Download pdf-lib if missing
+    const pdfLibPath = path.join(__dirname, 'pdf-lib.js')
+    const srcPdfLib = path.join(process.cwd(), 'src/main/pdf-lib.js')
+    if (!fs.existsSync(pdfLibPath)) {
+      if (fs.existsSync(srcPdfLib)) {
+        fs.copyFileSync(srcPdfLib, pdfLibPath)
+      } else {
+        axios
+          .get('https://unpkg.com/pdf-lib/dist/pdf-lib.min.js', { responseType: 'text' })
+          .then((response) => {
+            fs.writeFileSync(pdfLibPath, response.data, 'utf8')
+          })
+          .catch((err) => {
+            console.error('Failed to download pdf-lib.js', err)
+          })
+      }
+    }
+
+    // List PDF fields immediately if pdf-lib exists and pdf_fields.txt doesn't
+    const fieldsTextPath = 'd:\\Vue-Electron Projects\\Raven CM\\pdf_fields.txt'
+    if (fs.existsSync(pdfLibPath) && !fs.existsSync(fieldsTextPath)) {
+      try {
+        const pdfPath = path.join(
+          process.cwd(),
+          'buildAssets/Sheets/5E_CharacterSheet_Fillable.pdf'
+        )
+        if (fs.existsSync(pdfPath)) {
+          const pdfBytes = fs.readFileSync(pdfPath)
+          const PDFLib = require(pdfLibPath)
+          PDFLib.PDFDocument.load(pdfBytes)
+            .then((pdfDoc: any) => {
+              const form = pdfDoc.getForm()
+              const fields = form.getFields()
+              const fieldNames = fields.map((f: any) => `${f.constructor.name}: ${f.getName()}`)
+              fs.writeFileSync(fieldsTextPath, fieldNames.join('\n'), 'utf8')
+            })
+            .catch((e: any) => {
+              console.error('Failed to load PDF doc', e)
+            })
+        }
+      } catch (e) {
+        console.error('Error writing pdf fields file on initialize:', e)
+      }
+    }
+
     // Load elements once on startup
     IPCs.loadElements()
+
+    ipcMain.handle('msgGetAllElements', async (event: IpcMainEvent) => {
+      return IPCs.loadElements()
+    })
+
     // Get application version
     ipcMain.handle('msgRequestGetVersion', () => {
       return Constants.APP_VERSION
@@ -184,61 +241,108 @@ export default class IPCs {
     // Save character
     ipcMain.handle('msgSaveCharacter', async (event: IpcMainEvent, data: any) => {
       console.log(data)
-      const characterFolder = 'GameCharacters'
-      const fileName = `${data.characterName}.DnD5e`
+      let filePath = data.filePath
 
-      // Create the GameCharacters folder if it doesn't exist
-      if (!fs.existsSync(characterFolder)) {
-        fs.mkdirSync(characterFolder)
+      // Determine save file path if not already provided or if it doesn't exist
+      if (!filePath || !fs.existsSync(filePath)) {
+        const defaultFolder = Constants.RAVEN_FOLDER
+        if (!fs.existsSync(defaultFolder)) {
+          fs.mkdirSync(defaultFolder, { recursive: true })
+        }
+        // Save to default folder as a .dnd5e file
+        const fileName = `${data.characterName}.dnd5e`
+        filePath = path.join(defaultFolder, fileName)
       }
 
-      // Create the XML file
-      const filePath = path.join(characterFolder, fileName)
+      // Create the XML file content
       const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
-  <character version="1.0.0">
+<character version="1.0.0">
   <!-- information -->
-	<information>
-		<group>${data.group}</group>
-		<generationOption>${data.generationOption}</generationOption>
-	</information>
-	<!-- display data -->
-	<display-properties favorite="true">
+  <information>
+    <group>${data.group || 'Characters'}</group>
+    <generationOption>${data.generationOption || 'Roll 4d6 - Discard Lowest'}</generationOption>
+  </information>
+  <!-- display data -->
+  <display-properties favorite="true">
     <name>${data.characterName}</name>
     <race>${data.race}</race>
-		<class>${data.class}</class>
-		<archetype>${data.archetype}
-		</archetype>
-		<background>${data.background}</background>
-		<level>${data.level}</level>
-
-    <abilityGenerationOption>${data.abilityGenerationOption}</abilityGenerationOption>
+    <class>${data.class}</class>
+    <archetype>${data.archetype}</archetype>
+    <background>${data.background}</background>
+    <level>${data.level}</level>
+    <abilityGenerationOption>${data.abilityGenerationOption || 'Roll 4d6 - Discard Lowest'}</abilityGenerationOption>
   </display-properties>
   <!-- build data -->
   <build>
-  <name>${data.characterName}</name>
+    <name>${data.characterName}</name>
     <input>
       <gender>${data.pronouns}</gender>
       <player-name>${data.playerName}</player-name>
-			<experience>${data.characterExperience}</experience>
-  </character>`
+      <experience>${data.characterExperience}</experience>
+    </input>
+  </build>
+  <!-- appearance data -->
+  <appearance>
+    <deity>${data.deity || ''}</deity>
+    <age>${data.age || ''}</age>
+    <height>${data.height || ''}</height>
+    <weight>${data.weight || ''}</weight>
+    <eyes>${data.eyes || ''}</eyes>
+    <skin>${data.skin || ''}</skin>
+    <hair>${data.hair || ''}</hair>
+    <additionalFeatures>${data.additionalFeatures || ''}</additionalFeatures>
+  </appearance>
+</character>`
 
-      fs.writeFileSync(filePath, xmlContent)
-
+      fs.writeFileSync(filePath, xmlContent, 'utf8')
       console.log(`Character file saved to ${filePath}`)
+      return { success: true, filePath }
     })
 
     // Get characters saved
     ipcMain.handle('msgGetCharacters', async (event: IpcMainEvent) => {
-      const folders = [
-        path.join(process.cwd(), 'GameCharacters'),
-        Constants.RAVEN_FOLDER
-      ]
+      // Ensure pdf-lib is downloaded
+      const pdfLibPath = path.join(process.cwd(), 'src/main/pdf-lib.js')
+      if (!fs.existsSync(pdfLibPath)) {
+        try {
+          const res = await axios.get('https://unpkg.com/pdf-lib/dist/pdf-lib.min.js', {
+            responseType: 'text'
+          })
+          fs.writeFileSync(pdfLibPath, res.data, 'utf8')
+        } catch (e) {
+          console.error(e)
+        }
+      }
+
+      // List PDF fields if pdf-lib exists and pdf_fields.txt doesn't
+      const fieldsTextPath = path.join(process.cwd(), 'pdf_fields.txt')
+      if (fs.existsSync(pdfLibPath) && !fs.existsSync(fieldsTextPath)) {
+        try {
+          const pdfPath = path.join(
+            process.cwd(),
+            'buildAssets/Sheets/5E_CharacterSheet_Fillable.pdf'
+          )
+          if (fs.existsSync(pdfPath)) {
+            const pdfBytes = fs.readFileSync(pdfPath)
+            const PDFLib = require('./pdf-lib.js')
+            const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes)
+            const form = pdfDoc.getForm()
+            const fields = form.getFields()
+            const fieldNames = fields.map((f: any) => `${f.constructor.name}: ${f.getName()}`)
+            fs.writeFileSync(fieldsTextPath, fieldNames.join('\n'), 'utf8')
+          }
+        } catch (e) {
+          console.error('Error writing pdf fields file:', e)
+        }
+      }
+
+      const folders = [path.join(process.cwd(), 'GameCharacters'), Constants.RAVEN_FOLDER]
       const characters = []
       const parsedFiles = new Set<string>()
 
       folders.forEach((folder) => {
         if (!fs.existsSync(folder)) return
-        
+
         try {
           const files = fs.readdirSync(folder)
           files.forEach((file) => {
@@ -254,11 +358,17 @@ export default class IPCs {
                     console.error(`Error parsing character XML ${filePath}:`, err)
                   } else if (result && result.character) {
                     const char = result.character
-                    const displayProps = char['display-properties'] ? char['display-properties'][0] : {}
+                    const displayProps = char['display-properties']
+                      ? char['display-properties'][0]
+                      : {}
                     const infoProps = char.information ? char.information[0] : {}
-                    
+
                     let avatar = ''
-                    if (displayProps.portrait && displayProps.portrait[0] && displayProps.portrait[0].base64) {
+                    if (
+                      displayProps.portrait &&
+                      displayProps.portrait[0] &&
+                      displayProps.portrait[0].base64
+                    ) {
                       const b64 = displayProps.portrait[0].base64[0]
                       if (b64 && typeof b64 === 'string' && b64.trim()) {
                         avatar = `data:image/jpeg;base64,${b64.trim()}`
@@ -283,10 +393,22 @@ export default class IPCs {
                         source: ''
                       },
                       archetype: displayProps.archetype ? displayProps.archetype[0] : '',
-                      pronouns: displayProps.gender ? displayProps.gender[0] : (char.build && char.build[0].input && char.build[0].input[0].gender ? char.build[0].input[0].gender[0] : 'Male'),
-                      playerName: char.build && char.build[0].input && char.build[0].input[0]['player-name'] ? char.build[0].input[0]['player-name'][0] : '',
-                      experience: char.build && char.build[0].input && char.build[0].input[0].experience ? parseInt(char.build[0].input[0].experience[0], 10) : 0,
-                      abilityGenerationOption: infoProps.generationOption ? infoProps.generationOption[0] : 'Roll 4d6 - Discard Lowest',
+                      pronouns: displayProps.gender
+                        ? displayProps.gender[0]
+                        : char.build && char.build[0].input && char.build[0].input[0].gender
+                          ? char.build[0].input[0].gender[0]
+                          : 'Male',
+                      playerName:
+                        char.build && char.build[0].input && char.build[0].input[0]['player-name']
+                          ? char.build[0].input[0]['player-name'][0]
+                          : '',
+                      experience:
+                        char.build && char.build[0].input && char.build[0].input[0].experience
+                          ? parseInt(char.build[0].input[0].experience[0], 10)
+                          : 0,
+                      abilityGenerationOption: infoProps.generationOption
+                        ? infoProps.generationOption[0]
+                        : 'Roll 4d6 - Discard Lowest',
                       languages: [],
                       feat: '',
                       proficiency: '',
@@ -295,7 +417,7 @@ export default class IPCs {
                       equipment: [],
                       filePath
                     }
-                    
+
                     if (!parsedFiles.has(characterObject.name)) {
                       characters.push(characterObject)
                       parsedFiles.add(characterObject.name)
@@ -343,9 +465,6 @@ export default class IPCs {
             if (err) {
               console.error(err)
             }
-            // else {
-            //   console.log('Index file downloaded and saved to:', indexFilePath)
-            // }
           })
 
           // Parse XML content and extract URLs
@@ -379,9 +498,6 @@ export default class IPCs {
                       if (err) {
                         console.error(err)
                       }
-                      // else {
-                      //   console.log(`Downloaded file saved to: ${downloadFilePath}`)
-                      // }
                     })
 
                     // Check if the downloaded file is an index file
@@ -415,14 +531,9 @@ export default class IPCs {
                                   if (err) {
                                     console.error(err)
                                   }
-                                  // else {
-                                  //   console.log(`Downloaded file saved to: ${downloadFilePath}`)
-                                  // }
                                 })
 
                                 if (path.extname(url) === '.index') {
-                                  // downloadIndex(url, indexFolder)
-                                  console.log('oop?')
                                 }
                               })
                               .catch((error) => {
@@ -451,93 +562,6 @@ export default class IPCs {
       shell.openPath(ravenCharacterBuilderFolder)
     })
 
-    // // Get all races
-    // ipcMain.handle('msgGetAllRaces', async (event: IpcMainEvent) => {
-    //   const raceElements = []
-    //   const customFolder = Constants.CUSTOM_FOLDER
-
-    //   const searchForRaces = (folderPath) => {
-    //     fs.readdirSync(folderPath).forEach((file) => {
-    //       const filePath = path.join(folderPath, file)
-    //       const stat = fs.statSync(filePath)
-    //       if (stat.isDirectory()) {
-    //         searchForRaces(filePath)
-    //       } else if (file.includes('race-') && file.endsWith('.xml')) {
-    //         const xml = fs.readFileSync(filePath, 'utf8')
-    //         const parser = new xml2js.Parser()
-    //         parser.parseString(xml, (err, result) => {
-    //           if (err) {
-    //             console.error(err)
-    //           } else {
-    //             const elements = result.elements.element
-    //             elements.forEach((element) => {
-    //               if (element.$.type === 'Race') {
-    //                 const description = element.description.toString()
-    //                 const raceElement = {
-    //                   name: element.$.name,
-    //                   type: element.$.type,
-    //                   source: element.$.source,
-    //                   id: element.$.id,
-    //                   description
-    //                 }
-    //                 raceElements.push(raceElement)
-    //               }
-    //             })
-    //           }
-    //         })
-    //       }
-    //     })
-    //   }
-    //   searchForRaces(customFolder)
-    //   return raceElements
-    // })
-
-    // // Get all classes
-    // ipcMain.handle('msgGetAllClasses', async (event: IpcMainEvent) => {
-    //   const classElements = []
-    //   const customFolder = Constants.CUSTOM_FOLDER
-
-    //   const searchForClasses = (folderPath) => {
-    //     fs.readdirSync(folderPath).forEach((file) => {
-    //       const filePath = path.join(folderPath, file)
-    //       const stat = fs.statSync(filePath)
-    //       if (stat.isDirectory()) {
-    //         searchForClasses(filePath)
-    //       } else if (file.includes('class-') && file.endsWith('.xml')) {
-    //         const xml = fs.readFileSync(filePath, 'utf8')
-    //         const parser = new xml2js.Parser()
-    //         parser.parseString(xml, (err, result) => {
-    //           if (err) {
-    //             console.error(err)
-    //           } else {
-    //             const elements = result.elements.element
-    //             elements.forEach((element) => {
-    //               if (element.$.type === 'Class') {
-    //                 const description = element.description.toString()
-    //                 const classElement = {
-    //                   name: element.$.name,
-    //                   type: element.$.type,
-    //                   source: element.$.source,
-    //                   id: element.$.id,
-    //                   description
-    //                 }
-    //                 classElements.push(classElement)
-    //               }
-    //             })
-    //           }
-    //         })
-    //       }
-    //     })
-    //   }
-    //   searchForClasses(customFolder)
-    //   console.log(classElements)
-    //   return classElements
-    // })
-
-    ipcMain.handle('msgGetAllElements', async (event: IpcMainEvent) => {
-      return IPCs.loadElements()
-    })
-
     // Get local portrait files
     ipcMain.handle('msgGetPortraits', async (event: IpcMainEvent) => {
       const portraitsFolder = path.join(Constants.RAVEN_FOLDER, 'Portraits')
@@ -552,7 +576,8 @@ export default class IPCs {
           const ext = path.extname(file).toLowerCase()
           if (['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(ext)) {
             const base64 = fs.readFileSync(filePath, 'base64')
-            const mimeType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : `image/${ext.substring(1)}`
+            const mimeType =
+              ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : `image/${ext.substring(1)}`
             images.push(`data:${mimeType};base64,${base64}`)
           }
         })
@@ -567,6 +592,468 @@ export default class IPCs {
     ipcMain.on('msgShowItemInFolder', (event: IpcMainEvent, filePath: string) => {
       if (filePath && fs.existsSync(filePath)) {
         shell.showItemInFolder(filePath)
+      }
+    })
+
+    // Window controls
+    ipcMain.on('msgMinimizeWindow', (event: IpcMainEvent) => {
+      const win = BrowserWindow.fromWebContents(event.sender)
+      if (win) win.minimize()
+    })
+
+    ipcMain.on('msgMaximizeWindow', (event: IpcMainEvent) => {
+      const win = BrowserWindow.fromWebContents(event.sender)
+      if (win) {
+        if (win.isMaximized()) {
+          win.unmaximize()
+        } else {
+          win.maximize()
+        }
+      }
+    })
+
+    ipcMain.on('msgCloseWindow', (event: IpcMainEvent) => {
+      const win = BrowserWindow.fromWebContents(event.sender)
+      if (win) win.close()
+    })
+
+    // Update character's group
+    ipcMain.handle(
+      'msgUpdateCharacterGroup',
+      async (event: IpcMainEvent, filePath: string, newGroup: string) => {
+        if (!filePath || !fs.existsSync(filePath)) {
+          return { success: false, error: 'File not found' }
+        }
+        try {
+          let content = fs.readFileSync(filePath, 'utf8')
+          // Simple regex replace for <group>...</group>
+          if (/<group>([\s\S]*?)<\/group>/.test(content)) {
+            content = content.replace(/<group>([\s\S]*?)<\/group>/, `<group>${newGroup}</group>`)
+          } else {
+            // If group doesn't exist, try to insert it inside <information>
+            if (/<information>([\s\S]*?)<\/information>/.test(content)) {
+              content = content.replace(
+                /<information>([\s\S]*?)<\/information>/,
+                `<information>\n\t\t<group>${newGroup}</group>$1</information>`
+              )
+            } else {
+              // Otherwise, insert it right after the root tag
+              content = content.replace(
+                /<character([^>]*?)>/,
+                `<character$1>\n\t<information>\n\t\t<group>${newGroup}</group>\n\t</information>`
+              )
+            }
+          }
+          fs.writeFileSync(filePath, content, 'utf8')
+          return { success: true }
+        } catch (err: any) {
+          console.error('Error updating character group', err)
+          return { success: false, error: err.message }
+        }
+      }
+    )
+
+    // Delete character file
+    ipcMain.handle('msgDeleteCharacter', async (event: IpcMainEvent, filePath: string) => {
+      if (!filePath || !fs.existsSync(filePath)) {
+        return { success: false, error: 'File not found' }
+      }
+      try {
+        fs.unlinkSync(filePath)
+        return { success: true }
+      } catch (err: any) {
+        console.error('Error deleting character file', err)
+        return { success: false, error: err.message }
+      }
+    })
+
+    // Generate PDF character sheet preview
+    ipcMain.handle(
+      'msgGeneratePreview',
+      async (event: IpcMainEvent, filePath: string, armorClassOverride?: string) => {
+        try {
+          if (!filePath || !fs.existsSync(filePath)) {
+            return { success: false, error: 'Character file not found' }
+          }
+
+          const xmlContent = fs.readFileSync(filePath, 'utf8')
+          const parser = new xml2js.Parser()
+          const parsed = await parser.parseStringPromise(xmlContent)
+          if (!parsed || !parsed.character) {
+            return { success: false, error: 'Invalid character XML' }
+          }
+
+          const char = parsed.character
+          const displayProps = char['display-properties'] ? char['display-properties'][0] : {}
+          const infoProps = char.information ? char.information[0] : {}
+          const abilitiesProps = char.abilities ? char.abilities[0] : {}
+          const appearanceProps = char.appearance ? char.appearance[0] : {}
+
+          // Gather all elements registered in the character's sum or elements list
+          const elementIds = new Set<string>()
+          if (char.elements && char.elements[0] && char.elements[0].element) {
+            const elements = char.elements[0].element
+            elements.forEach((el: any) => {
+              if (el.$ && el.$.id) elementIds.add(el.$.id.toUpperCase())
+              if (el.$ && el.$.registered) elementIds.add(el.$.registered.toUpperCase())
+            })
+          }
+          if (
+            char.build &&
+            char.build[0] &&
+            char.build[0].sum &&
+            char.build[0].sum[0] &&
+            char.build[0].sum[0].element
+          ) {
+            const elements = char.build[0].sum[0].element
+            elements.forEach((el: any) => {
+              if (el.$ && el.$.id) elementIds.add(el.$.id.toUpperCase())
+              if (el.$ && el.$.registered) elementIds.add(el.$.registered.toUpperCase())
+            })
+          }
+
+          // Get abilities base
+          let str = abilitiesProps.strength ? parseInt(abilitiesProps.strength[0], 10) : 10
+          let dex = abilitiesProps.dexterity ? parseInt(abilitiesProps.dexterity[0], 10) : 10
+          let con = abilitiesProps.constitution ? parseInt(abilitiesProps.constitution[0], 10) : 10
+          let int = abilitiesProps.intelligence ? parseInt(abilitiesProps.intelligence[0], 10) : 10
+          let wis = abilitiesProps.wisdom ? parseInt(abilitiesProps.wisdom[0], 10) : 10
+          let cha = abilitiesProps.charisma ? parseInt(abilitiesProps.charisma[0], 10) : 10
+
+          // Apply race modifiers
+          const raceStr = displayProps.race ? displayProps.race[0].toLowerCase() : ''
+          if (raceStr.includes('warforged')) {
+            con += 2
+          } else if (raceStr.includes('mountain dwarf')) {
+            str += 2
+            con += 2
+          } else if (raceStr.includes('hill dwarf')) {
+            con += 2
+            wis += 1
+          } else if (raceStr.includes('high elf')) {
+            dex += 2
+            int += 1
+          } else if (raceStr.includes('wood elf')) {
+            dex += 2
+            wis += 1
+          } else if (raceStr.includes('lightfoot halfling')) {
+            dex += 2
+            cha += 1
+          } else if (raceStr.includes('stout halfling')) {
+            dex += 2
+            con += 1
+          } else if (raceStr.includes('human')) {
+            str += 1
+            dex += 1
+            con += 1
+            int += 1
+            wis += 1
+            cha += 1
+          } else if (raceStr.includes('dragonborn')) {
+            str += 2
+            cha += 1
+          } else if (raceStr.includes('forest gnome')) {
+            int += 2
+            dex += 1
+          } else if (raceStr.includes('rock gnome')) {
+            int += 2
+            con += 1
+          } else if (raceStr.includes('half-elf') || raceStr.includes('half elf')) {
+            cha += 2
+          } else if (raceStr.includes('half-orc') || raceStr.includes('half orc')) {
+            str += 2
+            con += 1
+          } else if (raceStr.includes('tiefling')) {
+            cha += 2
+            int += 1
+          }
+
+          // Apply ASI improvements
+          elementIds.forEach((id) => {
+            if (id.includes('ASI_STRENGTH')) str += 1
+            if (id.includes('ASI_DEXTERITY')) dex += 1
+            if (id.includes('ASI_CONSTITUTION')) con += 1
+            if (id.includes('ASI_INTELLIGENCE')) int += 1
+            if (id.includes('ASI_WISDOM')) wis += 1
+            if (id.includes('ASI_CHARISMA')) cha += 1
+          })
+
+          // Modifiers
+          const getMod = (val: number) => Math.floor((val - 10) / 2)
+          const formatMod = (val: number) => {
+            const mod = getMod(val)
+            return mod >= 0 ? `+${mod}` : `${mod}`
+          }
+
+          const strModVal = getMod(str)
+          const dexModVal = getMod(dex)
+          const conModVal = getMod(con)
+          const intModVal = getMod(int)
+          const wisModVal = getMod(wis)
+          const chaModVal = getMod(cha)
+
+          const level = displayProps.level ? parseInt(displayProps.level[0], 10) : 1
+          const profBonus = Math.floor((level - 1) / 4) + 2
+
+          // Helper to check if proficient in skill or saving throw
+          const hasProf = (key: string) => {
+            return (
+              elementIds.has(`ID_PROFICIENCY_SKILL_${key.toUpperCase()}`) ||
+              elementIds.has(`ID_PROFICIENCY_SAVINGTHROW_${key.toUpperCase()}`)
+            )
+          }
+
+          const calcST = (key: string, modVal: number) => {
+            const proficient = hasProf(key)
+            const total = modVal + (proficient ? profBonus : 0)
+            return { value: total >= 0 ? `+${total}` : `${total}`, proficient }
+          }
+
+          const calcSkill = (key: string, modVal: number) => {
+            const proficient = hasProf(key)
+            const total = modVal + (proficient ? profBonus : 0)
+            return { value: total >= 0 ? `+${total}` : `${total}`, proficient }
+          }
+
+          // Open template PDF
+          const pdfTemplatePath = path.join(
+            process.cwd(),
+            'buildAssets/Sheets/5E_CharacterSheet_Fillable.pdf'
+          )
+          if (!fs.existsSync(pdfTemplatePath)) {
+            return { success: false, error: 'PDF template not found' }
+          }
+
+          const pdfBytes = fs.readFileSync(pdfTemplatePath)
+          const pdfLibPath = path.join(__dirname, 'pdf-lib.js')
+          const PDFLib = require(pdfLibPath)
+          const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes)
+          const form = pdfDoc.getForm()
+
+          // Set Text Fields
+          const setField = (name: string, val: string) => {
+            try {
+              const field = form.getTextField(name)
+              if (field) field.setText(val)
+            } catch (e) {
+              console.error(`Failed to set text field ${name}:`, e)
+            }
+          }
+
+          const setCheck = (name: string, check: boolean) => {
+            try {
+              const field = form.getCheckBox(name)
+              if (field) {
+                if (check) field.check()
+                else field.uncheck()
+              }
+            } catch (e) {
+              console.error(`Failed to set check box ${name}:`, e)
+            }
+          }
+
+          // Base Info
+          setField('CharacterName', displayProps.name ? displayProps.name[0] : '')
+          setField('CharacterName 2', displayProps.name ? displayProps.name[0] : '')
+          setField(
+            'ClassLevel',
+            `Level ${level} ${displayProps.class ? displayProps.class[0] : ''}`
+          )
+          setField('Background', displayProps.background ? displayProps.background[0] : '')
+          setField(
+            'PlayerName',
+            char.build && char.build[0].input && char.build[0].input[0]['player-name']
+              ? char.build[0].input[0]['player-name'][0]
+              : ''
+          )
+          setField('Race ', displayProps.race ? displayProps.race[0] : '')
+          setField('Alignment', displayProps.alignment ? displayProps.alignment[0] : '')
+          setField(
+            'XP',
+            char.build && char.build[0].input && char.build[0].input[0].experience
+              ? char.build[0].input[0].experience[0]
+              : '0'
+          )
+
+          // Ability Scores
+          setField('STR', String(str))
+          setField('DEX', String(dex))
+          setField('CON', String(con))
+          setField('INT', String(int))
+          setField('WIS', String(wis))
+          setField('CHA', String(cha))
+
+          setField('STRmod', formatMod(str))
+          setField('DEXmod ', formatMod(dex))
+          setField('CONmod', formatMod(con))
+          setField('INTmod', formatMod(int))
+          setField('WISmod', formatMod(wis))
+          setField('CHamod', formatMod(cha))
+
+          // Saving Throws
+          const stStr = calcST('strength', strModVal)
+          const stDex = calcST('dexterity', dexModVal)
+          const stCon = calcST('constitution', conModVal)
+          const stInt = calcST('intelligence', intModVal)
+          const stWis = calcST('wisdom', wisModVal)
+          const stCha = calcST('charisma', chaModVal)
+
+          setField('ST Strength', stStr.value)
+          setField('ST Dexterity', stDex.value)
+          setField('ST Constitution', stCon.value)
+          setField('ST Intelligence', stInt.value)
+          setField('ST Wisdom', stWis.value)
+          setField('ST Charisma', stCha.value)
+
+          setCheck('Check Box 11', stStr.proficient)
+          setCheck('Check Box 18', stDex.proficient)
+          setCheck('Check Box 19', stCon.proficient)
+          setCheck('Check Box 20', stInt.proficient)
+          setCheck('Check Box 21', stWis.proficient)
+          setCheck('Check Box 22', stCha.proficient)
+
+          // Skills (alphabetical check boxes 23-40)
+          const skillsList = [
+            { name: 'acrobatics', mod: dexModVal, box: 'Check Box 23', field: 'Acrobatics' },
+            { name: 'animal_handling', mod: wisModVal, box: 'Check Box 24', field: 'Animal' },
+            { name: 'arcana', mod: intModVal, box: 'Check Box 25', field: 'Arcana' },
+            { name: 'athletics', mod: strModVal, box: 'Check Box 26', field: 'Athletics' },
+            { name: 'deception', mod: chaModVal, box: 'Check Box 27', field: 'Deception ' },
+            { name: 'history', mod: intModVal, box: 'Check Box 28', field: 'History ' },
+            { name: 'insight', mod: wisModVal, box: 'Check Box 29', field: 'Insight' },
+            { name: 'intimidation', mod: chaModVal, box: 'Check Box 30', field: 'Intimidation' },
+            { name: 'investigation', mod: intModVal, box: 'Check Box 31', field: 'Investigation ' },
+            { name: 'medicine', mod: wisModVal, box: 'Check Box 32', field: 'Medicine' },
+            { name: 'nature', mod: intModVal, box: 'Check Box 33', field: 'Nature' },
+            { name: 'perception', mod: wisModVal, box: 'Check Box 34', field: 'Perception ' },
+            { name: 'performance', mod: chaModVal, box: 'Check Box 35', field: 'Performance' },
+            { name: 'persuasion', mod: chaModVal, box: 'Check Box 36', field: 'Persuasion' },
+            { name: 'religion', mod: intModVal, box: 'Check Box 37', field: 'Religion' },
+            {
+              name: 'sleight_of_hand',
+              mod: dexModVal,
+              box: 'Check Box 38',
+              field: 'SleightofHand'
+            },
+            { name: 'stealth', mod: dexModVal, box: 'Check Box 39', field: 'Stealth ' },
+            { name: 'survival', mod: wisModVal, box: 'Check Box 40', field: 'Survival' }
+          ]
+
+          skillsList.forEach((skill) => {
+            const s = calcSkill(skill.name, skill.mod)
+            setField(skill.field, s.value)
+            setCheck(skill.box, s.proficient)
+          })
+
+          // Proficiency Bonus, AC, Speed, Initiative, Passive Wisdom
+          setField('ProfBonus', `+${profBonus}`)
+          setField('AC', armorClassOverride || '10')
+          setField('Initiative', formatMod(dex))
+          setField('Speed', '30ft.') // default
+
+          const perceptionVal = calcSkill('perception', wisModVal)
+          const passiveWisdom = 10 + (parseInt(perceptionVal.value.replace('+', ''), 10) || 0)
+          setField('Passive', String(passiveWisdom))
+
+          // Appearance
+          setField('Age', appearanceProps.age ? appearanceProps.age[0] : '')
+          setField('Height', appearanceProps.height ? appearanceProps.height[0] : '')
+          setField('Weight', appearanceProps.weight ? appearanceProps.weight[0] : '')
+          setField('Eyes', appearanceProps.eyes ? appearanceProps.eyes[0] : '')
+          setField('Skin', appearanceProps.skin ? appearanceProps.skin[0] : '')
+          setField('Hair', appearanceProps.hair ? appearanceProps.hair[0] : '')
+
+          // Spellcasting block if present
+          let spellClass = ''
+          let spellAbility = ''
+          let spellAttack = ''
+          let spellDc = ''
+          if (
+            char.build &&
+            char.build[0] &&
+            char.build[0].magic &&
+            char.build[0].magic[0] &&
+            char.build[0].magic[0].spellcasting
+          ) {
+            const sc = char.build[0].magic[0].spellcasting[0]
+            spellClass = sc.$.name || ''
+            spellAbility = sc.$.ability || ''
+            spellAttack = sc.$.attack ? `+${sc.$.attack}` : ''
+            spellDc = sc.$.dc || ''
+          }
+          setField('Spellcasting Class 2', spellClass)
+          setField('SpellcastingAbility 2', spellAbility)
+          setField('SpellAtkBonus 2', spellAttack)
+          setField('SpellSaveDC  2', spellDc)
+
+          // Features & Traits summary
+          let featuresList: string[] = []
+          if (
+            char.build &&
+            char.build[0] &&
+            char.build[0].elements &&
+            char.build[0].elements[0] &&
+            char.build[0].elements[0].element
+          ) {
+            const elements = char.build[0].elements[0].element
+            elements.forEach((el: any) => {
+              if (
+                el.$ &&
+                el.$.type &&
+                ['Class Feature', 'Archetype Feature', 'Racial Trait'].includes(el.$.type)
+              ) {
+                const name = el.$.name
+                featuresList.push(`${name}`)
+              }
+            })
+          }
+          setField('Features and Traits', featuresList.join('\n'))
+
+          const pdfBytesFilled = await pdfDoc.save()
+          const base64 = Buffer.from(pdfBytesFilled).toString('base64')
+          return { success: true, base64 }
+        } catch (err: any) {
+          console.error('Error generating preview PDF', err)
+          return { success: false, error: err.message }
+        }
+      }
+    )
+
+    // Save filled character sheet PDF
+    ipcMain.handle(
+      'msgSavePdf',
+      async (event: IpcMainEvent, base64: string, characterName: string) => {
+        try {
+          const win = BrowserWindow.fromWebContents(event.sender)
+          const { filePath } = await dialog.showSaveDialog(win!, {
+            title: 'Save Character Sheet PDF',
+            defaultPath: `${characterName || 'Character'}_Sheet.pdf`,
+            filters: [{ name: 'PDF File', extensions: ['pdf'] }]
+          })
+          if (filePath) {
+            const buffer = Buffer.from(base64, 'base64')
+            fs.writeFileSync(filePath, buffer)
+            return { success: true, filePath }
+          }
+          return { success: false, error: 'Cancelled' }
+        } catch (err: any) {
+          console.error('Error saving PDF file', err)
+          return { success: false, error: err.message }
+        }
+      }
+    )
+
+    // Get release notes from buildAssets/release.txt
+    ipcMain.handle('msgGetReleaseNotes', async () => {
+      try {
+        const releasePath = path.join(process.cwd(), 'buildAssets/release.txt')
+        if (fs.existsSync(releasePath)) {
+          return fs.readFileSync(releasePath, 'utf8')
+        }
+        return 'No release notes available.'
+      } catch (err) {
+        console.error('Error reading release.txt', err)
+        return 'No release notes available.'
       }
     })
   }

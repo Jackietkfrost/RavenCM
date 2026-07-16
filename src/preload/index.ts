@@ -15,7 +15,15 @@ const mainAvailChannels: string[] = [
   'msgGetAllClasses',
   'msgGetAllElements',
   'msgGetPortraits',
-  'msgShowItemInFolder'
+  'msgShowItemInFolder',
+  'msgMinimizeWindow',
+  'msgMaximizeWindow',
+  'msgCloseWindow',
+  'msgUpdateCharacterGroup',
+  'msgDeleteCharacter',
+  'msgGeneratePreview',
+  'msgSavePdf',
+  'msgGetReleaseNotes'
 ]
 const rendererAvailChannels: string[] = []
 

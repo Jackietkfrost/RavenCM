@@ -135,9 +135,10 @@ const allSpells = computed(() => characterStore.elements.spells || [])
 const selectedSpells = computed(() => characterStore.character.spells || [])
 
 const filteredSpells = computed(() => {
-  if (!searchQuery.value) return allSpells.value
+  const activeOnly = (allSpells.value || []).filter((item: any) => characterStore.isSourceActive(item.source))
+  if (!searchQuery.value) return activeOnly
   const query = searchQuery.value.toLowerCase()
-  return allSpells.value.filter(
+  return activeOnly.filter(
     (item: any) =>
       item.name.toLowerCase().includes(query) ||
       (item.school && item.school.toLowerCase().includes(query)) ||
@@ -175,8 +176,8 @@ const rowProps = (data: any) => {
 }
 
 onMounted(() => {
-  if (allSpells.value && allSpells.value.length > 0) {
-    selectedSpell.value = allSpells.value[0]
+  if (filteredSpells.value && filteredSpells.value.length > 0) {
+    selectedSpell.value = filteredSpells.value[0]
   }
 })
 </script>

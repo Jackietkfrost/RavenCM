@@ -1,4 +1,5 @@
-import DefaultLayout from '@/renderer/components/layout/DefaultLayout.vue'
-import HeaderLayout from '@/renderer/components/layout/HeaderLayout.vue'
+import DefaultLayout from './DefaultLayout.vue'
+import HeaderLayout from './HeaderLayout.vue'
+import CustomTitleBar from './CustomTitleBar.vue'
 
-export { DefaultLayout, HeaderLayout }
+export { DefaultLayout, HeaderLayout, CustomTitleBar }
