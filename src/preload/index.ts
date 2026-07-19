@@ -23,7 +23,8 @@ const mainAvailChannels: string[] = [
   'msgDeleteCharacter',
   'msgGeneratePreview',
   'msgSavePdf',
-  'msgGetReleaseNotes'
+  'msgGetReleaseNotes',
+  'msgShowConfirmDialog'
 ]
 const rendererAvailChannels: string[] = []
 

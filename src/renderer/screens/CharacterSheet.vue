@@ -20,13 +20,15 @@
             </v-btn>
           </div>
           <p class="text-caption text-grey mb-4">
-            Generate a preview of the character sheet or save as a PDF Document. In the application settings you can enable/disable whether you want the sheet to be 'Form Fillable', if you want spell cards, item cards, attack cards, and feature cards.
+            Generate a preview of the character sheet or save as a PDF Document. In the application
+            settings you can enable/disable whether you want the sheet to be 'Form Fillable', if you
+            want spell cards, item cards, attack cards, and feature cards.
           </p>
 
           <!-- Buttons row -->
           <div class="d-flex gap-x-3 mb-6">
             <v-btn
-              color="primary"
+              color="outline_button"
               variant="outlined"
               :prepend-icon="mdiFileSearchOutline"
               class="mr-2"
@@ -36,7 +38,7 @@
               Generate Preview
             </v-btn>
             <v-btn
-              color="primary"
+              color="outline_button"
               variant="outlined"
               :prepend-icon="mdiFilePdfBox"
               @click="saveCharacterSheet"
@@ -49,11 +51,15 @@
 
         <!-- Additional Fields Section -->
         <div>
-          <div class="text-h6 font-weight-bold text-uppercase border-bottom pb-2 mb-2" style="letter-spacing: 0.05em">
+          <div
+            class="text-h6 font-weight-bold text-uppercase border-bottom pb-2 mb-2"
+            style="letter-spacing: 0.05em"
+          >
             Additional Fields
           </div>
           <p class="text-caption text-grey mb-4">
-            Some fields on the new custom character sheet are not fully implemented yet and can temporary be populated here.
+            Some fields on the new custom character sheet are not fully implemented yet and can
+            temporary be populated here.
           </p>
           <v-text-field
             label="ARMOR CLASS (CONDITIONAL FIELD)"
@@ -69,10 +75,17 @@
       <!-- Right column: Preview box -->
       <v-col cols="7">
         <!-- Iframe loader when PDF is generated -->
-        <div v-if="pdfUrl" class="fill-height" style="min-height: calc(100vh - 220px);">
+        <div v-if="pdfUrl" class="fill-height" style="min-height: calc(100vh - 220px)">
           <iframe
             :src="pdfUrl"
-            style="border: none; width: 100%; height: 100%; min-height: calc(100vh - 220px); border-radius: 4px; background-color: white;"
+            style="
+              border: none;
+              width: 100%;
+              height: 100%;
+              min-height: calc(100vh - 220px);
+              border-radius: 4px;
+              background-color: white;
+            "
           ></iframe>
         </div>
 
@@ -89,14 +102,23 @@
           "
         >
           <template v-if="generating">
-            <v-progress-circular indeterminate color="primary" size="64" class="mb-4"></v-progress-circular>
+            <v-progress-circular
+              indeterminate
+              color="primary"
+              size="64"
+              class="mb-4"
+            ></v-progress-circular>
             <div class="text-subtitle-1 text-grey">Generating Character Sheet PDF...</div>
-            <div class="text-caption text-grey-darken-1 mt-1">Reading elements and writing form fields</div>
+            <div class="text-caption text-grey-darken-1 mt-1"
+              >Reading elements and writing form fields</div
+            >
           </template>
           <template v-else>
             <v-icon :icon="mdiFilePdfBox" size="120" class="text-grey-darken-2 opacity-50 mb-3" />
             <div class="text-subtitle-1 text-grey">Character Sheet Preview</div>
-            <div class="text-caption text-grey-darken-1 mt-1">Click "Generate Preview" to load the document</div>
+            <div class="text-caption text-grey-darken-1 mt-1"
+              >Click "Generate Preview" to load the document</div
+            >
           </template>
         </v-card>
       </v-col>
@@ -114,7 +136,9 @@ const generating = ref(false)
 const pdfBase64 = ref('')
 const pdfUrl = ref('')
 
-const hasActiveCharacter = computed(() => !!characterStore.character && !!characterStore.character.filePath)
+const hasActiveCharacter = computed(
+  () => !!characterStore.character && !!characterStore.character.name
+)
 
 const generatePreview = async () => {
   if (!hasActiveCharacter.value) return
@@ -122,9 +146,13 @@ const generatePreview = async () => {
   pdfUrl.value = ''
   pdfBase64.value = ''
   try {
+    const previewInput = characterStore.character.filePath
+      ? characterStore.character.filePath
+      : characterStore.getCharacterPayload()
+
     const res = await window.mainApi.invoke(
       'msgGeneratePreview',
-      characterStore.character.filePath,
+      previewInput,
       characterStore.character.armorClass || ''
     )
     if (res && res.success && res.base64) {
@@ -163,11 +191,14 @@ const saveCharacterSheet = async () => {
   }
 }
 
-watch(() => characterStore.autoGenerateTrigger, (newVal) => {
-  if (newVal > 0) {
-    generatePreview()
+watch(
+  () => characterStore.autoGenerateTrigger,
+  (newVal) => {
+    if (newVal > 0) {
+      generatePreview()
+    }
   }
-})
+)
 </script>
 
 <style scoped>

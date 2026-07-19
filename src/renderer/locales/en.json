@@ -12,7 +12,8 @@
     "equipment": "Equipment",
     "manage": "Manage",
     "charactersheet": "Character Sheet",
-    "error": "Unknown Error"
+    "error": "Unknown Error",
+    "settings": "Settings"
   },
   "menu": {
     "create-character": "Create Character",

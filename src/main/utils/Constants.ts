@@ -1,6 +1,7 @@
 import { join, dirname, resolve } from 'path'
 import { name, version, debug } from '../../../package.json'
 import { fileURLToPath } from 'url'
+import { homedir } from 'os'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -47,10 +48,12 @@ export default class Constants {
     showAtStartup: false
   }
 
-  static APP_INDEX_URL_DEV = `${debug.env.VITE_DEV_SERVER_URL}/index.html`
+  static APP_INDEX_URL_DEV = process.env.VITE_DEV_SERVER_URL
+    ? `${process.env.VITE_DEV_SERVER_URL.replace(/\/$/, '')}/index.html`
+    : `${debug.env.VITE_DEV_SERVER_URL}/index.html`
   static APP_INDEX_URL_PROD = join(__dirname, '../index.html')
 
-  static DOCUMENT_FOLDER = join(process.env.HOME, 'Documents')
+  static DOCUMENT_FOLDER = join(homedir(), 'Documents')
   static RAVEN_FOLDER = join(this.DOCUMENT_FOLDER, 'Raven Character Builder')
   static CUSTOM_FOLDER = join(this.RAVEN_FOLDER, 'Custom')
 

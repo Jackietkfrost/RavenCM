@@ -34,18 +34,23 @@ export default createVuetify({
       light: {
         dark: false,
         colors: {
-          primary: colors.brown.darken2,
+          primary: colors.brown.lighten1,
           background: colors.brown.lighten5,
           button: colors.brown.darken1,
-          accordion: colors.brown.lighten4
+          accordion: colors.brown.lighten4,
+          header: colors.brown.darken2,
+          subheader: colors.brown.darken3
         }
       },
       dark: {
         dark: true,
         colors: {
-          primary: colors.brown.darken4,
+          primary: colors.brown.lighten1,
           background: colors.grey.darken4,
           button: colors.brown.lighten1,
+          outline_button: colors.brown.lighten2,
+          header: colors.brown.darken2,
+          subheader: colors.brown.darken3
         }
       }
     }

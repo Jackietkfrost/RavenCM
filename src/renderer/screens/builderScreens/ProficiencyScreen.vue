@@ -20,12 +20,14 @@
     </v-row>
     <v-row>
       <!-- Left column: Proficiency list table -->
-      <v-col cols="7">
+      <v-col style="flex: 0 0 70%; max-width: 70%;">
         <v-card variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
           <v-card-title class="py-3">
-            <v-row no-gutters @click="() => (isExpanded = !isExpanded)" class="align-center">
-              <v-col class="" cols="4"> {{ t('BuildScreen.proficiency') }} </v-col>
-              <v-col class="text--secondary" cols="6">
+            <v-row no-gutters class="align-center">
+              <v-col class="cursor-pointer" cols="6" @click="() => (isExpanded = !isExpanded)">
+                {{ t('BuildScreen.proficiency') }}
+              </v-col>
+              <v-col class="text--secondary" cols="5">
                 <v-text-field
                   readonly
                   class="proficiency-box cursor-pointer"
@@ -36,21 +38,13 @@
                   single-line
                   persistent-clear
                   hide-details
-                  :dirty="
-                    characterStore.character.proficiency &&
-                    characterStore.character.proficiency.length > 0
-                  "
+                  :dirty="!!characterStore.character.proficiency"
+                  @click.stop="() => (isExpanded = !isExpanded)"
                   @click:clear="onClear"
                 ></v-text-field>
               </v-col>
-              <v-col class="d-flex justify-end" cols="2">
-                <v-icon
-                  :icon="isExpanded ? mdiChevronUp : mdiChevronDown"
-                  class="ml-auto"
-                  @click="() => (isExpanded = !isExpanded)"
-                >
-                  {{ isExpanded ? mdiChevronUp : mdiChevronDown }}
-                </v-icon>
+              <v-col class="d-flex justify-end cursor-pointer" cols="1" @click="() => (isExpanded = !isExpanded)">
+                <v-icon :icon="isExpanded ? mdiChevronUp : mdiChevronDown" class="ml-auto" />
               </v-col>
             </v-row>
           </v-card-title>
@@ -71,7 +65,7 @@
       </v-col>
 
       <!-- Right column: Proficiency details pane -->
-      <v-col cols="5">
+      <v-col style="flex: 0 0 30%; max-width: 30%;">
         <v-card
           variant="outlined"
           class="d-flex flex-column"
@@ -113,7 +107,7 @@
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
 import { mdiChevronDown, mdiChevronUp, mdiFilterMenuOutline, mdiMagnify } from '@mdi/js'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -142,10 +136,17 @@ const filteredItems = computed(() => {
   )
 })
 
+watch(
+  () => characterStore.character.proficiency,
+  (newProf) => {
+    textFieldValue.value = newProf || ''
+  }
+)
+
 const handleDoubleClick = (event: any, { item }: any) => {
   characterStore.character.proficiency = item.name
   textFieldValue.value = item.name
-  isExpanded.value = !isExpanded.value
+  isExpanded.value = false
 }
 
 const handleRowClick = (event: any, { item }: any) => {
@@ -159,9 +160,14 @@ const rowProps = (data: any) => {
   }
 }
 
-const onClear = () => {
+const onClear = (event: any) => {
+  if (event && event.stopPropagation) event.stopPropagation()
   characterStore.character.proficiency = ''
   textFieldValue.value = ''
+  selectedProficiency.value = null
+  setTimeout(() => {
+    isExpanded.value = true
+  }, 50)
 }
 
 onMounted(() => {

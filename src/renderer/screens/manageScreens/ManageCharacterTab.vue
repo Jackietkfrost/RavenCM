@@ -85,6 +85,28 @@
             clearable
           ></v-combobox>
         </v-col>
+
+        <!-- Row 3: HP and Speed -->
+        <v-col cols="12" md="4">
+          <v-text-field
+            label="HIT POINTS"
+            v-model.number="characterStore.character.hp"
+            type="number"
+            variant="outlined"
+            density="compact"
+            hide-details
+          ></v-text-field>
+        </v-col>
+        <v-col cols="12" md="4">
+          <v-text-field
+            label="SPEED"
+            v-model.number="characterStore.character.speed"
+            type="number"
+            variant="outlined"
+            density="compact"
+            hide-details
+          ></v-text-field>
+        </v-col>
       </v-row>
     </div>
 

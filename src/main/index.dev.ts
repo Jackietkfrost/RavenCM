@@ -9,14 +9,14 @@ const vue3DevTools = {
   version: '7.7.0'
 }
 
-try {
-  app.on('ready', async () => {
+app.on('ready', async () => {
+  try {
     await installExtension(vue3DevTools, {
       loadExtensionOptions: {
         allowFileAccess: true
       }
     })
-  })
-} catch {
-  // Do nothing
-}
+  } catch (err) {
+    console.error('Failed to install Vue DevTools extension:', err)
+  }
+})

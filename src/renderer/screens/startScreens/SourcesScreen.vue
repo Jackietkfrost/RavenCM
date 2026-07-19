@@ -5,7 +5,7 @@
       <v-col cols="12" md="4" class="d-flex align-center gap-x-2">
         <v-btn
           color="primary"
-          variant="outlined"
+          variant="flat"
           size="small"
           :prepend-icon="mdiContentSave"
           @click="saveDefaultSources"
@@ -14,7 +14,7 @@
         </v-btn>
         <v-btn
           color="primary"
-          variant="outlined"
+          variant="flat"
           size="small"
           :prepend-icon="mdiDownload"
           @click="loadDefaultSources"
@@ -228,7 +228,7 @@ import { mdiContentSave, mdiDownload } from '@mdi/js'
 import { ref, computed, onMounted, watch } from 'vue'
 
 const characterStore = useAppStore()
-const selectedCategory = ref('Wizards of the Coast')
+const selectedCategory = ref('')
 const selectedSource = ref<any>(null)
 
 const restrictPlaytest = ref(false)
@@ -241,48 +241,58 @@ const applyRestrictionsBtn = () => {
   saveDefaultSources()
 }
 
-const categories = ['Wizards of the Coast', 'Adventurers League', 'Unearthed Arcana', 'Third Party', 'Homebrew']
-
 const allSources = computed(() => {
   return characterStore.elements.sources || []
 })
 
-// Helper to determine category of a source
+// Dynamic categories derived directly from unique source attributes in the loaded XML sources
+const categories = computed(() => {
+  const uniqueCats = new Set<string>()
+  allSources.value.forEach((s: any) => {
+    if (s.source) {
+      uniqueCats.add(s.source)
+    }
+  })
+  const arr = Array.from(uniqueCats)
+  if (arr.length === 0) {
+    return ['Core']
+  }
+  return arr.sort()
+})
+
+// Automatically select the first category if none is selected or the selected one is no longer present
+watch(
+  categories,
+  (newCats) => {
+    if (newCats && newCats.length > 0 && (!selectedCategory.value || !newCats.includes(selectedCategory.value))) {
+      selectedCategory.value = newCats[0]
+    }
+  },
+  { immediate: true }
+)
+
+// Helper to determine category of a source (drawing directly from source attribute in XML)
 const getSourceCategory = (source: any): string => {
-  const author = source.setters?.author?.toLowerCase() || ''
-  const name = source.name.toLowerCase()
-  
-  if (name.startsWith('ua:') || name.includes('unearthed arcana')) {
-    return 'Unearthed Arcana'
-  }
-  if (author.includes('wizards of the coast') || author.includes('wotc') || source.source === 'Core') {
-    return 'Wizards of the Coast'
-  }
-  if (author.includes('adventurers league') || name.includes('adventurers league')) {
-    return 'Adventurers League'
-  }
-  if (source.source === 'Homebrew' || author.includes('homebrew') || name.includes('homebrew')) {
-    return 'Homebrew'
-  }
-  return 'Third Party'
+  return source.source || 'Core'
 }
 
-// Group sources by category
+// Group sources by category dynamically
 const sourcesByCategory = computed(() => {
-  const map: Record<string, any[]> = {
-    'Wizards of the Coast': [],
-    'Adventurers League': [],
-    'Unearthed Arcana': [],
-    'Third Party': [],
-    'Homebrew': []
-  }
+  const map: Record<string, any[]> = {}
+  
+  categories.value.forEach((cat) => {
+    map[cat] = []
+  })
   
   allSources.value.forEach((s: any) => {
     const cat = getSourceCategory(s)
     if (map[cat]) {
       map[cat].push(s)
     } else {
-      map['Third Party'].push(s)
+      if (!map[cat]) {
+        map[cat] = []
+      }
+      map[cat].push(s)
     }
   })
   

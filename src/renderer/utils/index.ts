@@ -1,6 +1,6 @@
 export default class Utils {
   static getCurrentLocale(): string {
-    return navigator?.language?.split('-')[0] || 'en'
+    return localStorage.getItem('language') || navigator?.language?.split('-')[0] || 'en'
   }
 
   static async openExternal(url: string): Promise<void> {

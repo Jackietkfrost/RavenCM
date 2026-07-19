@@ -8,7 +8,8 @@
   "title": {
     "main": "Pantalla Principal",
     "second": "Segunda Pantalla",
-    "error": "Se produjo un error"
+    "error": "Se produjo un error",
+    "settings": "Ajustes"
   },
   "menu": {
     "change-theme": "Cambiar de Tema",
@@ -16,6 +17,12 @@
     "increase-count": "Aumentar la cuenta en 1",
     "documentation": "Documentación",
     "github": "Código Fuente",
-    "open-file": "Abrir un archivo de texto"
+    "open-file": "Abrir un archivo de texto",
+    "settings": "Ajustes"
+  },
+  "StartScreen": {
+    "character-collection": "Colección de Personajes",
+    "sources": "fuentes",
+    "additional-sources": "Fuentes Adicionales"
   }
 }

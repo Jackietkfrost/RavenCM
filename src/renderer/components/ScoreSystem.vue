@@ -5,7 +5,7 @@
     :label="label"
     :inset="false"
     variant="solo"
-    v-model="moduleValue"
+    v-model="modelValue"
     flat
     :max="20"
     :min="3"
@@ -14,8 +14,7 @@
   />
 </template>
 <script setup lang="tsx">
-import { ref } from 'vue'
-const moduleValue = ref(10)
+const modelValue = defineModel<number>({ default: 10 })
 defineProps({
   label: {
     type: String,

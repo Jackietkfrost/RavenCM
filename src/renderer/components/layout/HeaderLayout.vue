@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar color="primary" density="comfortable" elevation="24">
+  <v-app-bar color="header" density="comfortable" elevation="24">
     <v-btn
       :prepend-icon="mdiHome"
       :class="{ active: isCurrentRoute('/') }"
@@ -60,12 +60,6 @@
           {{ t('menu.github') }}
         </v-tooltip>
       </v-btn>
-      <v-btn icon @click="handleChangeTheme">
-        <v-icon :icon="mdiBrightness6" />
-        <v-tooltip activator="parent" location="bottom">
-          {{ t('menu.change-theme') }}
-        </v-tooltip>
-      </v-btn>
       <v-btn icon @click="handleOpenSettings">
         <v-icon :icon="mdiCog" />
         <v-tooltip activator="parent" location="bottom">
@@ -73,34 +67,44 @@
         </v-tooltip>
       </v-btn>
       <!-- Selected Character Info or Create Character Button -->
-      <v-container v-if="hasSelectedCharacter" width="220" class="pa-0 ma-0 ml-2">
-        <v-row no-gutters class="align-center">
-          <v-col cols="8" class="text-right pr-2">
-            <h5 class="text-subtitle-2 font-weight-bold text-truncate" style="line-height: 1.2;">
-              {{ characterStore.character.name }}
-            </h5>
-            <h6 class="text-caption text-grey" style="line-height: 1.2;">
-              Level {{ characterStore.character.level }}
-            </h6>
-          </v-col>
-          <v-col cols="4" class="d-flex justify-end">
-            <v-avatar :image="characterStore.character.avatar || '/images/icon-64px.png'" size="36" style="border: 2px solid rgba(var(--v-theme-primary), 0.5);" />
-          </v-col>
-        </v-row>
-      </v-container>
-      
-      <!-- If no character selected, show Plus button -->
-      <v-btn
-        v-else
-        icon
-        variant="text"
-        class="ml-2 plus-button"
-        @click="characterStore.toggleCreateCharacter()"
+      <div
+        v-if="hasSelectedCharacter"
+        class="d-flex align-center justify-end ml-4 cursor-pointer"
+        @click="handleAvatarClick"
+        style="max-width: 250px"
       >
+        <div class="text-right mr-3 d-flex flex-column align-end" style="max-width: 180px">
+          <h5
+            class="text-subtitle-2 font-weight-bold text-truncate text-right w-100 text-uppercase name-text"
+            style="line-height: 1.2"
+          >
+            {{ String(characterStore.character.name).toUpperCase() }}
+          </h5>
+          <h6
+            class="text-caption text-grey text-right w-100 text-uppercase mt-0.5"
+            style="line-height: 1.2"
+          >
+            {{ levelInfoStr }}
+          </h6>
+          <v-progress-linear
+            :model-value="xpPercentage"
+            color="amber-darken-2"
+            height="2"
+            rounded
+            class="mt-1"
+            style="max-width: 100%"
+          />
+        </div>
+        <v-avatar size="44" class="character-avatar-clickable">
+          <v-img :src="characterStore.character.avatar || '/images/icon-64px.png'" cover />
+          <v-tooltip activator="parent" location="bottom"> View Character Stats </v-tooltip>
+        </v-avatar>
+      </div>
+
+      <!-- If no character selected, show Plus button -->
+      <v-btn v-else icon variant="text" class="ml-2 plus-button" @click="handlePlusClick">
         <v-icon :icon="mdiPlus" color="success" size="24" />
-        <v-tooltip activator="parent" location="bottom">
-          Create Character
-        </v-tooltip>
+        <v-tooltip activator="parent" location="bottom"> Create Character </v-tooltip>
       </v-btn>
     </template>
   </v-app-bar>
@@ -124,7 +128,6 @@ import {
   mdiGithub,
   mdiHome,
   mdiWrench,
-  mdiBrightness6,
   mdiMagicStaff,
   mdiSack,
   mdiAccountCog,
@@ -133,13 +136,13 @@ import {
   mdiPlus
 } from '@mdi/js'
 import { openExternal } from '@/renderer/utils'
-import { useTheme } from 'vuetify'
+// import { useTheme } from 'vuetify'
 import { useAppStore } from '@/renderer/store/appStore'
 
 import { computed } from 'vue'
 
 const characterStore = useAppStore()
-const theme = useTheme()
+// const theme = useTheme()
 const router = useRouter()
 const route: any = useRoute()
 // const titleKey: string = (route?.meta?.titleKey || 'title.main') as string
@@ -158,17 +161,66 @@ const isCurrentRoute = (path: string): boolean => {
   return path === route.path
 }
 
-const handleChangeTheme = (): void => {
-  const nextTheme = theme.global.current.value.dark ? 'light' : 'dark'
-  theme.global.name.value = nextTheme
-  localStorage.setItem('theme', nextTheme)
-}
+// const handleChangeTheme = (): void => {
+//   const nextTheme = theme.global.current.value.dark ? 'light' : 'dark'
+//   theme.global.name.value = nextTheme
+//   localStorage.setItem('theme', nextTheme)
+// }
+
+const xpThresholds = [
+  0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000,
+  195000, 225000, 265000, 305000, 355000
+]
+
+const xpPercentage = computed(() => {
+  const char = characterStore.character
+  if (!char) return 0
+  const level = char.level || 1
+  const xp = char.experience || 0
+
+  const minXp = xpThresholds[level - 1] ?? 0
+  const maxXp = xpThresholds[level] ?? 355000
+
+  if (maxXp > minXp) {
+    return Math.max(0, Math.min(100, ((xp - minXp) / (maxXp - minXp)) * 100))
+  }
+  return 100
+})
+
+const levelInfoStr = computed(() => {
+  const char = characterStore.character
+  if (!char) return ''
+  let str = `LEVEL ${char.level}`
+  if (char.race) str += ` ${char.race}`
+  if (char.class) str += ` ${char.class}`
+  return str.toUpperCase()
+})
 
 const handleOpenGitHub = async (): Promise<void> => {
   await openExternal('https://github.com/Jackietkfrost/RavenCM')
 }
 
-const handleOpenSettings = (): void => {}
+const handleOpenSettings = (): void => {
+  characterStore.showSettings = true
+}
+
+const handleAvatarClick = () => {
+  if (characterStore.createCharacter && characterStore.drawerMode === 'view') {
+    characterStore.createCharacter = false
+  } else {
+    characterStore.drawerMode = 'view'
+    characterStore.createCharacter = true
+  }
+}
+
+const handlePlusClick = () => {
+  if (characterStore.createCharacter && characterStore.drawerMode === 'create') {
+    characterStore.createCharacter = false
+  } else {
+    characterStore.drawerMode = 'create'
+    characterStore.createCharacter = true
+  }
+}
 </script>
 <style scoped>
 .v-btn {
@@ -192,5 +244,18 @@ const handleOpenSettings = (): void => {}
   border: 2px solid rgba(0, 159, 87, 0.8) !important;
   background-color: rgba(0, 159, 87, 0.15) !important;
   transform: scale(1.05);
+}
+.character-avatar-clickable {
+  cursor: pointer;
+  border: 2px solid rgba(var(--v-theme-primary), 0.5) !important;
+  transition: all 0.2s ease;
+}
+.character-avatar-clickable:hover {
+  border-color: rgba(var(--v-theme-primary), 1) !important;
+  transform: scale(1.08);
+}
+.name-text {
+  color: #58a6ff;
+  letter-spacing: 0.02em;
 }
 </style>

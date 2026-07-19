@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar color="primary" density="compact" height="50">
+  <v-app-bar color="subheader" density="compact" height="50">
     <v-btn
       variant="text"
       :class="{ active: characterStore.currentManageStage === 'character' }"

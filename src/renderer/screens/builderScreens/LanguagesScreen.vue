@@ -1,77 +1,91 @@
 <template>
   <v-container fluid class="pa-4">
-    <v-row no-gutters class="mb-4">
-      <v-col cols="11" sm="6">
+    <!-- Header section -->
+    <v-row class="mb-4 align-center">
+      <v-col cols="12" sm="6">
         <v-text-field
-          :prepend-inner-icon="mdiMagnify"
-          variant="solo"
-          density="compact"
-          label="Search"
           v-model="searchQuery"
+          variant="outlined"
+          density="compact"
+          :placeholder="t('Search')"
+          :prepend-inner-icon="mdiMagnify"
           clearable
           hide-details
         ></v-text-field>
       </v-col>
-      <v-col class="d-flex justify-end" cols="1" sm="6">
+      <v-col class="d-flex justify-end" cols="12" sm="6">
         <v-btn icon variant="text">
           <v-icon :icon="mdiFilterMenuOutline" />
         </v-btn>
       </v-col>
     </v-row>
     <v-row>
-      <!-- Left column: Language list table -->
-      <v-col cols="7">
-        <v-card variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
+      <!-- Left column: Language selection slots list -->
+      <v-col style="flex: 0 0 70%; max-width: 70%">
+        <div
+          v-if="languageSelectionSlots.length === 0"
+          class="d-flex flex-column align-center justify-center py-12 text-grey"
+        >
+          <div class="text-subtitle-1">No language choices granted by your current selections.</div>
+        </div>
+        <v-card
+          v-for="(slot, index) in languageSelectionSlots"
+          :key="slot.key"
+          variant="outlined"
+          class="mb-4"
+          style="border-color: rgba(128, 128, 128, 0.2)"
+        >
           <v-card-title class="py-3">
-            <v-row no-gutters @click="() => (isExpanded = !isExpanded)" class="align-center">
-              <v-col class="" cols="4"> {{ t('BuildScreen.languages') }} </v-col>
-              <v-col class="text--secondary" cols="6">
+            <v-row no-gutters class="align-center">
+              <v-col class="cursor-pointer" cols="6" @click="() => toggleSlot(index)">
+                {{ slot.name }}
+              </v-col>
+              <v-col class="text--secondary" cols="5">
                 <v-text-field
                   readonly
                   class="languages-box cursor-pointer"
-                  v-model="textFieldValue"
+                  :model-value="selectedLanguages[index] || ''"
                   variant="plain"
                   density="compact"
                   clearable
                   single-line
                   persistent-clear
                   hide-details
-                  :dirty="
-                    characterStore.character.languages &&
-                    characterStore.character.languages.length > 0
-                  "
-                  @click:clear="onClear"
+                  :dirty="!!selectedLanguages[index]"
+                  @click.stop="() => toggleSlot(index)"
+                  @click:clear="() => onClearSlot(index)"
                 ></v-text-field>
               </v-col>
-              <v-col class="d-flex justify-end" cols="2">
+              <v-col
+                class="d-flex justify-end cursor-pointer"
+                cols="1"
+                @click="() => toggleSlot(index)"
+              >
                 <v-icon
-                  :icon="isExpanded ? mdiChevronUp : mdiChevronDown"
+                  :icon="expandedSlotIndex === index ? mdiChevronUp : mdiChevronDown"
                   class="ml-auto"
-                  @click="() => (isExpanded = !isExpanded)"
-                >
-                  {{ isExpanded ? mdiChevronUp : mdiChevronDown }}
-                </v-icon>
+                />
               </v-col>
             </v-row>
           </v-card-title>
           <v-data-table-virtual
-            v-if="isExpanded"
+            v-if="expandedSlotIndex === index"
             :headers="headers"
-            :items="filteredItems"
+            :items="getFilteredItemsForSlot(slot)"
             :item-value="(item) => item.id"
             hover
             fixed-header
-            height="calc(100vh - 280px)"
-            @dblclick:row="handleDoubleClick"
-            @click:row="handleRowClick"
-            :row-props="rowProps"
+            height="300px"
+            @dblclick:row="(event, row) => handleSlotDoubleClick(index, row.item)"
+            @click:row="(event, row) => handleSlotClick(index, row.item)"
+            :row-props="(data) => getRowPropsForSlot(index, data)"
           >
           </v-data-table-virtual>
         </v-card>
       </v-col>
 
       <!-- Right column: Language details pane -->
-      <v-col cols="5">
+      <v-col style="flex: 0 0 30%; max-width: 30%">
         <v-card
           variant="outlined"
           class="d-flex flex-column"
@@ -118,57 +132,247 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const characterStore = useAppStore()
-const isExpanded = ref(true)
-const textFieldValue = ref(
-  characterStore.character.languages && typeof characterStore.character.languages === 'string'
-    ? characterStore.character.languages
-    : ''
-)
 const languages = characterStore.elements.languages
 const headers = ref([
   { title: 'Language', key: 'name', align: 'start' as const },
   { title: 'Source', key: 'source', align: 'end' as const }
 ])
-const items = ref(languages)
 const searchQuery = ref('')
 const selectedLanguage = ref<any>(null)
+const expandedSlotIndex = ref<number | null>(0)
 
-const filteredItems = computed(() => {
-  const activeOnly = (items.value || []).filter((item: any) => characterStore.isSourceActive(item.source))
-  if (!searchQuery.value) return activeOnly
+// Calculate dynamic language choice slots based on active character build rules
+const languageSelectionSlots = computed(() => {
+  const activeRules: any[] = []
+  const activeIds = new Set<string>()
+
+  // 1. Race rules & ID
+  if (characterStore.character.race) {
+    const raceEl = characterStore.elements.races.find(
+      (r: any) => r.name === characterStore.character.race
+    )
+    if (raceEl) {
+      activeIds.add(raceEl.id)
+      if (raceEl.rules) activeRules.push(...raceEl.rules)
+    }
+  }
+
+  // 2. Subrace rules & ID
+  if (characterStore.character.subrace) {
+    const subraceEl = (characterStore.elements.subRaces || []).find(
+      (s: any) => s.name === characterStore.character.subrace
+    )
+    if (subraceEl) {
+      activeIds.add(subraceEl.id)
+      if (subraceEl.rules) activeRules.push(...subraceEl.rules)
+    }
+  }
+
+  // 3. Class rules & ID
+  if (characterStore.character.class) {
+    const classEl = characterStore.elements.classes.find(
+      (c: any) => c.name === characterStore.character.class
+    )
+    if (classEl) {
+      activeIds.add(classEl.id)
+      if (classEl.rules) activeRules.push(...classEl.rules)
+    }
+  }
+
+  // 4. Subclass/Archetype rules & ID
+  if (characterStore.character.archetype) {
+    const archetypeEl = characterStore.elements.archetypes.find(
+      (a: any) => a.name === characterStore.character.archetype
+    )
+    if (archetypeEl) {
+      activeIds.add(archetypeEl.id)
+      if (archetypeEl.rules) activeRules.push(...archetypeEl.rules)
+    }
+  }
+
+  // 5. Background rules & ID
+  if (characterStore.character.background && characterStore.character.background.name) {
+    const backgroundEl = characterStore.elements.backgrounds.find(
+      (b: any) => b.name === characterStore.character.background.name
+    )
+    if (backgroundEl) {
+      activeIds.add(backgroundEl.id)
+      if (backgroundEl.rules) activeRules.push(...backgroundEl.rules)
+    }
+  }
+
+  // 6. Feats rules & ID
+  if (characterStore.character.feat) {
+    const featEl = characterStore.elements.feats.find(
+      (f: any) => f.name === characterStore.character.feat
+    )
+    if (featEl) {
+      activeIds.add(featEl.id)
+      if (featEl.rules) activeRules.push(...featEl.rules)
+    }
+  }
+
+  // Evaluator for requirement strings
+  const isRuleActive = (rule: any) => {
+    if (!rule.requirements) return true
+    const reqs = rule.requirements.split(',').map((r: string) => r.trim())
+    return reqs.every((req: string) => {
+      if (req.startsWith('!')) {
+        return !activeIds.has(req.slice(1))
+      } else {
+        return activeIds.has(req)
+      }
+    })
+  }
+
+  // Filter for active select rules of type Language
+  const languageRules = activeRules.filter(
+    (rule: any) => rule.type === 'select' && rule.selectType === 'Language' && isRuleActive(rule)
+  )
+
+  // Expand each rule into individual slots based on rule.number
+  const slots: { name: string; supports: string; key: string }[] = []
+  languageRules.forEach((rule, ruleIdx) => {
+    const num = parseInt(rule.number, 10) || 1
+    for (let i = 0; i < num; i++) {
+      slots.push({
+        name: rule.name || 'Language',
+        supports: rule.supports || '',
+        key: `${rule.name || 'language'}-${ruleIdx}-${i}`
+      })
+    }
+  })
+
+  return slots
+})
+
+// Read/write wrapper around the store's character languages array
+const selectedLanguages = computed({
+  get() {
+    const langs = characterStore.character.languages
+    return Array.isArray(langs) ? langs : []
+  },
+  set(newVal) {
+    characterStore.character.languages = newVal
+  }
+})
+
+const toggleSlot = (index: number) => {
+  expandedSlotIndex.value = expandedSlotIndex.value === index ? null : index
+}
+
+// Compute names of languages already granted by race or subrace rules
+const raceLanguages = computed(() => {
+  const currentRaceName = characterStore.character.race
+  if (!currentRaceName) return []
+
+  const raceEl = characterStore.elements.races.find(
+    (r: any) => r.name === currentRaceName
+  )
+  if (!raceEl || !raceEl.rules) return []
+
+  const grantedIds = new Set<string>()
+  raceEl.rules.forEach((rule: any) => {
+    if (rule.type === 'grant' && rule.grantType === 'Language') {
+      grantedIds.add(rule.id.toUpperCase())
+    }
+  })
+
+  const currentSubrace = characterStore.character.subrace
+  if (currentSubrace) {
+    const subraceEl = (characterStore.elements.subRaces || []).find(
+      (s: any) => s.name === currentSubrace
+    )
+    if (subraceEl && subraceEl.rules) {
+      subraceEl.rules.forEach((rule: any) => {
+        if (rule.type === 'grant' && rule.grantType === 'Language') {
+          grantedIds.add(rule.id.toUpperCase())
+        }
+      })
+    }
+  }
+
+  const names: string[] = []
+  grantedIds.forEach((id) => {
+    const lang = (characterStore.elements.languages || []).find(
+      (l: any) => l.id.toUpperCase() === id
+    )
+    if (lang) {
+      names.push(lang.name.toLowerCase())
+    }
+  })
+
+  return names
+})
+
+const getFilteredItemsForSlot = (slot: any) => {
+  const activeOnly = (languages || []).filter((item: any) =>
+    characterStore.isSourceActive(item.source)
+  )
+
+  // Filter by supports tags (e.g. Standard||Exotic)
+  let list = activeOnly
+  if (slot.supports) {
+    const allowed = slot.supports.split('||').map((s: string) => s.trim().toLowerCase())
+    list = activeOnly.filter((item: any) => {
+      if (!item.supports) return false
+      const itemSupports = item.supports.split(',').map((s: string) => s.trim().toLowerCase())
+      return itemSupports.some((sup: string) => allowed.includes(sup))
+    })
+  }
+
+  // Filter out languages already spoken/granted by race or subrace
+  const spoken = raceLanguages.value
+  list = list.filter((item: any) => !spoken.includes(item.name.toLowerCase()))
+
+  // Filter by search query
+  if (!searchQuery.value) return list
   const query = searchQuery.value.toLowerCase()
-  return activeOnly.filter(
+  return list.filter(
     (item: any) =>
       item.name.toLowerCase().includes(query) ||
       (item.source && item.source.toLowerCase().includes(query))
   )
-})
-
-const handleDoubleClick = (event: any, { item }: any) => {
-  characterStore.character.languages = item.name
-  textFieldValue.value = item.name
-  isExpanded.value = !isExpanded.value
 }
 
-const handleRowClick = (event: any, { item }: any) => {
+const handleSlotDoubleClick = (index: number, item: any) => {
+  const current = [...selectedLanguages.value]
+  while (current.length <= index) {
+    current.push('')
+  }
+  current[index] = item.name
+  selectedLanguages.value = current
+  expandedSlotIndex.value = null
+}
+
+const handleSlotClick = (index: number, item: any) => {
   selectedLanguage.value = item
 }
 
-const rowProps = (data: any) => {
+const getRowPropsForSlot = (index: number, data: any) => {
   const isSelected = selectedLanguage.value && selectedLanguage.value.id === data.item.id
   return {
     class: isSelected ? 'v-theme--selected' : ''
   }
 }
 
-const onClear = () => {
-  characterStore.character.languages = ''
-  textFieldValue.value = ''
+const onClearSlot = (index: number) => {
+  const current = [...selectedLanguages.value]
+  if (current.length > index) {
+    current[index] = ''
+  }
+  selectedLanguages.value = current
+  setTimeout(() => {
+    expandedSlotIndex.value = index
+  }, 50)
 }
 
 onMounted(() => {
-  if (filteredItems.value && filteredItems.value.length > 0) {
-    selectedLanguage.value = filteredItems.value[0]
+  const allLangs = (languages || []).filter((item: any) =>
+    characterStore.isSourceActive(item.source)
+  )
+  if (allLangs && allLangs.length > 0) {
+    selectedLanguage.value = allLangs[0]
   }
 })
 </script>

@@ -5,6 +5,7 @@ import MagicScreen from '@/renderer/screens/MagicScreen.vue'
 import EquipmentScreen from '@/renderer/screens/EquipmentScreen.vue'
 import ManagerScreen from '@/renderer/screens/ManagerScreen.vue'
 import CharacterScreen from '@/renderer/screens/CharacterSheet.vue'
+import SettingsScreen from '@/renderer/screens/SettingsScreen.vue'
 
 export {
   ErrorScreen,
@@ -13,5 +14,6 @@ export {
   MagicScreen,
   EquipmentScreen,
   ManagerScreen,
-  CharacterScreen
+  CharacterScreen,
+  SettingsScreen
 }

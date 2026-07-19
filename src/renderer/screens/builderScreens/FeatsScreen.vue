@@ -20,12 +20,14 @@
     </v-row>
     <v-row>
       <!-- Left column: Feat list table -->
-      <v-col cols="7">
+      <v-col style="flex: 0 0 70%; max-width: 70%;">
         <v-card variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
           <v-card-title class="py-3">
-            <v-row no-gutters @click="() => (isExpanded = !isExpanded)" class="align-center">
-              <v-col class="" cols="4"> {{ t('BuildScreen.feat') }} </v-col>
-              <v-col class="text--secondary" cols="6">
+            <v-row no-gutters class="align-center">
+              <v-col class="cursor-pointer" cols="6" @click="() => (isExpanded = !isExpanded)">
+                {{ t('BuildScreen.feat') }}
+              </v-col>
+              <v-col class="text--secondary" cols="5">
                 <v-text-field
                   readonly
                   class="feat-box cursor-pointer"
@@ -36,20 +38,13 @@
                   single-line
                   persistent-clear
                   hide-details
-                  :dirty="
-                    characterStore.character.feat && characterStore.character.feat.length > 0
-                  "
+                  :dirty="!!characterStore.character.feat"
+                  @click.stop="() => (isExpanded = !isExpanded)"
                   @click:clear="onClear"
                 ></v-text-field>
               </v-col>
-              <v-col class="d-flex justify-end" cols="2">
-                <v-icon
-                  :icon="isExpanded ? mdiChevronUp : mdiChevronDown"
-                  class="ml-auto"
-                  @click="() => (isExpanded = !isExpanded)"
-                >
-                  {{ isExpanded ? mdiChevronUp : mdiChevronDown }}
-                </v-icon>
+              <v-col class="d-flex justify-end cursor-pointer" cols="1" @click="() => (isExpanded = !isExpanded)">
+                <v-icon :icon="isExpanded ? mdiChevronUp : mdiChevronDown" class="ml-auto" />
               </v-col>
             </v-row>
           </v-card-title>
@@ -70,7 +65,7 @@
       </v-col>
 
       <!-- Right column: Feat details pane -->
-      <v-col cols="5">
+      <v-col style="flex: 0 0 30%; max-width: 30%;">
         <v-card
           variant="outlined"
           class="d-flex flex-column"
@@ -112,7 +107,7 @@
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
 import { mdiChevronDown, mdiChevronUp, mdiFilterMenuOutline, mdiMagnify } from '@mdi/js'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -139,10 +134,17 @@ const filteredItems = computed(() => {
   )
 })
 
+watch(
+  () => characterStore.character.feat,
+  (newFeat) => {
+    textFieldValue.value = newFeat || ''
+  }
+)
+
 const handleDoubleClick = (event: any, { item }: any) => {
   characterStore.character.feat = item.name
   textFieldValue.value = item.name
-  isExpanded.value = !isExpanded.value
+  isExpanded.value = false
 }
 
 const handleRowClick = (event: any, { item }: any) => {
@@ -156,9 +158,14 @@ const rowProps = (data: any) => {
   }
 }
 
-const onClear = () => {
+const onClear = (event: any) => {
+  if (event && event.stopPropagation) event.stopPropagation()
   characterStore.character.feat = ''
   textFieldValue.value = ''
+  selectedFeat.value = null
+  setTimeout(() => {
+    isExpanded.value = true
+  }, 50)
 }
 
 onMounted(() => {

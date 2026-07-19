@@ -166,41 +166,8 @@ const navigateTo = (path: string, stageField?: string, stageValue?: string) => {
 }
 
 const saveCharacter = async () => {
-  if (!characterStore.character || !characterStore.character.name) return
   try {
-    const res = await window.mainApi.invoke('msgSaveCharacter', {
-      characterName: characterStore.character.name,
-      race: characterStore.character.race || '',
-      class: characterStore.character.class || '',
-      archetype: characterStore.character.archetype || '',
-      background: characterStore.character.background?.name || '',
-      level: characterStore.character.level || 1,
-      group: characterStore.character.group || '',
-      pronouns: characterStore.character.pronouns || '',
-      playerName: characterStore.character.playerName || '',
-      characterExperience: characterStore.character.experience || 0,
-      generationOption: characterStore.character.abilityGenerationOption || 'Roll 4d6 - Discard Lowest',
-      abilityGenerationOption: characterStore.character.abilityGenerationOption || 'Roll 4d6 - Discard Lowest',
-      filePath: characterStore.character.filePath || '',
-      deity: characterStore.character.deity || '',
-      age: characterStore.character.age || '',
-      height: characterStore.character.height || '',
-      weight: characterStore.character.weight || '',
-      eyes: characterStore.character.eyes || '',
-      skin: characterStore.character.skin || '',
-      hair: characterStore.character.hair || '',
-      additionalFeatures: characterStore.character.additionalFeatures || ''
-    })
-    
-    if (res && res.success && res.filePath) {
-      characterStore.character.filePath = res.filePath
-    }
-    
-    // Refresh character list in store
-    const chars = await window.mainApi.invoke('msgGetCharacters')
-    characterStore.characters = chars
-    
-    console.log('Saved character successfully', res)
+    await characterStore.saveCharacter()
   } catch (e) {
     console.error('Error saving character:', e)
   }
@@ -258,8 +225,25 @@ const maximizeWindow = () => {
   window.mainApi.send('msgMaximizeWindow')
 }
 
-const closeWindow = () => {
-  window.mainApi.send('msgCloseWindow')
+const closeWindow = async () => {
+  if (characterStore.hasUnsavedChanges()) {
+    const response = await window.mainApi.invoke('msgShowConfirmDialog', {
+      title: 'Unsaved Changes',
+      message: `You have unsaved changes for ${characterStore.character.name || 'your character'}. Do you want to save them before closing?`,
+      buttons: ['Save & Close', 'Discard & Close', 'Cancel']
+    })
+
+    if (response === 0) {
+      const saveRes = await characterStore.saveCharacter()
+      if (saveRes && saveRes.success) {
+        window.mainApi.send('msgCloseWindow')
+      }
+    } else if (response === 1) {
+      window.mainApi.send('msgCloseWindow')
+    }
+  } else {
+    window.mainApi.send('msgCloseWindow')
+  }
 }
 </script>
 

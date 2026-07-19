@@ -1,4 +1,4 @@
-import { ipcMain, shell, IpcMainEvent, dialog, BrowserWindow } from 'electron'
+import { ipcMain, shell, IpcMainEvent, dialog, BrowserWindow, app } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as xml2js from 'xml2js'
@@ -10,6 +10,76 @@ import Constants from './utils/Constants'
  * */
 export default class IPCs {
   private static cachedElements: any[] | null = null
+
+  private static getCharacterXmlContent(data: any): string {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<character version="1.0.0">
+  <!-- information -->
+  <information>
+    <group>${data.group || 'Characters'}</group>
+    <generationOption>${data.generationOption || 'Roll 4d6 - Discard Lowest'}</generationOption>
+  </information>
+  <!-- display data -->
+  <display-properties favorite="true">
+    <name>${data.characterName || data.name || ''}</name>
+    <race>${data.race || ''}</race>
+    <subrace>${data.subrace || ''}</subrace>
+    <class>${data.class || ''}</class>
+    <archetype>${data.archetype || ''}</archetype>
+    <background>${data.background || ''}</background>
+    <background-variant>${data.backgroundVariant || ''}</background-variant>
+    <background-feature>${data.backgroundFeature || ''}</background-feature>
+    <level>${data.level || 1}</level>
+    <abilityGenerationOption>${data.abilityGenerationOption || 'Roll 4d6 - Discard Lowest'}</abilityGenerationOption>
+  </display-properties>
+  <!-- build data -->
+  <build>
+    <name>${data.characterName || data.name || ''}</name>
+    <input>
+      <gender>${data.pronouns || data.gender || ''}</gender>
+      <player-name>${data.playerName || ''}</player-name>
+      <experience>${data.characterExperience || data.experience || 0}</experience>
+    </input>
+  </build>
+  <!-- appearance data -->
+  <appearance>
+    <deity>${data.deity || ''}</deity>
+    <age>${data.age || ''}</age>
+    <height>${data.height || ''}</height>
+    <weight>${data.weight || ''}</weight>
+    <eyes>${data.eyes || ''}</eyes>
+    <skin>${data.skin || ''}</skin>
+    <hair>${data.hair || ''}</hair>
+    <additionalFeatures>${data.additionalFeatures || ''}</additionalFeatures>
+  </appearance>
+  <!-- abilities -->
+  <abilities>
+    <strength>${data.str || 10}</strength>
+    <dexterity>${data.dex || 10}</dexterity>
+    <constitution>${data.con || 10}</constitution>
+    <intelligence>${data.int || 10}</intelligence>
+    <wisdom>${data.wis || 10}</wisdom>
+    <charisma>${data.cha || 10}</charisma>
+  </abilities>
+  <!-- stats -->
+  <stats>
+    <str>${data.str || 10}</str>
+    <dex>${data.dex || 10}</dex>
+    <con>${data.con || 10}</con>
+    <int>${data.int || 10}</int>
+    <wis>${data.wis || 10}</wis>
+    <cha>${data.cha || 10}</cha>
+    <hp>${data.hp || 10}</hp>
+    <speed>${data.speed || 30}</speed>
+  </stats>
+  <proficient-skills>
+    ${(data.proficientSkills || []).map((s: string) => `<skill>${s}</skill>`).join('')}
+  </proficient-skills>
+  <proficient-saving-throws>
+    ${(data.proficientSavingThrows || []).map((s: string) => `<saving-throw>${s}</saving-throw>`).join('')}
+  </proficient-saving-throws>
+</character>`
+  }
 
   private static extractText(obj: any): string {
     if (obj === null || obj === undefined) {
@@ -27,7 +97,7 @@ export default class IPCs {
         text += obj._.trim() + ' '
       }
       for (const key in obj) {
-        if (key !== '$') {
+        if (key !== '$' && key !== '_') {
           text += IPCs.extractText(obj[key]) + ' '
         }
       }
@@ -124,6 +194,55 @@ export default class IPCs {
                           })
                         }
 
+                        const rulesList: any[] = []
+                        if (element.rules && element.rules[0]) {
+                          const rulesNode = element.rules[0]
+                          if (rulesNode.stat) {
+                            rulesNode.stat.forEach((statNode: any) => {
+                              if (statNode.$) {
+                                rulesList.push({
+                                  type: 'stat',
+                                  name: statNode.$.name,
+                                  value: statNode.$.value,
+                                  requirements: statNode.$.requirements || ''
+                                })
+                              }
+                            })
+                          }
+                          if (rulesNode.grant) {
+                            rulesNode.grant.forEach((grantNode: any) => {
+                              if (grantNode.$) {
+                                rulesList.push({
+                                  type: 'grant',
+                                  grantType: grantNode.$.type,
+                                  id: grantNode.$.id,
+                                  requirements: grantNode.$.requirements || ''
+                                })
+                              }
+                            })
+                          }
+                          if (rulesNode.select) {
+                            rulesNode.select.forEach((selectNode: any) => {
+                              if (selectNode.$) {
+                                rulesList.push({
+                                  type: 'select',
+                                  selectType: selectNode.$.type,
+                                  name: selectNode.$.name,
+                                  number: selectNode.$.number || '1',
+                                  supports: selectNode.$.supports || '',
+                                  requirements: selectNode.$.requirements || '',
+                                  optional: selectNode.$.optional || ''
+                                })
+                              }
+                            })
+                          }
+                        }
+
+                        let supportsText = ''
+                        if (element.supports) {
+                          supportsText = IPCs.extractText(element.supports[0])
+                        }
+
                         const elementObject = {
                           name: element.$.name,
                           type: element.$.type,
@@ -131,7 +250,9 @@ export default class IPCs {
                           id: element.$.id || '',
                           description: descriptionText,
                           htmlDescription: IPCs.extractRawDescription(xml, element.$.id || ''),
-                          setters: settersObj
+                          setters: settersObj,
+                          rules: rulesList,
+                          supports: supportsText
                         }
 
                         parsedElements.push(elementObject)
@@ -151,11 +272,11 @@ export default class IPCs {
     try {
       searchForElements(customFolder)
     } catch (e) {
-      console.error('Error listing custom folder:', e)
+      console.error(e)
     }
 
     this.cachedElements = parsedElements
-    return this.cachedElements
+    return parsedElements
   }
 
   static initialize(): void {
@@ -255,44 +376,7 @@ export default class IPCs {
       }
 
       // Create the XML file content
-      const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
-<character version="1.0.0">
-  <!-- information -->
-  <information>
-    <group>${data.group || 'Characters'}</group>
-    <generationOption>${data.generationOption || 'Roll 4d6 - Discard Lowest'}</generationOption>
-  </information>
-  <!-- display data -->
-  <display-properties favorite="true">
-    <name>${data.characterName}</name>
-    <race>${data.race}</race>
-    <class>${data.class}</class>
-    <archetype>${data.archetype}</archetype>
-    <background>${data.background}</background>
-    <level>${data.level}</level>
-    <abilityGenerationOption>${data.abilityGenerationOption || 'Roll 4d6 - Discard Lowest'}</abilityGenerationOption>
-  </display-properties>
-  <!-- build data -->
-  <build>
-    <name>${data.characterName}</name>
-    <input>
-      <gender>${data.pronouns}</gender>
-      <player-name>${data.playerName}</player-name>
-      <experience>${data.characterExperience}</experience>
-    </input>
-  </build>
-  <!-- appearance data -->
-  <appearance>
-    <deity>${data.deity || ''}</deity>
-    <age>${data.age || ''}</age>
-    <height>${data.height || ''}</height>
-    <weight>${data.weight || ''}</weight>
-    <eyes>${data.eyes || ''}</eyes>
-    <skin>${data.skin || ''}</skin>
-    <hair>${data.hair || ''}</hair>
-    <additionalFeatures>${data.additionalFeatures || ''}</additionalFeatures>
-  </appearance>
-</character>`
+      const xmlContent = IPCs.getCharacterXmlContent(data)
 
       fs.writeFileSync(filePath, xmlContent, 'utf8')
       console.log(`Character file saved to ${filePath}`)
@@ -378,11 +462,51 @@ export default class IPCs {
                       avatar = displayProps.avatar[0]
                     }
 
+                    const stats = char.stats
+                      ? char.stats[0]
+                      : char.build && char.build[0].stats
+                        ? char.build[0].stats[0]
+                        : {}
+                    const abilitiesProps = char.abilities
+                      ? char.abilities[0]
+                      : char.build && char.build[0].abilities
+                        ? char.build[0].abilities[0]
+                        : {}
+                    const skillsGroup = char['proficient-skills']
+                      ? char['proficient-skills'][0]
+                      : {}
+                    const savesGroup = char['proficient-saving-throws']
+                      ? char['proficient-saving-throws'][0]
+                      : {}
+
+                    const proficientSkills: string[] = []
+                    if (skillsGroup && skillsGroup.skill) {
+                      if (Array.isArray(skillsGroup.skill)) {
+                        skillsGroup.skill.forEach((s: any) => {
+                          if (s) proficientSkills.push(String(s).trim())
+                        })
+                      } else {
+                        proficientSkills.push(String(skillsGroup.skill).trim())
+                      }
+                    }
+
+                    const proficientSavingThrows: string[] = []
+                    if (savesGroup && savesGroup['saving-throw']) {
+                      if (Array.isArray(savesGroup['saving-throw'])) {
+                        savesGroup['saving-throw'].forEach((s: any) => {
+                          if (s) proficientSavingThrows.push(String(s).trim())
+                        })
+                      } else {
+                        proficientSavingThrows.push(String(savesGroup['saving-throw']).trim())
+                      }
+                    }
+
                     const characterObject = {
                       name: displayProps.name ? displayProps.name[0] : 'Unnamed',
                       avatar: avatar || '/images/icon-64px.png',
                       level: displayProps.level ? parseInt(displayProps.level[0], 10) : 1,
                       race: displayProps.race ? displayProps.race[0] : '',
+                      subrace: displayProps.subrace ? displayProps.subrace[0] : '',
                       class: displayProps.class ? displayProps.class[0] : '',
                       group: infoProps.group ? infoProps.group[0] : 'Characters',
                       alignment: displayProps.alignment ? displayProps.alignment[0] : '',
@@ -392,6 +516,8 @@ export default class IPCs {
                         id: '',
                         source: ''
                       },
+                      backgroundVariant: displayProps['background-variant'] ? displayProps['background-variant'][0] : '',
+                      backgroundFeature: displayProps['background-feature'] ? displayProps['background-feature'][0] : '',
                       archetype: displayProps.archetype ? displayProps.archetype[0] : '',
                       pronouns: displayProps.gender
                         ? displayProps.gender[0]
@@ -415,7 +541,50 @@ export default class IPCs {
                       spells: [],
                       inventory: [],
                       equipment: [],
+                      str: stats.str
+                        ? parseInt(stats.str[0], 10)
+                        : abilitiesProps.strength
+                          ? parseInt(abilitiesProps.strength[0], 10)
+                          : 10,
+                      dex: stats.dex
+                        ? parseInt(stats.dex[0], 10)
+                        : abilitiesProps.dexterity
+                          ? parseInt(abilitiesProps.dexterity[0], 10)
+                          : 10,
+                      con: stats.con
+                        ? parseInt(stats.con[0], 10)
+                        : abilitiesProps.constitution
+                          ? parseInt(abilitiesProps.constitution[0], 10)
+                          : 10,
+                      int: stats.int
+                        ? parseInt(stats.int[0], 10)
+                        : abilitiesProps.intelligence
+                          ? parseInt(abilitiesProps.intelligence[0], 10)
+                          : 10,
+                      wis: stats.wis
+                        ? parseInt(stats.wis[0], 10)
+                        : abilitiesProps.wisdom
+                          ? parseInt(abilitiesProps.wisdom[0], 10)
+                          : 10,
+                      cha: stats.cha
+                        ? parseInt(stats.cha[0], 10)
+                        : abilitiesProps.charisma
+                          ? parseInt(abilitiesProps.charisma[0], 10)
+                          : 10,
+                      hp: stats.hp ? parseInt(stats.hp[0], 10) : 10,
+                      speed: stats.speed ? parseInt(stats.speed[0], 10) : 30,
+                      proficientSkills,
+                      proficientSavingThrows,
                       filePath
+                    }
+
+                    // Debug parsed XML structure
+                    if (displayProps.name && String(displayProps.name[0]).includes('Flower Pot')) {
+                      fs.writeFileSync(
+                        'C:\\Users\\Jacquelinne\\Documents\\Raven Character Builder\\debug_ipcs.txt',
+                        JSON.stringify(characterObject, null, 2),
+                        'utf8'
+                      )
                     }
 
                     if (!parsedFiles.has(characterObject.name)) {
@@ -557,9 +726,7 @@ export default class IPCs {
     })
 
     ipcMain.on('msgOpenContentFolder', async (event: IpcMainEvent) => {
-      const documentsFolder = path.join(process.env.HOME, 'Documents')
-      const ravenCharacterBuilderFolder = path.join(documentsFolder, 'Raven Character Builder')
-      shell.openPath(ravenCharacterBuilderFolder)
+      shell.openPath(Constants.RAVEN_FOLDER)
     })
 
     // Get local portrait files
@@ -617,6 +784,20 @@ export default class IPCs {
       if (win) win.close()
     })
 
+    // Show native confirm dialog
+    ipcMain.handle('msgShowConfirmDialog', async (event: IpcMainEvent, options: any) => {
+      const win = BrowserWindow.fromWebContents(event.sender)
+      const result = await dialog.showMessageBox(win!, {
+        type: 'question',
+        buttons: options.buttons || ['Yes', 'No'],
+        defaultId: 0,
+        cancelId: 2,
+        title: options.title || 'Confirmation',
+        message: options.message || 'Are you sure?'
+      })
+      return result.response
+    })
+
     // Update character's group
     ipcMain.handle(
       'msgUpdateCharacterGroup',
@@ -670,8 +851,23 @@ export default class IPCs {
     // Generate PDF character sheet preview
     ipcMain.handle(
       'msgGeneratePreview',
-      async (event: IpcMainEvent, filePath: string, armorClassOverride?: string) => {
+      async (event: IpcMainEvent, filePathOrData: string | any, armorClassOverride?: string) => {
+        let tempFilePathToDelete: string | null = null
         try {
+          let filePath = ''
+          if (typeof filePathOrData === 'string') {
+            filePath = filePathOrData
+          } else if (filePathOrData && typeof filePathOrData === 'object') {
+            const tempFolder = app.getPath('temp')
+            filePath = path.join(
+              tempFolder,
+              `raven_preview_${Date.now()}_${Math.random().toString(36).substr(2, 5)}.dnd5e`
+            )
+            const xmlContent = IPCs.getCharacterXmlContent(filePathOrData)
+            fs.writeFileSync(filePath, xmlContent, 'utf8')
+            tempFilePathToDelete = filePath
+          }
+
           if (!filePath || !fs.existsSync(filePath)) {
             return { success: false, error: 'Character file not found' }
           }
@@ -713,59 +909,84 @@ export default class IPCs {
           }
 
           // Get abilities base
-          let str = abilitiesProps.strength ? parseInt(abilitiesProps.strength[0], 10) : 10
-          let dex = abilitiesProps.dexterity ? parseInt(abilitiesProps.dexterity[0], 10) : 10
-          let con = abilitiesProps.constitution ? parseInt(abilitiesProps.constitution[0], 10) : 10
-          let int = abilitiesProps.intelligence ? parseInt(abilitiesProps.intelligence[0], 10) : 10
-          let wis = abilitiesProps.wisdom ? parseInt(abilitiesProps.wisdom[0], 10) : 10
-          let cha = abilitiesProps.charisma ? parseInt(abilitiesProps.charisma[0], 10) : 10
+          const statsProps = char.stats ? char.stats[0] : {}
+          let str = statsProps.str
+            ? parseInt(statsProps.str[0], 10)
+            : abilitiesProps.strength
+              ? parseInt(abilitiesProps.strength[0], 10)
+              : 10
+          let dex = statsProps.dex
+            ? parseInt(statsProps.dex[0], 10)
+            : abilitiesProps.dexterity
+              ? parseInt(abilitiesProps.dexterity[0], 10)
+              : 10
+          let con = statsProps.con
+            ? parseInt(statsProps.con[0], 10)
+            : abilitiesProps.constitution
+              ? parseInt(abilitiesProps.constitution[0], 10)
+              : 10
+          let int = statsProps.int
+            ? parseInt(statsProps.int[0], 10)
+            : abilitiesProps.intelligence
+              ? parseInt(abilitiesProps.intelligence[0], 10)
+              : 10
+          let wis = statsProps.wis
+            ? parseInt(statsProps.wis[0], 10)
+            : abilitiesProps.wisdom
+              ? parseInt(abilitiesProps.wisdom[0], 10)
+              : 10
+          let cha = statsProps.cha
+            ? parseInt(statsProps.cha[0], 10)
+            : abilitiesProps.charisma
+              ? parseInt(abilitiesProps.charisma[0], 10)
+              : 10
 
-          // Apply race modifiers
-          const raceStr = displayProps.race ? displayProps.race[0].toLowerCase() : ''
-          if (raceStr.includes('warforged')) {
-            con += 2
-          } else if (raceStr.includes('mountain dwarf')) {
-            str += 2
-            con += 2
-          } else if (raceStr.includes('hill dwarf')) {
-            con += 2
-            wis += 1
-          } else if (raceStr.includes('high elf')) {
-            dex += 2
-            int += 1
-          } else if (raceStr.includes('wood elf')) {
-            dex += 2
-            wis += 1
-          } else if (raceStr.includes('lightfoot halfling')) {
-            dex += 2
-            cha += 1
-          } else if (raceStr.includes('stout halfling')) {
-            dex += 2
-            con += 1
-          } else if (raceStr.includes('human')) {
-            str += 1
-            dex += 1
-            con += 1
-            int += 1
-            wis += 1
-            cha += 1
-          } else if (raceStr.includes('dragonborn')) {
-            str += 2
-            cha += 1
-          } else if (raceStr.includes('forest gnome')) {
-            int += 2
-            dex += 1
-          } else if (raceStr.includes('rock gnome')) {
-            int += 2
-            con += 1
-          } else if (raceStr.includes('half-elf') || raceStr.includes('half elf')) {
-            cha += 2
-          } else if (raceStr.includes('half-orc') || raceStr.includes('half orc')) {
-            str += 2
-            con += 1
-          } else if (raceStr.includes('tiefling')) {
-            cha += 2
-            int += 1
+          // Apply race and subrace modifiers dynamically from parsed rules in XML compendiums
+          const applyStatRulesForName = (elementName: string, elementTypes: string[]) => {
+            if (!elementName) return
+            const nameLower = elementName.toLowerCase()
+            const foundElements = IPCs.cachedElements?.filter(
+              (el) => elementTypes.includes(el.type) && el.name.toLowerCase() === nameLower
+            )
+
+            if (foundElements) {
+              foundElements.forEach((el) => {
+                if (el.rules) {
+                  el.rules.forEach((rule: any) => {
+                    if (rule.type === 'stat') {
+                      const statName = rule.name.toLowerCase()
+                      const val = parseInt(rule.value, 10) || 0
+
+                      // Skip TCoE customized ASI rules (which require choices) since we are processing the standard stat boosts
+                      if (
+                        rule.requirements &&
+                        rule.requirements.includes('CUSTOMIZED_ASI') &&
+                        !rule.requirements.startsWith('!')
+                      ) {
+                        return
+                      }
+
+                      if (statName === 'strength') str += val
+                      else if (statName === 'dexterity') dex += val
+                      else if (statName === 'constitution') con += val
+                      else if (statName === 'intelligence') int += val
+                      else if (statName === 'wisdom') wis += val
+                      else if (statName === 'charisma') cha += val
+                    }
+                  })
+                }
+              })
+            }
+          }
+
+          // Apply stats for the base race
+          if (displayProps.race && displayProps.race[0]) {
+            applyStatRulesForName(displayProps.race[0], ['Race', 'Race Variant'])
+          }
+
+          // Apply stats for the selected subrace
+          if (displayProps.subrace && displayProps.subrace[0]) {
+            applyStatRulesForName(displayProps.subrace[0], ['Sub Race', 'Race Variant'])
           }
 
           // Apply ASI improvements
@@ -795,22 +1016,59 @@ export default class IPCs {
           const level = displayProps.level ? parseInt(displayProps.level[0], 10) : 1
           const profBonus = Math.floor((level - 1) / 4) + 2
 
+          // Parse proficient skills and saving throws from XML
+          const skillsGroup = char['proficient-skills'] ? char['proficient-skills'][0] : {}
+          const savesGroup = char['proficient-saving-throws']
+            ? char['proficient-saving-throws'][0]
+            : {}
+
+          const proficientSkills: string[] = []
+          if (skillsGroup && skillsGroup.skill) {
+            if (Array.isArray(skillsGroup.skill)) {
+              skillsGroup.skill.forEach((s: any) => {
+                if (s) proficientSkills.push(String(s).trim().toLowerCase())
+              })
+            } else {
+              proficientSkills.push(String(skillsGroup.skill).trim().toLowerCase())
+            }
+          }
+
+          const proficientSavingThrows: string[] = []
+          if (savesGroup && savesGroup['saving-throw']) {
+            if (Array.isArray(savesGroup['saving-throw'])) {
+              savesGroup['saving-throw'].forEach((s: any) => {
+                if (s) proficientSavingThrows.push(String(s).trim().toLowerCase())
+              })
+            } else {
+              proficientSavingThrows.push(String(savesGroup['saving-throw']).trim().toLowerCase())
+            }
+          }
+
           // Helper to check if proficient in skill or saving throw
-          const hasProf = (key: string) => {
-            return (
-              elementIds.has(`ID_PROFICIENCY_SKILL_${key.toUpperCase()}`) ||
-              elementIds.has(`ID_PROFICIENCY_SAVINGTHROW_${key.toUpperCase()}`)
-            )
+          const hasProf = (key: string, isSavingThrow: boolean = false) => {
+            const keyLower = key.toLowerCase()
+            if (isSavingThrow) {
+              return (
+                proficientSavingThrows.includes(keyLower) ||
+                elementIds.has(`ID_PROFICIENCY_SAVINGTHROW_${key.toUpperCase()}`)
+              )
+            } else {
+              const keySearch = keyLower.replace(/_/g, ' ')
+              return (
+                proficientSkills.includes(keySearch) ||
+                elementIds.has(`ID_PROFICIENCY_SKILL_${key.toUpperCase()}`)
+              )
+            }
           }
 
           const calcST = (key: string, modVal: number) => {
-            const proficient = hasProf(key)
+            const proficient = hasProf(key, true)
             const total = modVal + (proficient ? profBonus : 0)
             return { value: total >= 0 ? `+${total}` : `${total}`, proficient }
           }
 
           const calcSkill = (key: string, modVal: number) => {
-            const proficient = hasProf(key)
+            const proficient = hasProf(key, false)
             const total = modVal + (proficient ? profBonus : 0)
             return { value: total >= 0 ? `+${total}` : `${total}`, proficient }
           }
@@ -947,9 +1205,23 @@ export default class IPCs {
 
           // Proficiency Bonus, AC, Speed, Initiative, Passive Wisdom
           setField('ProfBonus', `+${profBonus}`)
-          setField('AC', armorClassOverride || '10')
+          const baseAc = 10 + dexModVal
+          const raceStr = displayProps.race ? displayProps.race[0].toLowerCase() : ''
+          const isWarforged = raceStr.includes('warforged')
+          const racialAcBonus = isWarforged ? 1 : 0
+          const computedAc = String(baseAc + racialAcBonus)
+          const acVal =
+            armorClassOverride && armorClassOverride.trim() ? armorClassOverride : computedAc
+
+          setField('AC', acVal)
           setField('Initiative', formatMod(dex))
-          setField('Speed', '30ft.') // default
+
+          const speedVal = statsProps.speed ? statsProps.speed[0] : '30'
+          setField('Speed', `${speedVal}ft.`)
+
+          const hpVal = statsProps.hp ? statsProps.hp[0] : '10'
+          setField('HPMax', String(hpVal))
+          setField('HPCurrent', String(hpVal))
 
           const perceptionVal = calcSkill('perception', wisModVal)
           const passiveWisdom = 10 + (parseInt(perceptionVal.value.replace('+', ''), 10) || 0)
@@ -1015,6 +1287,14 @@ export default class IPCs {
         } catch (err: any) {
           console.error('Error generating preview PDF', err)
           return { success: false, error: err.message }
+        } finally {
+          if (tempFilePathToDelete && fs.existsSync(tempFilePathToDelete)) {
+            try {
+              fs.unlinkSync(tempFilePathToDelete)
+            } catch (unlinkErr) {
+              console.error('Error deleting temporary preview file:', unlinkErr)
+            }
+          }
         }
       }
     )

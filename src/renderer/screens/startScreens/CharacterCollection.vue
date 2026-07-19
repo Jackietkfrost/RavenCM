@@ -299,11 +299,48 @@ const groupedCharacters = computed(() => {
 })
 
 const handleStartCreateCharacter = async (): Promise<void> => {
-  characterStore.toggleCreateCharacter()
+  if (characterStore.hasUnsavedChanges()) {
+    const response = await window.mainApi.invoke('msgShowConfirmDialog', {
+      title: 'Unsaved Changes',
+      message: `You have unsaved changes for ${characterStore.character.name || 'your character'}. Do you want to save them before creating a new character?`,
+      buttons: ['Save & Create', 'Discard & Create', 'Cancel']
+    })
+
+    if (response === 0) {
+      const saveRes = await characterStore.saveCharacter()
+      if (saveRes && saveRes.success) {
+        characterStore.drawerMode = 'create'
+        characterStore.createCharacter = true
+      }
+    } else if (response === 1) {
+      characterStore.drawerMode = 'create'
+      characterStore.createCharacter = true
+    }
+  } else {
+    characterStore.drawerMode = 'create'
+    characterStore.createCharacter = true
+  }
 }
 
-const handleSelectCharacter = (character: any) => {
-  characterStore.setCharacter(character)
+const handleSelectCharacter = async (character: any) => {
+  if (characterStore.hasUnsavedChanges()) {
+    const response = await window.mainApi.invoke('msgShowConfirmDialog', {
+      title: 'Unsaved Changes',
+      message: `You have unsaved changes for ${characterStore.character.name || 'your character'}. Do you want to save them before switching?`,
+      buttons: ['Save & Switch', 'Discard & Switch', 'Cancel']
+    })
+
+    if (response === 0) {
+      const saveRes = await characterStore.saveCharacter()
+      if (saveRes && saveRes.success) {
+        characterStore.setCharacter(character)
+      }
+    } else if (response === 1) {
+      characterStore.setCharacter(character)
+    }
+  } else {
+    characterStore.setCharacter(character)
+  }
 }
 
 const onContextMenu = (event: MouseEvent, character: any) => {

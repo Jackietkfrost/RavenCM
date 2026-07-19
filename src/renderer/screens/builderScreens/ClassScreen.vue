@@ -19,13 +19,16 @@
       </v-col>
     </v-row>
     <v-row>
-      <!-- Left column: Class list table -->
-      <v-col cols="7">
-        <v-card variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
+      <!-- Left column: Class and Subclass accordions -->
+      <v-col style="flex: 0 0 70%; max-width: 70%; max-height: calc(100vh - 220px);" class="overflow-y-auto">
+        <!-- Class Accordion Card -->
+        <v-card key="class-card" variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
           <v-card-title class="py-3">
-            <v-row no-gutters @click="() => (isExpanded = !isExpanded)" class="align-center">
-              <v-col class="" cols="4"> {{ t('BuildScreen.class') }} </v-col>
-              <v-col class="text--secondary" cols="6">
+            <v-row no-gutters class="align-center">
+              <v-col class="cursor-pointer" cols="6" @click="() => (isExpanded = !isExpanded)">
+                {{ t('BuildScreen.class') }}
+              </v-col>
+              <v-col class="text--secondary" cols="5">
                 <v-text-field
                   readonly
                   class="class-box cursor-pointer"
@@ -36,43 +39,104 @@
                   single-line
                   persistent-clear
                   hide-details
-                  :dirty="
-                    characterStore.character.class
-                      ? characterStore.character.class.length > 0
-                      : false
-                  "
+                  :dirty="!!characterStore.character.class"
+                  @click.stop="() => (isExpanded = !isExpanded)"
                   @click:clear="onClear"
                 ></v-text-field>
               </v-col>
-              <v-col class="d-flex justify-end" cols="2">
-                <v-icon
-                  :icon="isExpanded ? mdiChevronUp : mdiChevronDown"
-                  class="ml-auto"
-                  @click="() => (isExpanded = !isExpanded)"
-                >
-                  {{ isExpanded ? mdiChevronUp : mdiChevronDown }}
-                </v-icon>
+              <v-col
+                class="d-flex justify-end cursor-pointer"
+                cols="1"
+                @click="() => (isExpanded = !isExpanded)"
+              >
+                <v-icon :icon="isExpanded ? mdiChevronUp : mdiChevronDown" class="ml-auto" />
               </v-col>
             </v-row>
           </v-card-title>
           <v-data-table-virtual
             v-if="isExpanded"
+            key="class-table"
             :headers="headers"
             :items="filteredItems"
             :item-value="(item) => item.id"
             hover
             fixed-header
-            height="calc(100vh - 280px)"
+            height="350px"
             @dblclick:row="handleDoubleClick"
             @click:row="handleRowClick"
             :row-props="rowProps"
           >
+            <template #[descriptionSlotName]="{ item }">
+              <span class="text-italic text-grey">
+                {{ item.setters?.short || '' }}
+              </span>
+            </template>
           </v-data-table-virtual>
+        </v-card>
+
+        <!-- Subclass Accordion Card -->
+        <v-card
+          v-if="characterStore.character.class && availableArchetypes.length > 0"
+          key="subclass-card"
+          variant="outlined"
+          class="mt-4"
+          style="border-color: rgba(128, 128, 128, 0.2)"
+        >
+          <v-card-title class="py-3">
+            <v-row no-gutters class="align-center">
+              <v-col
+                class="cursor-pointer"
+                cols="6"
+                @click="() => (isSubclassExpanded = !isSubclassExpanded)"
+              >
+                {{ subclassWording }}
+              </v-col>
+              <v-col class="text--secondary" cols="5">
+                <v-text-field
+                  readonly
+                  class="class-box cursor-pointer"
+                  v-model="subclassTextFieldValue"
+                  variant="plain"
+                  density="compact"
+                  clearable
+                  single-line
+                  persistent-clear
+                  hide-details
+                  :dirty="!!subclassTextFieldValue"
+                  @click.stop="() => (isSubclassExpanded = !isSubclassExpanded)"
+                  @click:clear="onClearSubclass"
+                ></v-text-field>
+              </v-col>
+              <v-col
+                class="d-flex justify-end cursor-pointer"
+                cols="1"
+                @click="() => (isSubclassExpanded = !isSubclassExpanded)"
+              >
+                <v-icon
+                  :icon="isSubclassExpanded ? mdiChevronUp : mdiChevronDown"
+                  class="ml-auto"
+                />
+              </v-col>
+            </v-row>
+          </v-card-title>
+          <v-data-table-virtual
+            v-if="isSubclassExpanded"
+            key="subclass-table"
+            :headers="subclassHeaders"
+            :items="availableArchetypes"
+            :item-value="(item) => item.id"
+            hover
+            fixed-header
+            height="250px"
+            @dblclick:row="handleSubclassDoubleClick"
+            @click:row="handleSubclassClick"
+            :row-props="subclassRowProps"
+          ></v-data-table-virtual>
         </v-card>
       </v-col>
 
-      <!-- Right column: Class details pane -->
-      <v-col cols="5">
+      <!-- Right column: Class/Subclass details pane -->
+      <v-col style="flex: 0 0 30%; max-width: 30%;">
         <v-card
           variant="outlined"
           class="d-flex flex-column"
@@ -102,7 +166,7 @@
           </template>
           <template v-else>
             <div class="d-flex flex-column align-center justify-center fill-height text-grey py-12">
-              <div class="text-subtitle-1">Select a class to view details</div>
+              <div class="text-subtitle-1">Select an item to view details</div>
             </div>
           </template>
         </v-card>
@@ -114,24 +178,134 @@
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
 import { mdiChevronDown, mdiChevronUp, mdiFilterMenuOutline, mdiMagnify } from '@mdi/js'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const characterStore = useAppStore()
+
+// Main Class states
 const isExpanded = ref(true)
 const textFieldValue = ref(characterStore.character.class ? characterStore.character.class : '')
 const classes = characterStore.elements.classes
 const headers = ref([
   { title: 'Class', key: 'name', align: 'start' as const },
+  { title: 'Description', key: 'short', align: 'start' as const },
   { title: 'Source', key: 'source', align: 'end' as const }
 ])
 const items = ref(classes)
 const searchQuery = ref('')
 const selectedClass = ref<any>(null)
 
+// Subclass states
+const isSubclassExpanded = ref(false)
+const subclassTextFieldValue = ref('')
+const descriptionSlotName = 'item.short'
+
+// Compute the subclass groups (e.g., ["Otherworldly Patron"]) supported by the class
+const subclassGroups = computed(() => {
+  const currentClassName = characterStore.character.class
+  if (!currentClassName) return []
+
+  const baseClass = characterStore.elements.classes.find(
+    (c: any) => c.name.toLowerCase() === currentClassName.toLowerCase()
+  )
+  if (!baseClass) return []
+
+  const groups = new Set<string>()
+
+  // 1. Scan class rules for direct subclass selection or granted features
+  const classRules = baseClass.rules || []
+  classRules.forEach((r: any) => {
+    if (r.type === 'select' && r.selectType === 'Archetype' && r.supports) {
+      groups.add(r.supports.toLowerCase())
+    }
+  })
+
+  // 2. Scan granted Class Features for subclass selection rules
+  const classFeatureIds = classRules
+    .filter((r: any) => r.type === 'grant' && r.grantType === 'Class Feature')
+    .map((r: any) => r.id)
+
+  const classFeatures = characterStore.elements.classFeatures || []
+  classFeatures.forEach((cf: any) => {
+    if (classFeatureIds.includes(cf.id)) {
+      const cfRules = cf.rules || []
+      cfRules.forEach((r: any) => {
+        if (r.type === 'select' && r.selectType === 'Archetype' && r.supports) {
+          groups.add(r.supports.toLowerCase())
+        }
+      })
+    }
+  })
+
+  return Array.from(groups)
+})
+
+// Compute available subclasses (Archetypes) for the selected class
+const availableArchetypes = computed(() => {
+  const groups = subclassGroups.value
+  if (groups.length === 0) return []
+  return (characterStore.elements.archetypes || []).filter(
+    (arch: any) => arch.supports && groups.includes(arch.supports.toLowerCase())
+  )
+})
+
+// Find the subclass wording dynamically from the Class element's select rules, class features, or supports
+const subclassWording = computed(() => {
+  const currentClassName = characterStore.character.class
+  if (!currentClassName) return 'Subclass'
+
+  const baseClass = characterStore.elements.classes.find(
+    (c: any) => c.name.toLowerCase() === currentClassName.toLowerCase()
+  )
+  if (!baseClass) return 'Subclass'
+
+  const classRules = baseClass.rules || []
+
+  // 1. Check select rules directly in the class element
+  const directSelect = classRules.find(
+    (r: any) => r.type === 'select' && r.selectType === 'Archetype'
+  )
+  if (directSelect && directSelect.name) return directSelect.name
+
+  // 2. Check subclass select rules inside granted Class Features
+  const classFeatureIds = classRules
+    .filter((r: any) => r.type === 'grant' && r.grantType === 'Class Feature')
+    .map((r: any) => r.id)
+
+  const classFeatures = characterStore.elements.classFeatures || []
+  for (const cf of classFeatures) {
+    if (classFeatureIds.includes(cf.id)) {
+      const cfRules = cf.rules || []
+      const cfSelect = cfRules.find(
+        (r: any) => r.type === 'select' && r.selectType === 'Archetype'
+      )
+      if (cfSelect && cfSelect.name) return cfSelect.name
+    }
+  }
+
+  // 3. Fallback to capitalized supports name of the matching archetypes
+  const groups = subclassGroups.value
+  if (groups.length > 0) {
+    const matchingArch = (characterStore.elements.archetypes || []).find(
+      (a: any) => a.supports && a.supports.toLowerCase() === groups[0]
+    )
+    if (matchingArch) return matchingArch.supports
+  }
+
+  return 'Subclass'
+})
+
+const subclassHeaders = computed(() => [
+  { title: subclassWording.value, key: 'name', align: 'start' as const },
+  { title: 'Source', key: 'source', align: 'end' as const }
+])
+
 const filteredItems = computed(() => {
-  const activeOnly = (items.value || []).filter((item: any) => characterStore.isSourceActive(item.source))
+  const activeOnly = (items.value || []).filter((item: any) =>
+    characterStore.isSourceActive(item.source)
+  )
   if (!searchQuery.value) return activeOnly
   const query = searchQuery.value.toLowerCase()
   return activeOnly.filter(
@@ -141,10 +315,42 @@ const filteredItems = computed(() => {
   )
 })
 
+// Watch character class selection changes to toggle subclass accordion
+watch(
+  () => characterStore.character.class,
+  (newClass) => {
+    textFieldValue.value = newClass || ''
+    if (!newClass) {
+      characterStore.character.archetype = ''
+      isExpanded.value = true
+      isSubclassExpanded.value = false
+    } else {
+      isExpanded.value = false
+      setTimeout(() => {
+        if (availableArchetypes.value.length > 0) {
+          isSubclassExpanded.value = true
+        } else {
+          isSubclassExpanded.value = false
+        }
+      }, 50)
+    }
+  }
+)
+
+// Watch character subclass/archetype changes to update local text field
+watch(
+  () => characterStore.character.archetype,
+  (newArchetype) => {
+    subclassTextFieldValue.value = newArchetype || ''
+  },
+  { immediate: true }
+)
+
+// Main Class handlers
 const handleDoubleClick = (event: any, { item }: any) => {
   characterStore.character.class = item.name
   textFieldValue.value = item.name
-  isExpanded.value = !isExpanded.value
+  isExpanded.value = false
 }
 
 const handleRowClick = (event: any, { item }: any) => {
@@ -158,8 +364,40 @@ const rowProps = (data: any) => {
   }
 }
 
-const onClear = () => {
+const onClear = (event: any) => {
+  if (event && event.stopPropagation) event.stopPropagation()
   characterStore.character.class = ''
+  textFieldValue.value = ''
+  selectedClass.value = null
+  setTimeout(() => {
+    isExpanded.value = true
+  }, 50)
+}
+
+// Subclass handlers
+const handleSubclassClick = (event: any, { item }: any) => {
+  selectedClass.value = item
+}
+
+const handleSubclassDoubleClick = (event: any, { item }: any) => {
+  characterStore.character.archetype = item.name
+  selectedClass.value = item
+  isSubclassExpanded.value = false
+}
+
+const subclassRowProps = (data: any) => {
+  const isSelected = selectedClass.value && selectedClass.value.id === data.item.id
+  return {
+    class: isSelected ? 'v-theme--selected' : ''
+  }
+}
+
+const onClearSubclass = (event: any) => {
+  if (event && event.stopPropagation) event.stopPropagation()
+  characterStore.character.archetype = ''
+  setTimeout(() => {
+    isSubclassExpanded.value = true
+  }, 50)
 }
 
 onMounted(() => {

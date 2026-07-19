@@ -13,11 +13,16 @@ export type ElementsInfo = {
   equipment: any[]
   archetypes: any[]
   archetypeFeatures: any[]
+  classFeatures?: any[]
   proficiencies?: ProficiencyInfo[]
   weapons?: any[]
   armors?: any[]
   deities?: any[]
   sources?: any[]
+  subRaces?: any[]
+  raceVariants?: any[]
+  backgroundVariants?: any[]
+  backgroundFeatures?: any[]
 }
 
 export type ItemInfo = {
@@ -37,13 +42,17 @@ export type CharacterInfo = {
   avatar: string
   class: string
   race: string
+  subrace?: string
+  backgroundVariant?: string
+  backgroundFeature?: string
   pronouns: string
   level: number
   background: BackgroundInfo
   archetype: string
   alignment: string
-  languages: LanguageInfo[]
+  languages: string[]
   proficiency: string
+  filePath?: string
   feat: string
   spells: SpellInfo[]
   abilityGenerationOption: string
@@ -64,6 +73,16 @@ export type CharacterInfo = {
   hair?: string
   additionalFeatures?: string
   armorClass?: string
+  hp?: number
+  str?: number
+  dex?: number
+  con?: number
+  int?: number
+  wis?: number
+  cha?: number
+  speed?: number
+  proficientSkills?: string[]
+  proficientSavingThrows?: string[]
 }
 
 export type SubRaceInfo = {
@@ -82,6 +101,8 @@ export type RaceInfo = {
   subraces: SubRaceInfo
   description: string
   htmlDescription?: string
+  setters?: any
+  rules?: any[]
 }
 
 export type ClassInfo = {
@@ -91,6 +112,8 @@ export type ClassInfo = {
   id: string
   description: string
   htmlDescription?: string
+  setters?: any
+  rules?: any[]
 }
 
 export type SpellInfo = {
@@ -117,6 +140,8 @@ export type BackgroundInfo = {
   source: string
   id: string
   htmlDescription?: string
+  setters?: any
+  rules?: any[]
 }
 
 export type ProficiencyInfo = {
@@ -133,6 +158,8 @@ export type FeatInfo = {
   source: string
   id: string
   htmlDescription?: string
+  setters?: any
+  rules?: any[]
 }
 
 // type EquipmentInfo = {
