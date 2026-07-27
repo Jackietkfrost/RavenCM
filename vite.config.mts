@@ -73,6 +73,10 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    server: {
+      host: '127.0.0.1',
+      port: 5173
+    },
     define: {
       __VUE_I18N_FULL_INSTALL__: true,
       __VUE_I18N_LEGACY_API__: false,
