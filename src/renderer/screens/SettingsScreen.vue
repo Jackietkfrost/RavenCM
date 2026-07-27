@@ -466,31 +466,32 @@ const changeTheme = () => {
   localStorage.setItem('theme', nextTheme)
 }
 
-const changeAutoSave = (val: boolean) => {
-  localStorage.setItem('autoSave', val.toString())
+const changeAutoSave = (val: boolean | null) => {
+  localStorage.setItem('autoSave', (val ?? false).toString())
 }
 
-const changePlayerName = (val: string) => {
-  localStorage.setItem('defaultPlayerName', val)
+const changePlayerName = (val: string | null) => {
+  const name = val || ''
+  localStorage.setItem('defaultPlayerName', name)
   if (characterStore.character) {
-    characterStore.character.playerName = val
+    characterStore.character.playerName = name
   }
 }
 
-const changeDefaultGenerationOption = (val: string) => {
-  localStorage.setItem('defaultGenerationOption', val)
+const changeDefaultGenerationOption = (val: string | null) => {
+  localStorage.setItem('defaultGenerationOption', val || '')
 }
 
-const changeDefaultFeats = (val: boolean) => {
-  localStorage.setItem('defaultFeats', val.toString())
+const changeDefaultFeats = (val: boolean | null) => {
+  localStorage.setItem('defaultFeats', (val ?? false).toString())
 }
 
-const changeDefaultMulticlassing = (val: boolean) => {
-  localStorage.setItem('defaultMulticlassing', val.toString())
+const changeDefaultMulticlassing = (val: boolean | null) => {
+  localStorage.setItem('defaultMulticlassing', (val ?? false).toString())
 }
 
-const changeDefaultAverageHp = (val: boolean) => {
-  localStorage.setItem('defaultAverageHp', val.toString())
+const changeDefaultAverageHp = (val: boolean | null) => {
+  localStorage.setItem('defaultAverageHp', (val ?? false).toString())
 }
 
 const openContentFolder = () => {

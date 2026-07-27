@@ -31,6 +31,7 @@ export const useAppStore = defineStore('appstore', {
         class: '',
         race: '',
         subrace: '',
+        group: '',
         pronouns: '',
         level: 1,
         background: {

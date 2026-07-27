@@ -43,6 +43,7 @@ export type CharacterInfo = {
   class: string
   race: string
   subrace?: string
+  group?: string
   backgroundVariant?: string
   backgroundFeature?: string
   pronouns: string
