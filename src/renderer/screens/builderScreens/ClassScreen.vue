@@ -20,7 +20,10 @@
     </v-row>
     <v-row>
       <!-- Left column: Class and Subclass accordions -->
-      <v-col style="flex: 0 0 70%; max-width: 70%; max-height: calc(100vh - 220px);" class="overflow-y-auto">
+      <v-col
+        style="flex: 0 0 70%; max-width: 70%; max-height: calc(100vh - 220px)"
+        class="overflow-y-auto"
+      >
         <!-- Class Accordion Card -->
         <v-card key="class-card" variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
           <v-card-title class="py-3">
@@ -136,7 +139,7 @@
       </v-col>
 
       <!-- Right column: Class/Subclass details pane -->
-      <v-col style="flex: 0 0 30%; max-width: 30%;">
+      <v-col style="flex: 0 0 30%; max-width: 30%">
         <v-card
           variant="outlined"
           class="d-flex flex-column"
@@ -278,9 +281,7 @@ const subclassWording = computed(() => {
   for (const cf of classFeatures) {
     if (classFeatureIds.includes(cf.id)) {
       const cfRules = cf.rules || []
-      const cfSelect = cfRules.find(
-        (r: any) => r.type === 'select' && r.selectType === 'Archetype'
-      )
+      const cfSelect = cfRules.find((r: any) => r.type === 'select' && r.selectType === 'Archetype')
       if (cfSelect && cfSelect.name) return cfSelect.name
     }
   }

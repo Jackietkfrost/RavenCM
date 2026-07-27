@@ -516,8 +516,12 @@ export default class IPCs {
                         id: '',
                         source: ''
                       },
-                      backgroundVariant: displayProps['background-variant'] ? displayProps['background-variant'][0] : '',
-                      backgroundFeature: displayProps['background-feature'] ? displayProps['background-feature'][0] : '',
+                      backgroundVariant: displayProps['background-variant']
+                        ? displayProps['background-variant'][0]
+                        : '',
+                      backgroundFeature: displayProps['background-feature']
+                        ? displayProps['background-feature'][0]
+                        : '',
                       archetype: displayProps.archetype ? displayProps.archetype[0] : '',
                       pronouns: displayProps.gender
                         ? displayProps.gender[0]

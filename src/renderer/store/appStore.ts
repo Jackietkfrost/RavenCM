@@ -137,7 +137,8 @@ export const useAppStore = defineStore('appstore', {
           playerName: this.character.playerName || '',
           characterExperience: this.character.experience || 0,
           generationOption: this.character.abilityGenerationOption || 'Roll 4d6 - Discard Lowest',
-          abilityGenerationOption: this.character.abilityGenerationOption || 'Roll 4d6 - Discard Lowest',
+          abilityGenerationOption:
+            this.character.abilityGenerationOption || 'Roll 4d6 - Discard Lowest',
           filePath: this.character.filePath || '',
           deity: this.character.deity || '',
           age: this.character.age || '',
@@ -187,7 +188,11 @@ export const useAppStore = defineStore('appstore', {
       }
 
       // Check Background
-      if (this.character.background && this.character.background.name && !isAvailable(this.elements.backgrounds, this.character.background.name)) {
+      if (
+        this.character.background &&
+        this.character.background.name &&
+        !isAvailable(this.elements.backgrounds, this.character.background.name)
+      ) {
         this.character.background = {
           name: '',
           description: '',
@@ -203,7 +208,7 @@ export const useAppStore = defineStore('appstore', {
 
       // Check Languages
       if (this.character.languages && this.character.languages.length > 0) {
-        this.character.languages = this.character.languages.filter((langName: string) => 
+        this.character.languages = this.character.languages.filter((langName: string) =>
           isAvailable(this.elements.languages, langName)
         )
       }
@@ -285,15 +290,46 @@ export const useAppStore = defineStore('appstore', {
     },
     hasUnsavedChanges(): boolean {
       if (!this.character || !this.character.name || !this.originalCharacter) return false
-      
+
       const keysToCompare: (keyof CharacterInfo)[] = [
-        'name', 'class', 'race', 'subrace', 'backgroundVariant', 'backgroundFeature', 'pronouns', 'level', 'archetype', 'alignment',
-        'gender', 'playerName', 'experience', 'deity', 'age', 'height',
-        'weight', 'eyes', 'skin', 'hair', 'additionalFeatures', 'armorClass',
-        'str', 'dex', 'con', 'int', 'wis', 'cha', 'hp', 'speed', 'feat', 'proficiency', 'abilityGenerationOption',
-        'averageHitPoints', 'feats', 'multiclassing'
+        'name',
+        'class',
+        'race',
+        'subrace',
+        'backgroundVariant',
+        'backgroundFeature',
+        'pronouns',
+        'level',
+        'archetype',
+        'alignment',
+        'gender',
+        'playerName',
+        'experience',
+        'deity',
+        'age',
+        'height',
+        'weight',
+        'eyes',
+        'skin',
+        'hair',
+        'additionalFeatures',
+        'armorClass',
+        'str',
+        'dex',
+        'con',
+        'int',
+        'wis',
+        'cha',
+        'hp',
+        'speed',
+        'feat',
+        'proficiency',
+        'abilityGenerationOption',
+        'averageHitPoints',
+        'feats',
+        'multiclassing'
       ]
-      
+
       for (const key of keysToCompare) {
         let val1 = this.character[key]
         let val2 = this.originalCharacter[key]
@@ -311,33 +347,56 @@ export const useAppStore = defineStore('appstore', {
         }
 
         if (val1 !== val2) {
-          console.log(`Unsaved change detected in key "${key}": "${this.originalCharacter[key]}" -> "${this.character[key]}"`)
+          console.log(
+            `Unsaved change detected in key "${key}": "${this.originalCharacter[key]}" -> "${this.character[key]}"`
+          )
           return true
         }
       }
-      
+
       const bg1 = this.character.background?.name || ''
       const bg2 = this.originalCharacter.background?.name || ''
       if (bg1 !== bg2) {
         console.log(`Unsaved change detected in background: "${bg2}" -> "${bg1}"`)
         return true
       }
-      
+
       const compareArrays = (arr1: any[] | undefined, arr2: any[] | undefined) => {
-        const a1 = (arr1 || []).map(x => typeof x === 'string' ? x : JSON.stringify(x)).sort()
-        const a2 = (arr2 || []).map(x => typeof x === 'string' ? x : JSON.stringify(x)).sort()
+        const a1 = (arr1 || []).map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).sort()
+        const a2 = (arr2 || []).map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).sort()
         if (a1.length !== a2.length) return true
         return a1.some((val, idx) => val !== a2[idx])
       }
-      
-      const arraysToCompare: { name: string; val1: any[] | undefined; val2: any[] | undefined }[] = [
-        { name: 'proficientSkills', val1: this.character.proficientSkills, val2: this.originalCharacter.proficientSkills },
-        { name: 'proficientSavingThrows', val1: this.character.proficientSavingThrows, val2: this.originalCharacter.proficientSavingThrows },
-        { name: 'languages', val1: this.character.languages, val2: this.originalCharacter.languages },
-        { name: 'spells', val1: this.character.spells, val2: this.originalCharacter.spells },
-        { name: 'inventory', val1: this.character.inventory, val2: this.originalCharacter.inventory },
-        { name: 'equipment', val1: this.character.equipment, val2: this.originalCharacter.equipment }
-      ]
+
+      const arraysToCompare: { name: string; val1: any[] | undefined; val2: any[] | undefined }[] =
+        [
+          {
+            name: 'proficientSkills',
+            val1: this.character.proficientSkills,
+            val2: this.originalCharacter.proficientSkills
+          },
+          {
+            name: 'proficientSavingThrows',
+            val1: this.character.proficientSavingThrows,
+            val2: this.originalCharacter.proficientSavingThrows
+          },
+          {
+            name: 'languages',
+            val1: this.character.languages,
+            val2: this.originalCharacter.languages
+          },
+          { name: 'spells', val1: this.character.spells, val2: this.originalCharacter.spells },
+          {
+            name: 'inventory',
+            val1: this.character.inventory,
+            val2: this.originalCharacter.inventory
+          },
+          {
+            name: 'equipment',
+            val1: this.character.equipment,
+            val2: this.originalCharacter.equipment
+          }
+        ]
 
       for (const arr of arraysToCompare) {
         if (compareArrays(arr.val1, arr.val2)) {
@@ -345,11 +404,12 @@ export const useAppStore = defineStore('appstore', {
           return true
         }
       }
-      
+
       return false
     },
     async saveCharacter() {
-      if (!this.character || !this.character.name) return { success: false, error: 'No character name' }
+      if (!this.character || !this.character.name)
+        return { success: false, error: 'No character name' }
       try {
         const payload = this.getCharacterPayload()
         const res = await window.mainApi.invoke('msgSaveCharacter', payload)

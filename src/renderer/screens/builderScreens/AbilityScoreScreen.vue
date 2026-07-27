@@ -14,15 +14,19 @@
             <div class="stat-card">
               <!-- Stat Title -->
               <span class="stat-title">{{ stat.label }}</span>
-              
+
               <!-- Total Score (Big Number) -->
               <span class="total-score-text">
                 {{ (characterStore.character[stat.key] || 10) + activeModifiers[stat.key] }}
               </span>
-              
+
               <!-- Modifier Badge (Oval overlapping bottom border) -->
               <div class="modifier-oval">
-                {{ getModifierStr((characterStore.character[stat.key] || 10) + activeModifiers[stat.key]) }}
+                {{
+                  getModifierStr(
+                    (characterStore.character[stat.key] || 10) + activeModifiers[stat.key]
+                  )
+                }}
               </div>
             </div>
 
@@ -30,20 +34,20 @@
             <div
               v-if="activeModifiers[stat.key] !== 0"
               class="text-center mt-5"
-              style="min-height: 38px;"
+              style="min-height: 38px"
             >
               <div class="text-caption text-success font-weight-bold">
                 +{{ activeModifiers[stat.key] }} (Racial)
               </div>
               <div
                 class="text-caption text-grey text-truncate"
-                style="font-size: 0.72rem !important; line-height: 1.1; max-width: 95px;"
+                style="font-size: 0.72rem !important; line-height: 1.1; max-width: 95px"
                 :title="characterStore.character.subrace || characterStore.character.race"
               >
                 {{ characterStore.character.subrace || characterStore.character.race }}
               </div>
             </div>
-            <div v-else class="mt-5" style="min-height: 38px;"></div>
+            <div v-else class="mt-5" style="min-height: 38px"></div>
           </div>
 
           <!-- Right side: Base Score Controls (Up/Down Chevrons and value) -->

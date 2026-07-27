@@ -2,13 +2,20 @@
   <div class="character-manage-container">
     <!-- Character Details Section -->
     <div class="mb-6">
-      <div class="text-h6 font-weight-bold text-uppercase border-bottom pb-2 mb-2" style="letter-spacing: 0.05em;">
+      <div
+        class="text-h6 font-weight-bold text-uppercase border-bottom pb-2 mb-2"
+        style="letter-spacing: 0.05em"
+      >
         Character Details
       </div>
       <div class="text-caption text-grey mb-4">
-        Characters are defined by much more than their race and class. They're individuals with their own stories, interests, connections, and capabilities beyond those that class and race define. This section expounds on the details that distinguish characters from one another, including the basics of name and physical description, the rules of backgrounds and languages, and the finer points of personality and alignment.
+        Characters are defined by much more than their race and class. They're individuals with
+        their own stories, interests, connections, and capabilities beyond those that class and race
+        define. This section expounds on the details that distinguish characters from one another,
+        including the basics of name and physical description, the rules of backgrounds and
+        languages, and the finer points of personality and alignment.
       </div>
-      
+
       <v-row>
         <!-- Row 1 -->
         <v-col cols="12" md="4">
@@ -63,7 +70,7 @@
             hide-details
           >
             <template #append-inner>
-              <div class="d-flex align-center gap-x-1" style="margin-right: -4px;">
+              <div class="d-flex align-center gap-x-1" style="margin-right: -4px">
                 <v-btn icon size="x-small" variant="text" @click="incrementExp">
                   <v-icon :icon="mdiPlus" />
                 </v-btn>
@@ -112,13 +119,16 @@
 
     <!-- Appearance Section -->
     <div class="mb-6">
-      <div class="text-h6 font-weight-bold text-uppercase border-bottom pb-2 mb-2" style="letter-spacing: 0.05em;">
+      <div
+        class="text-h6 font-weight-bold text-uppercase border-bottom pb-2 mb-2"
+        style="letter-spacing: 0.05em"
+      >
         Appearance
       </div>
       <div class="text-caption text-grey mb-4">
         Define the appearance of your character below.
       </div>
-      
+
       <v-row>
         <!-- Row 1 -->
         <v-col cols="12" md="4">
@@ -185,13 +195,17 @@
 
     <!-- Additional Features Section -->
     <div>
-      <div class="text-h6 font-weight-bold text-uppercase border-bottom pb-2 mb-2" style="letter-spacing: 0.05em;">
+      <div
+        class="text-h6 font-weight-bold text-uppercase border-bottom pb-2 mb-2"
+        style="letter-spacing: 0.05em"
+      >
         Additional Features
       </div>
       <div class="text-caption text-grey mb-4">
-        Does your character have any additional features that are from a different source than your race, class, or background?
+        Does your character have any additional features that are from a different source than your
+        race, class, or background?
       </div>
-      
+
       <v-textarea
         label="ADDITIONAL FEATURES"
         v-model="characterStore.character.additionalFeatures"
@@ -213,13 +227,30 @@ const characterStore = useAppStore()
 const genderOptions = ['Male', 'Female', 'Construct', 'Nonbinary']
 
 const alignmentOptions = [
-  'Lawful Good', 'Neutral Good', 'Chaotic Good',
-  'Lawful Neutral', 'Neutral', 'Chaotic Neutral',
-  'Lawful Evil', 'Neutral Evil', 'Chaotic Evil'
+  'Lawful Good',
+  'Neutral Good',
+  'Chaotic Good',
+  'Lawful Neutral',
+  'Neutral',
+  'Chaotic Neutral',
+  'Lawful Evil',
+  'Neutral Evil',
+  'Chaotic Evil'
 ]
 
 const eyeOptions = ['Blue', 'Brown', 'Green', 'Gray', 'Amber', 'Hazel', 'Red', 'Yellow', 'Black']
-const skinOptions = ['Fair', 'Pale', 'Tan', 'Light Brown', 'Dark Brown', 'Black', 'Green', 'Blue', 'Red', 'Gray']
+const skinOptions = [
+  'Fair',
+  'Pale',
+  'Tan',
+  'Light Brown',
+  'Dark Brown',
+  'Black',
+  'Green',
+  'Blue',
+  'Red',
+  'Gray'
+]
 const hairOptions = ['Black', 'Brown', 'Blonde', 'Red', 'White', 'Gray', 'Silver', 'Bald']
 
 const deitiesList = computed(() => {
@@ -227,15 +258,59 @@ const deitiesList = computed(() => {
 })
 
 const randomNames = [
-  'Adrik', 'Alberich', 'Baern', 'Barendd', 'Brottor', 'Bruenor',
-  'Dain', 'Darrak', 'Delg', 'Eberk', 'Einkil', 'Fargrim',
-  'Flint', 'Gardain', 'Harbek', 'Kildrak', 'Morgran', 'Orsik',
-  'Oskar', 'Rangrim', 'Rurik', 'Taklinn', 'Thoradin', 'Thorin',
-  'Tordek', 'Traubon', 'Travok', 'Ulfgar', 'Veit', 'Vondal',
-  'Amber', 'Artin', 'Audhild', 'Bardryn', 'Dagnal', 'Diesa',
-  'Eldeth', 'Falkrunn', 'Finellen', 'Gunnloda', 'Gurdis', 'Helja',
-  'Hlin', 'Kathra', 'Kristryd', 'Ilde', 'Liftrasa', 'Mardred',
-  'Riswynn', 'Sannl', 'Torbera', 'Torgga', 'Vistra'
+  'Adrik',
+  'Alberich',
+  'Baern',
+  'Barendd',
+  'Brottor',
+  'Bruenor',
+  'Dain',
+  'Darrak',
+  'Delg',
+  'Eberk',
+  'Einkil',
+  'Fargrim',
+  'Flint',
+  'Gardain',
+  'Harbek',
+  'Kildrak',
+  'Morgran',
+  'Orsik',
+  'Oskar',
+  'Rangrim',
+  'Rurik',
+  'Taklinn',
+  'Thoradin',
+  'Thorin',
+  'Tordek',
+  'Traubon',
+  'Travok',
+  'Ulfgar',
+  'Veit',
+  'Vondal',
+  'Amber',
+  'Artin',
+  'Audhild',
+  'Bardryn',
+  'Dagnal',
+  'Diesa',
+  'Eldeth',
+  'Falkrunn',
+  'Finellen',
+  'Gunnloda',
+  'Gurdis',
+  'Helja',
+  'Hlin',
+  'Kathra',
+  'Kristryd',
+  'Ilde',
+  'Liftrasa',
+  'Mardred',
+  'Riswynn',
+  'Sannl',
+  'Torbera',
+  'Torgga',
+  'Vistra'
 ]
 
 const handleRandomName = () => {

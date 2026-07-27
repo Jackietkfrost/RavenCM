@@ -19,7 +19,9 @@
       <!-- Left column: Inventory Table -->
       <v-col cols="7">
         <v-card variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
-          <v-card-title class="text-subtitle-1 font-weight-bold py-2 border-bottom d-flex justify-space-between align-center">
+          <v-card-title
+            class="text-subtitle-1 font-weight-bold py-2 border-bottom d-flex justify-space-between align-center"
+          >
             <span>Character's Inventory Items</span>
             <span class="text-caption text-grey">Double-click to remove item</span>
           </v-card-title>
@@ -55,12 +57,13 @@
               "
             >
               <div class="d-flex flex-column">
-                <span class="text-h5 font-weight-bold text-uppercase" style="letter-spacing: 0.05em">
+                <span
+                  class="text-h5 font-weight-bold text-uppercase"
+                  style="letter-spacing: 0.05em"
+                >
                   {{ selectedItem.name }}
                 </span>
-                <span class="text-caption text-grey">
-                  Category: {{ selectedItem.type }}
-                </span>
+                <span class="text-caption text-grey"> Category: {{ selectedItem.type }} </span>
               </div>
               <div class="text-caption text-grey">
                 {{ selectedItem.source }}
@@ -101,7 +104,9 @@ const headers = ref([
 const inventoryItems = computed(() => characterStore.character.inventory || [])
 
 const filteredItems = computed(() => {
-  const activeOnly = inventoryItems.value.filter((item: any) => characterStore.isSourceActive(item.source))
+  const activeOnly = inventoryItems.value.filter((item: any) =>
+    characterStore.isSourceActive(item.source)
+  )
   if (!searchQuery.value) return activeOnly
   const query = searchQuery.value.toLowerCase()
   return activeOnly.filter(
@@ -117,7 +122,10 @@ const handleDoubleClick = (event: any, { item }: any) => {
     characterStore.character.inventory = characterStore.character.inventory.filter(
       (i: any) => (i.instanceId || i.id) !== (item.instanceId || item.id)
     )
-    if (selectedItem.value && (selectedItem.value.instanceId || selectedItem.value.id) === (item.instanceId || item.id)) {
+    if (
+      selectedItem.value &&
+      (selectedItem.value.instanceId || selectedItem.value.id) === (item.instanceId || item.id)
+    ) {
       selectedItem.value = null
     }
   }
@@ -128,7 +136,10 @@ const handleRowClick = (event: any, { item }: any) => {
 }
 
 const rowProps = (data: any) => {
-  const isSelected = selectedItem.value && (selectedItem.value.instanceId || selectedItem.value.id) === (data.item.instanceId || data.item.id)
+  const isSelected =
+    selectedItem.value &&
+    (selectedItem.value.instanceId || selectedItem.value.id) ===
+      (data.item.instanceId || data.item.id)
   return {
     class: isSelected ? 'v-theme--selected' : ''
   }

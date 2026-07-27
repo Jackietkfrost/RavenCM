@@ -32,10 +32,7 @@
       </v-menu>
 
       <!-- Selected Character Name Dropdown -->
-      <v-menu
-        offset="y"
-        v-if="characterStore.character && characterStore.character.name"
-      >
+      <v-menu offset="y" v-if="characterStore.character && characterStore.character.name">
         <template #activator="{ props }">
           <span
             v-bind="props"
@@ -44,7 +41,12 @@
             {{ characterStore.character.name }}
           </span>
         </template>
-        <v-list density="compact" class="character-dropdown-list py-1" width="240" bg-color="#1e1e24">
+        <v-list
+          density="compact"
+          class="character-dropdown-list py-1"
+          width="240"
+          bg-color="#1e1e24"
+        >
           <v-list-item @click="saveCharacter" class="dropdown-item">
             <div class="d-flex justify-space-between align-center w-100">
               <span class="dropdown-text">Save Character</span>
@@ -55,16 +57,28 @@
             <span class="dropdown-text">Save Character Sheet (.pdf)</span>
           </v-list-item>
           <v-divider class="my-1 border-grey-darken-3" />
-          <v-list-item @click="navigateTo('/builder', 'currentBuildStage', 'class')" class="dropdown-item">
+          <v-list-item
+            @click="navigateTo('/builder', 'currentBuildStage', 'class')"
+            class="dropdown-item"
+          >
             <span class="dropdown-text">Level Up, HP, & Multiclass</span>
           </v-list-item>
-          <v-list-item @click="navigateTo('/manager', 'currentManageStage', 'character')" class="dropdown-item">
+          <v-list-item
+            @click="navigateTo('/manager', 'currentManageStage', 'character')"
+            class="dropdown-item"
+          >
             <span class="dropdown-text">Manage Character Options</span>
           </v-list-item>
-          <v-list-item @click="navigateTo('/', 'currentStartStage', 'sources')" class="dropdown-item">
+          <v-list-item
+            @click="navigateTo('/', 'currentStartStage', 'sources')"
+            class="dropdown-item"
+          >
             <span class="dropdown-text">Manage Sources</span>
           </v-list-item>
-          <v-list-item @click="navigateTo('/equipment', 'currentEquipmentStage', 'inventory')" class="dropdown-item">
+          <v-list-item
+            @click="navigateTo('/equipment', 'currentEquipmentStage', 'inventory')"
+            class="dropdown-item"
+          >
             <span class="dropdown-text">Manage Coins</span>
           </v-list-item>
           <v-divider class="my-1 border-grey-darken-3" />
@@ -160,7 +174,7 @@ const router = useRouter()
 
 const navigateTo = (path: string, stageField?: string, stageValue?: string) => {
   if (stageField && stageValue) {
-    (characterStore as any)[stageField] = stageValue
+    ;(characterStore as any)[stageField] = stageValue
   }
   router.push(path)
 }

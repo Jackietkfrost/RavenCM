@@ -20,7 +20,10 @@
     </v-row>
     <v-row>
       <!-- Left column: Background list and sub-selection cards -->
-      <v-col style="flex: 0 0 70%; max-width: 70%; max-height: calc(100vh - 220px);" class="overflow-y-auto">
+      <v-col
+        style="flex: 0 0 70%; max-width: 70%; max-height: calc(100vh - 220px)"
+        class="overflow-y-auto"
+      >
         <!-- Main Background Card -->
         <v-card variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
           <v-card-title class="py-3">
@@ -39,12 +42,21 @@
                   single-line
                   persistent-clear
                   hide-details
-                  :dirty="!!(characterStore.character.background && characterStore.character.background.name)"
+                  :dirty="
+                    !!(
+                      characterStore.character.background &&
+                      characterStore.character.background.name
+                    )
+                  "
                   @click.stop="() => (isExpanded = !isExpanded)"
                   @click:clear="onClear"
                 ></v-text-field>
               </v-col>
-              <v-col class="d-flex justify-end cursor-pointer" cols="1" @click="() => (isExpanded = !isExpanded)">
+              <v-col
+                class="d-flex justify-end cursor-pointer"
+                cols="1"
+                @click="() => (isExpanded = !isExpanded)"
+              >
                 <v-icon :icon="isExpanded ? mdiChevronUp : mdiChevronDown" class="ml-auto" />
               </v-col>
             </v-row>
@@ -80,7 +92,10 @@
           <v-card-title class="py-3">
             <v-row no-gutters class="align-center">
               <v-col class="cursor-pointer" cols="6" @click="() => toggleSlot(index)">
-                {{ slot.name }} <span class="text-caption text-grey ml-1">({{ slot.optional ? 'Optional' : 'Required' }})</span>
+                {{ slot.name }}
+                <span class="text-caption text-grey ml-1"
+                  >({{ slot.optional ? 'Optional' : 'Required' }})</span
+                >
               </v-col>
               <v-col class="text--secondary" cols="5">
                 <v-text-field
@@ -98,8 +113,15 @@
                   @click:clear="() => onClearSlot(slot)"
                 ></v-text-field>
               </v-col>
-              <v-col class="d-flex justify-end cursor-pointer" cols="1" @click="() => toggleSlot(index)">
-                <v-icon :icon="expandedSlotIndex === index ? mdiChevronUp : mdiChevronDown" class="ml-auto" />
+              <v-col
+                class="d-flex justify-end cursor-pointer"
+                cols="1"
+                @click="() => toggleSlot(index)"
+              >
+                <v-icon
+                  :icon="expandedSlotIndex === index ? mdiChevronUp : mdiChevronDown"
+                  class="ml-auto"
+                />
               </v-col>
             </v-row>
           </v-card-title>
@@ -125,7 +147,7 @@
       </v-col>
 
       <!-- Right column: Background details pane -->
-      <v-col style="flex: 0 0 30%; max-width: 30%;">
+      <v-col style="flex: 0 0 30%; max-width: 30%">
         <v-card
           variant="outlined"
           class="d-flex flex-column"
@@ -203,7 +225,9 @@ const activeDetailsItem = computed(() => {
 })
 
 const filteredItems = computed(() => {
-  const activeOnly = (items.value || []).filter((item: any) => characterStore.isSourceActive(item.source))
+  const activeOnly = (items.value || []).filter((item: any) =>
+    characterStore.isSourceActive(item.source)
+  )
   if (!searchQuery.value) return activeOnly
   const query = searchQuery.value.toLowerCase()
   return activeOnly.filter(
@@ -218,21 +242,29 @@ const backgroundSelectionSlots = computed(() => {
   const currentBgName = characterStore.character.background?.name
   if (!currentBgName) return []
 
-  const baseBg = characterStore.elements.backgrounds.find(
-    (b: any) => b.name === currentBgName
-  )
-  
-  const slots: { name: string; selectType: string; supports: string; key: string; optional?: boolean }[] = []
-  
+  const baseBg = characterStore.elements.backgrounds.find((b: any) => b.name === currentBgName)
+
+  const slots: {
+    name: string
+    selectType: string
+    supports: string
+    key: string
+    optional?: boolean
+  }[] = []
+
   if (baseBg && baseBg.rules) {
     // Filter for select rules where selectType is "Background Variant" or "Background Feature"
     const selectRules = baseBg.rules.filter(
-      (rule: any) => rule.type === 'select' && (rule.selectType === 'Background Variant' || rule.selectType === 'Background Feature')
+      (rule: any) =>
+        rule.type === 'select' &&
+        (rule.selectType === 'Background Variant' || rule.selectType === 'Background Feature')
     )
 
     selectRules.forEach((rule: any, idx: number) => {
       slots.push({
-        name: rule.name || (rule.selectType === 'Background Variant' ? 'Background Variant' : 'Background Feature'),
+        name:
+          rule.name ||
+          (rule.selectType === 'Background Variant' ? 'Background Variant' : 'Background Feature'),
         selectType: rule.selectType,
         supports: rule.supports || '',
         key: `bg-select-${rule.selectType}-${idx}`,
@@ -244,7 +276,13 @@ const backgroundSelectionSlots = computed(() => {
   // Fallback: Check elements database dynamically if no rules match
   if (slots.length === 0) {
     const hasVariants = (characterStore.elements.backgroundVariants || []).some(
-      (v: any) => v.supports && v.supports.toLowerCase().split(',').map((s: string) => s.trim().toLowerCase()).includes(currentBgName.toLowerCase())
+      (v: any) =>
+        v.supports &&
+        v.supports
+          .toLowerCase()
+          .split(',')
+          .map((s: string) => s.trim().toLowerCase())
+          .includes(currentBgName.toLowerCase())
     )
     if (hasVariants) {
       slots.push({
@@ -257,7 +295,13 @@ const backgroundSelectionSlots = computed(() => {
     }
 
     const hasFeatures = (characterStore.elements.backgroundFeatures || []).some(
-      (f: any) => f.supports && f.supports.toLowerCase().split(',').map((s: string) => s.trim().toLowerCase()).includes(currentBgName.toLowerCase())
+      (f: any) =>
+        f.supports &&
+        f.supports
+          .toLowerCase()
+          .split(',')
+          .map((s: string) => s.trim().toLowerCase())
+          .includes(currentBgName.toLowerCase())
     )
     if (hasFeatures) {
       slots.push({
@@ -274,25 +318,28 @@ const backgroundSelectionSlots = computed(() => {
 })
 
 const getFilteredItemsForSlot = (slot: any) => {
-  const allEl = slot.selectType === 'Background Variant'
-    ? (characterStore.elements.backgroundVariants || [])
-    : (characterStore.elements.backgroundFeatures || [])
+  const allEl =
+    slot.selectType === 'Background Variant'
+      ? characterStore.elements.backgroundVariants || []
+      : characterStore.elements.backgroundFeatures || []
 
   const currentBgName = characterStore.character.background?.name || ''
-  
+
   const matched = allEl.filter((item: any) => {
     if (!item.supports) return false
     const itemSupportsLower = item.supports.toLowerCase()
     const slotSupportsLower = slot.supports.toLowerCase()
-    
+
     if (itemSupportsLower === slotSupportsLower) return true
-    
+
     const slotTerms = slotSupportsLower.split('||').map((s: string) => s.trim())
     const itemTerms = itemSupportsLower.split(',').map((s: string) => s.trim())
-    
+
     return slotTerms.some((term: string) => {
       const andTerms = term.split(',').map((s: string) => s.trim())
-      return andTerms.every((t: string) => itemTerms.includes(t) || t === currentBgName.toLowerCase())
+      return andTerms.every(
+        (t: string) => itemTerms.includes(t) || t === currentBgName.toLowerCase()
+      )
     })
   })
 
@@ -301,9 +348,10 @@ const getFilteredItemsForSlot = (slot: any) => {
 }
 
 const getSlotValue = (slot: any) => {
-  const currentVal = slot.selectType === 'Background Variant'
-    ? (characterStore.character.backgroundVariant || '')
-    : (characterStore.character.backgroundFeature || '')
+  const currentVal =
+    slot.selectType === 'Background Variant'
+      ? characterStore.character.backgroundVariant || ''
+      : characterStore.character.backgroundFeature || ''
   if (!currentVal) return ''
   const isMatch = getFilteredItemsForSlot(slot).some((item: any) => item.name === currentVal)
   return isMatch ? currentVal : ''

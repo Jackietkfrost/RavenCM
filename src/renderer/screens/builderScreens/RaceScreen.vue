@@ -20,7 +20,10 @@
     </v-row>
     <v-row>
       <!-- Left column: Accordions -->
-      <v-col style="flex: 0 0 70%; max-width: 70%; max-height: calc(100vh - 220px);" class="overflow-y-auto">
+      <v-col
+        style="flex: 0 0 70%; max-width: 70%; max-height: calc(100vh - 220px)"
+        class="overflow-y-auto"
+      >
         <!-- Race Accordion Card -->
         <v-card key="race-card" variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
           <v-card-title class="py-3">
@@ -44,7 +47,11 @@
                   @click:clear="onClear"
                 ></v-text-field>
               </v-col>
-              <v-col class="d-flex justify-end cursor-pointer" cols="1" @click="() => (isExpanded = !isExpanded)">
+              <v-col
+                class="d-flex justify-end cursor-pointer"
+                cols="1"
+                @click="() => (isExpanded = !isExpanded)"
+              >
                 <v-icon :icon="isExpanded ? mdiChevronUp : mdiChevronDown" class="ml-auto" />
               </v-col>
             </v-row>
@@ -95,8 +102,15 @@
                   @click:clear="() => onClearSlot(slot)"
                 ></v-text-field>
               </v-col>
-              <v-col class="d-flex justify-end cursor-pointer" cols="1" @click="() => toggleSlot(index)">
-                <v-icon :icon="expandedSlotIndex === index ? mdiChevronUp : mdiChevronDown" class="ml-auto" />
+              <v-col
+                class="d-flex justify-end cursor-pointer"
+                cols="1"
+                @click="() => toggleSlot(index)"
+              >
+                <v-icon
+                  :icon="expandedSlotIndex === index ? mdiChevronUp : mdiChevronDown"
+                  class="ml-auto"
+                />
               </v-col>
             </v-row>
           </v-card-title>
@@ -186,16 +200,16 @@ const raceSelectionSlots = computed(() => {
   if (!characterStore.character.race) return []
   const currentRaceName = characterStore.character.race
 
-  const baseRace = characterStore.elements.races.find(
-    (r: any) => r.name === currentRaceName
-  )
-  
+  const baseRace = characterStore.elements.races.find((r: any) => r.name === currentRaceName)
+
   const slots: { name: string; selectType: string; supports: string; key: string }[] = []
-  
+
   if (baseRace && baseRace.rules) {
     // Filter for select rules where selectType is "Sub Race" or "Race Variant"
     const selectRules = baseRace.rules.filter(
-      (rule: any) => rule.type === 'select' && (rule.selectType === 'Sub Race' || rule.selectType === 'Race Variant')
+      (rule: any) =>
+        rule.type === 'select' &&
+        (rule.selectType === 'Sub Race' || rule.selectType === 'Race Variant')
     )
 
     selectRules.forEach((rule: any, idx: number) => {
@@ -239,9 +253,10 @@ const raceSelectionSlots = computed(() => {
 })
 
 const getFilteredItemsForSlot = (slot: any) => {
-  const allEl = slot.selectType === 'Sub Race'
-    ? (characterStore.elements.subRaces || [])
-    : (characterStore.elements.raceVariants || [])
+  const allEl =
+    slot.selectType === 'Sub Race'
+      ? characterStore.elements.subRaces || []
+      : characterStore.elements.raceVariants || []
 
   // Filter items matching the supports restriction of the slot
   const matched = allEl.filter(
@@ -287,7 +302,9 @@ watch(
 )
 
 const filteredItems = computed(() => {
-  const activeOnly = (items.value || []).filter((item: any) => characterStore.isSourceActive(item.source))
+  const activeOnly = (items.value || []).filter((item: any) =>
+    characterStore.isSourceActive(item.source)
+  )
   if (!searchQuery.value) return activeOnly
   const query = searchQuery.value.toLowerCase()
   return activeOnly.filter(

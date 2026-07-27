@@ -47,7 +47,9 @@
 
           <!-- Selected Spells -->
           <v-card variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
-            <v-card-title class="text-subtitle-1 font-weight-bold py-2 border-bottom d-flex justify-space-between align-center">
+            <v-card-title
+              class="text-subtitle-1 font-weight-bold py-2 border-bottom d-flex justify-space-between align-center"
+            >
               <span>Character's Prepared Spells</span>
               <span class="text-caption text-grey">Double-click a spell below to remove it</span>
             </v-card-title>
@@ -79,7 +81,10 @@
                 "
               >
                 <div class="d-flex flex-column">
-                  <span class="text-h5 font-weight-bold text-uppercase" style="letter-spacing: 0.05em">
+                  <span
+                    class="text-h5 font-weight-bold text-uppercase"
+                    style="letter-spacing: 0.05em"
+                  >
                     {{ selectedSpell.name }}
                   </span>
                   <span class="text-caption text-grey">
@@ -97,7 +102,9 @@
               </div>
             </template>
             <template v-else>
-              <div class="d-flex flex-column align-center justify-center fill-height text-grey py-12">
+              <div
+                class="d-flex flex-column align-center justify-center fill-height text-grey py-12"
+              >
                 <div class="text-subtitle-1">Select a spell to view details</div>
               </div>
             </template>
@@ -107,7 +114,11 @@
     </v-container>
   </template>
   <template v-else>
-    <v-container fluid class="pa-4 d-flex align-center justify-center" style="height: calc(100vh - 120px)">
+    <v-container
+      fluid
+      class="pa-4 d-flex align-center justify-center"
+      style="height: calc(100vh - 120px)"
+    >
       <div class="text-center text-grey">
         <div class="text-h6">Choose a class that can use spells for options.</div>
       </div>
@@ -160,8 +171,10 @@ const classSupportsSpells = computed(() => {
 })
 
 const filteredSpells = computed(() => {
-  const activeOnly = (allSpells.value || []).filter((item: any) => characterStore.isSourceActive(item.source))
-  
+  const activeOnly = (allSpells.value || []).filter((item: any) =>
+    characterStore.isSourceActive(item.source)
+  )
+
   // Filter by supported class if a class is chosen
   let list = activeOnly
   const currentClass = characterStore.character.class

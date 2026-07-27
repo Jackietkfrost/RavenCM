@@ -34,7 +34,7 @@
             What's New
           </h3>
           <v-divider class="mb-2" />
-          <p class="text-body-2 text-medium-emphasis" style="white-space: pre-wrap;">
+          <p class="text-body-2 text-medium-emphasis" style="white-space: pre-wrap">
             {{ releaseNotes }}
           </p>
         </div>
@@ -183,9 +183,7 @@
     <!-- Edit Group Dialog Popup -->
     <v-dialog v-model="showEditGroupDialog" max-width="400">
       <v-card>
-        <v-card-title class="text-h6 font-weight-bold">
-          Edit Character Group
-        </v-card-title>
+        <v-card-title class="text-h6 font-weight-bold"> Edit Character Group </v-card-title>
         <v-card-text class="pt-2">
           <v-text-field
             label="Character Group"
@@ -205,12 +203,7 @@
           >
             Cancel
           </v-btn>
-          <v-btn
-            variant="flat"
-            color="primary"
-            @click="handleSaveGroup"
-            class="text-none"
-          >
+          <v-btn variant="flat" color="primary" @click="handleSaveGroup" class="text-none">
             Save
           </v-btn>
         </v-card-actions>
@@ -220,11 +213,10 @@
     <!-- Delete Confirm Dialog Popup -->
     <v-dialog v-model="showDeleteDialog" max-width="400">
       <v-card>
-        <v-card-title class="text-h6 font-weight-bold text-error">
-          Delete Character?
-        </v-card-title>
+        <v-card-title class="text-h6 font-weight-bold text-error"> Delete Character? </v-card-title>
         <v-card-text class="pt-2">
-          Do you want to delete <strong>{{ selectedCharForDelete?.name }}</strong>? This action cannot be undone.
+          Do you want to delete <strong>{{ selectedCharForDelete?.name }}</strong
+          >? This action cannot be undone.
         </v-card-text>
         <v-card-actions class="justify-end px-6 pb-4">
           <v-btn
@@ -235,12 +227,7 @@
           >
             Cancel
           </v-btn>
-          <v-btn
-            variant="flat"
-            color="error"
-            @click="handleConfirmDelete"
-            class="text-none"
-          >
+          <v-btn variant="flat" color="error" @click="handleConfirmDelete" class="text-none">
             Yes
           </v-btn>
         </v-card-actions>

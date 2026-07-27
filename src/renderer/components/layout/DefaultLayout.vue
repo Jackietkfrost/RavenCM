@@ -1,13 +1,22 @@
 <template>
   <v-app>
     <CustomTitleBar />
-    <v-layout style="top: 38px; height: calc(100vh - 38px); position: absolute; left: 0; right: 0; bottom: 0;">
+    <v-layout
+      style="
+        top: 38px;
+        height: calc(100vh - 38px);
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      "
+    >
       <CreateCharacterDrawer />
       <HeaderLayout />
       <v-main>
         <slot />
       </v-main>
-      
+
       <v-dialog
         v-model="characterStore.showSettings"
         max-width="950"

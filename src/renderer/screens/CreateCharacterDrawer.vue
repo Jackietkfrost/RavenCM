@@ -323,6 +323,20 @@
         ></v-btn>
       </div>
 
+      <!-- Randomize Portrait Button -->
+      <div class="d-flex justify-center mb-4">
+        <v-btn
+          variant="tonal"
+          size="small"
+          color="primary"
+          :prepend-icon="mdiDice5Outline"
+          @click="selectRandom"
+          class="text-none font-weight-bold"
+        >
+          Randomize Portrait
+        </v-btn>
+      </div>
+
       <v-expansion-panels class="px-2" v-model="activePanel">
         <v-expansion-panel value="details" color="accordion" title="Character Details">
           <v-expansion-panel-text color="accordion">
@@ -483,7 +497,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '../store/appStore'
 import { CharacterInfo } from '../utils/dnd-typing'
-import { mdiChevronLeft, mdiChevronRight } from '@mdi/js'
+import { mdiChevronLeft, mdiChevronRight, mdiDice5Outline } from '@mdi/js'
 
 interface Image {
   src: string
@@ -494,7 +508,9 @@ const characterName = ref('')
 const startingLevel = ref(1)
 const levels = ref(Array.from({ length: 20 }, (_, i) => i + 1))
 const pronouns = ref('Male')
-const abilityGenerationOption = ref(localStorage.getItem('defaultGenerationOption') || 'Roll 4d6 - Discard Lowest')
+const abilityGenerationOption = ref(
+  localStorage.getItem('defaultGenerationOption') || 'Roll 4d6 - Discard Lowest'
+)
 const abilityGenerationOptions = ref([
   'Roll 3d6',
   'Roll 4d6 - Discard Lowest',
@@ -518,6 +534,14 @@ const selectPrev = () => {
 }
 const selectNext = () => {
   model.value = nextIndex.value
+}
+const selectRandom = () => {
+  if (!items.value || items.value.length <= 1) return
+  let randomIndex = model.value
+  while (randomIndex === model.value) {
+    randomIndex = Math.floor(Math.random() * items.value.length)
+  }
+  model.value = randomIndex
 }
 
 const handleRoute = (path: string): void => {

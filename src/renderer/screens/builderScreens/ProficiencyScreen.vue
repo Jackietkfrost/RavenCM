@@ -20,7 +20,7 @@
     </v-row>
     <v-row>
       <!-- Left column: Proficiency list table -->
-      <v-col style="flex: 0 0 70%; max-width: 70%;">
+      <v-col style="flex: 0 0 70%; max-width: 70%">
         <v-card variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
           <v-card-title class="py-3">
             <v-row no-gutters class="align-center">
@@ -43,7 +43,11 @@
                   @click:clear="onClear"
                 ></v-text-field>
               </v-col>
-              <v-col class="d-flex justify-end cursor-pointer" cols="1" @click="() => (isExpanded = !isExpanded)">
+              <v-col
+                class="d-flex justify-end cursor-pointer"
+                cols="1"
+                @click="() => (isExpanded = !isExpanded)"
+              >
                 <v-icon :icon="isExpanded ? mdiChevronUp : mdiChevronDown" class="ml-auto" />
               </v-col>
             </v-row>
@@ -65,7 +69,7 @@
       </v-col>
 
       <!-- Right column: Proficiency details pane -->
-      <v-col style="flex: 0 0 30%; max-width: 30%;">
+      <v-col style="flex: 0 0 30%; max-width: 30%">
         <v-card
           variant="outlined"
           class="d-flex flex-column"
@@ -126,7 +130,9 @@ const searchQuery = ref('')
 const selectedProficiency = ref<any>(null)
 
 const filteredItems = computed(() => {
-  const activeOnly = (items.value || []).filter((item: any) => characterStore.isSourceActive(item.source))
+  const activeOnly = (items.value || []).filter((item: any) =>
+    characterStore.isSourceActive(item.source)
+  )
   if (!searchQuery.value) return activeOnly
   const query = searchQuery.value.toLowerCase()
   return activeOnly.filter(

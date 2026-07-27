@@ -38,7 +38,9 @@
       <!-- Middle column: Equipment Table -->
       <v-col cols="5">
         <v-card variant="outlined" style="border-color: rgba(128, 128, 128, 0.2)">
-          <v-card-title class="text-subtitle-1 font-weight-bold py-2 border-bottom d-flex justify-space-between align-center">
+          <v-card-title
+            class="text-subtitle-1 font-weight-bold py-2 border-bottom d-flex justify-space-between align-center"
+          >
             <span>Equipment List</span>
             <span class="text-caption text-grey">Double-click to add to inventory</span>
           </v-card-title>
@@ -74,12 +76,13 @@
               "
             >
               <div class="d-flex flex-column">
-                <span class="text-h5 font-weight-bold text-uppercase" style="letter-spacing: 0.05em">
+                <span
+                  class="text-h5 font-weight-bold text-uppercase"
+                  style="letter-spacing: 0.05em"
+                >
                   {{ selectedItem.name }}
                 </span>
-                <span class="text-caption text-grey">
-                  Category: {{ selectedItem.type }}
-                </span>
+                <span class="text-caption text-grey"> Category: {{ selectedItem.type }} </span>
               </div>
               <div class="text-caption text-grey">
                 {{ selectedItem.source }}
@@ -138,11 +141,11 @@ const allItems = computed(() => {
 const filteredItems = computed(() => {
   let list = allItems.value.filter((item: any) => characterStore.isSourceActive(item.source))
   const cat = selectedCategoryVal.value[0] || '0'
-  
+
   if (cat !== '0') {
     list = list.filter((item: any) => item.type === cat)
   }
-  
+
   if (!searchQuery.value) return list
   const query = searchQuery.value.toLowerCase()
   return list.filter(

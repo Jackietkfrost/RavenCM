@@ -266,9 +266,7 @@ const raceLanguages = computed(() => {
   const currentRaceName = characterStore.character.race
   if (!currentRaceName) return []
 
-  const raceEl = characterStore.elements.races.find(
-    (r: any) => r.name === currentRaceName
-  )
+  const raceEl = characterStore.elements.races.find((r: any) => r.name === currentRaceName)
   if (!raceEl || !raceEl.rules) return []
 
   const grantedIds = new Set<string>()

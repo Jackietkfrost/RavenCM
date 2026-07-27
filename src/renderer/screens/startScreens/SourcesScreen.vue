@@ -48,10 +48,10 @@
     </v-row>
 
     <!-- Main Content Row -->
-    <v-row style="height: calc(100vh - 220px);">
+    <v-row style="height: calc(100vh - 220px)">
       <!-- Column 1: Categories -->
       <v-col cols="3" class="d-flex flex-column justify-space-between h-100">
-        <div class="overflow-y-auto" style="max-height: calc(100vh - 300px);">
+        <div class="overflow-y-auto" style="max-height: calc(100vh - 300px)">
           <v-card
             v-for="cat in categories"
             :key="cat"
@@ -62,7 +62,10 @@
           >
             <div class="d-flex justify-space-between align-center px-4 py-3">
               <div class="d-flex flex-column">
-                <span class="text-subtitle-2 font-weight-bold text-uppercase" style="letter-spacing: 0.05em">
+                <span
+                  class="text-subtitle-2 font-weight-bold text-uppercase"
+                  style="letter-spacing: 0.05em"
+                >
                   {{ cat }}
                 </span>
                 <span class="text-caption text-grey mt-1">
@@ -98,12 +101,7 @@
       <!-- Column 2: Sources Grid -->
       <v-col cols="5" class="h-100 overflow-y-auto pr-3">
         <v-row no-gutters>
-          <v-col
-            v-for="source in filteredSources"
-            :key="source.id"
-            cols="12"
-            class="mb-2"
-          >
+          <v-col v-for="source in filteredSources" :key="source.id" cols="12" class="mb-2">
             <v-card
               class="source-card text-left"
               :class="{ selected: selectedSource && selectedSource.id === source.id }"
@@ -112,14 +110,17 @@
             >
               <div class="d-flex justify-space-between align-center px-3 py-2">
                 <div class="d-flex flex-column flex-grow-1 mr-2 text-truncate">
-                  <span class="text-subtitle-2 font-weight-bold text-truncate" style="line-height: 1.2;">
+                  <span
+                    class="text-subtitle-2 font-weight-bold text-truncate"
+                    style="line-height: 1.2"
+                  >
                     {{ source.name }}
                   </span>
                   <span class="text-caption text-grey text-truncate mt-0.5">
                     {{ source.setters?.author || 'Wizards of the Coast' }}
                   </span>
                 </div>
-                
+
                 <div class="d-flex align-center">
                   <!-- Indicator dots bottom-right style -->
                   <div class="d-flex gap-x-1 mr-2">
@@ -151,12 +152,15 @@
         <v-card
           variant="outlined"
           class="d-flex flex-column h-100"
-          style="border-color: rgba(128, 128, 128, 0.2);"
+          style="border-color: rgba(128, 128, 128, 0.2)"
         >
           <template v-if="selectedSource">
             <!-- Header -->
             <div class="px-4 py-3 border-bottom d-flex flex-column">
-              <span class="text-h6 font-weight-bold text-uppercase" style="letter-spacing: 0.05em; line-height: 1.2;">
+              <span
+                class="text-h6 font-weight-bold text-uppercase"
+                style="letter-spacing: 0.05em; line-height: 1.2"
+              >
                 {{ selectedSource.name }}
               </span>
               <span
@@ -186,7 +190,9 @@
                 <div class="text-caption font-weight-bold text-uppercase text-grey">Author</div>
                 <a
                   href="#"
-                  @click.prevent="openExternalLink(selectedSource.setters.authorUrl || 'http://dnd.wizards.com')"
+                  @click.prevent="
+                    openExternalLink(selectedSource.setters.authorUrl || 'http://dnd.wizards.com')
+                  "
                   class="text-caption text-primary"
                 >
                   {{ selectedSource.setters.author }}
@@ -204,7 +210,11 @@
                 >
                   <template #placeholder>
                     <div class="d-flex align-center justify-center fill-height bg-grey-darken-4">
-                      <v-progress-circular indeterminate color="primary" size="24"></v-progress-circular>
+                      <v-progress-circular
+                        indeterminate
+                        color="primary"
+                        size="24"
+                      ></v-progress-circular>
                     </div>
                   </template>
                 </v-img>
@@ -264,7 +274,11 @@ const categories = computed(() => {
 watch(
   categories,
   (newCats) => {
-    if (newCats && newCats.length > 0 && (!selectedCategory.value || !newCats.includes(selectedCategory.value))) {
+    if (
+      newCats &&
+      newCats.length > 0 &&
+      (!selectedCategory.value || !newCats.includes(selectedCategory.value))
+    ) {
       selectedCategory.value = newCats[0]
     }
   },
@@ -279,11 +293,11 @@ const getSourceCategory = (source: any): string => {
 // Group sources by category dynamically
 const sourcesByCategory = computed(() => {
   const map: Record<string, any[]> = {}
-  
+
   categories.value.forEach((cat) => {
     map[cat] = []
   })
-  
+
   allSources.value.forEach((s: any) => {
     const cat = getSourceCategory(s)
     if (map[cat]) {
@@ -295,18 +309,18 @@ const sourcesByCategory = computed(() => {
       map[cat].push(s)
     }
   })
-  
+
   return map
 })
 
 // Filter sources by current category and playtest restrictions
 const filteredSources = computed(() => {
   let list = sourcesByCategory.value[selectedCategory.value] || []
-  
+
   if (restrictPlaytest.value) {
     list = list.filter((s: any) => s.setters?.playtest !== 'true')
   }
-  
+
   return list
 })
 
@@ -314,7 +328,7 @@ const filteredSources = computed(() => {
 const getCategoryStatus = (cat: string): string => {
   const list = sourcesByCategory.value[cat] || []
   const enabledCount = list.filter((s: any) => enabledSources.value[s.id]).length
-  
+
   if (enabledCount === list.length) {
     return `All ${list.length} Sources Included`
   }
@@ -330,7 +344,7 @@ const isCategoryAllEnabled = (cat: string): boolean => {
 const toggleCategory = (cat: string) => {
   const list = sourcesByCategory.value[cat] || []
   const allEnabled = isCategoryAllEnabled(cat)
-  
+
   list.forEach((s: any) => {
     enabledSources.value[s.id] = !allEnabled
   })
@@ -359,15 +373,19 @@ const loadDefaultSources = () => {
 }
 
 // Watch sources to initialize selection
-watch(filteredSources, (newList) => {
-  if (newList && newList.length > 0) {
-    if (!selectedSource.value || !newList.some((s: any) => s.id === selectedSource.value.id)) {
-      selectedSource.value = newList[0]
+watch(
+  filteredSources,
+  (newList) => {
+    if (newList && newList.length > 0) {
+      if (!selectedSource.value || !newList.some((s: any) => s.id === selectedSource.value.id)) {
+        selectedSource.value = newList[0]
+      }
+    } else {
+      selectedSource.value = null
     }
-  } else {
-    selectedSource.value = null
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   const storeActive = characterStore.activeSources
@@ -382,7 +400,7 @@ onMounted(() => {
       enabledSources.value[s.id] = true
     }
   })
-  
+
   if (filteredSources.value && filteredSources.value.length > 0) {
     selectedSource.value = filteredSources.value[0]
   }
