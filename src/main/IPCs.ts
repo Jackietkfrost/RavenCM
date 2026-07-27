@@ -299,7 +299,7 @@ export default class IPCs {
     }
 
     // List PDF fields immediately if pdf-lib exists and pdf_fields.txt doesn't
-    const fieldsTextPath = 'd:\\Vue-Electron Projects\\Raven CM\\pdf_fields.txt'
+    const fieldsTextPath = path.join(process.cwd(), 'pdf_fields.txt')
     if (fs.existsSync(pdfLibPath) && !fs.existsSync(fieldsTextPath)) {
       try {
         const pdfPath = path.join(
