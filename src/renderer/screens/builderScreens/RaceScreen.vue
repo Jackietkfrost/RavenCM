@@ -70,6 +70,19 @@
             @click:row="handleRowClick"
             :row-props="rowProps"
           >
+            <!-- eslint-disable-next-line vue/valid-v-slot -->
+            <template #item.name="{ item }">
+              <div class="d-flex align-center">
+                {{ item.name }}
+                <v-icon
+                  v-if="characterStore.character.race === item.name && characterStore.character.raceSource === item.source"
+                  :icon="mdiCheck"
+                  color="success"
+                  class="ml-2"
+                  size="small"
+                />
+              </div>
+            </template>
           </v-data-table-virtual>
         </v-card>
 
@@ -125,7 +138,21 @@
             @dblclick:row="(event, row) => handleSlotDoubleClick(index, row.item)"
             @click:row="(event, row) => handleSlotClick(index, row.item)"
             :row-props="(data) => getRowPropsForSlot(index, data)"
-          ></v-data-table-virtual>
+          >
+            <!-- eslint-disable-next-line vue/valid-v-slot -->
+            <template #item.name="{ item }">
+              <div class="d-flex align-center">
+                {{ item.name }}
+                <v-icon
+                  v-if="characterStore.character.subrace === item.name && characterStore.character.subraceSource === item.source"
+                  :icon="mdiCheck"
+                  color="success"
+                  class="ml-2"
+                  size="small"
+                />
+              </div>
+            </template>
+          </v-data-table-virtual>
         </v-card>
       </v-col>
 
@@ -171,7 +198,7 @@
 
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
-import { mdiChevronDown, mdiChevronUp, mdiFilterMenuOutline, mdiMagnify } from '@mdi/js'
+import { mdiChevronDown, mdiChevronUp, mdiFilterMenuOutline, mdiMagnify, mdiCheck } from '@mdi/js'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -317,7 +344,9 @@ const filteredItems = computed(() => {
 // Main Race row handlers
 const handleDoubleClick = (event: any, { item }: any) => {
   characterStore.character.race = item.name
+  characterStore.character.raceSource = item.source
   characterStore.character.subrace = ''
+  characterStore.character.subraceSource = ''
   textFieldValue.value = item.name
   selectedRace.value = item
   isExpanded.value = false
@@ -337,7 +366,9 @@ const rowProps = (data: any) => {
 const onClear = (event: any) => {
   if (event && event.stopPropagation) event.stopPropagation()
   characterStore.character.race = ''
+  characterStore.character.raceSource = ''
   characterStore.character.subrace = ''
+  characterStore.character.subraceSource = ''
   textFieldValue.value = ''
   selectedRace.value = null
   setTimeout(() => {
@@ -352,6 +383,7 @@ const handleSlotClick = (index: number, item: any) => {
 
 const handleSlotDoubleClick = (index: number, item: any) => {
   characterStore.character.subrace = item.name
+  characterStore.character.subraceSource = item.source
   selectedRace.value = item
   expandedSlotIndex.value = null
 }
@@ -365,6 +397,7 @@ const getRowPropsForSlot = (index: number, data: any) => {
 
 const onClearSlot = (slot: any) => {
   characterStore.character.subrace = ''
+  characterStore.character.subraceSource = ''
   selectedRace.value = null
   const idx = raceSelectionSlots.value.findIndex((s) => s.key === slot.key)
   if (idx !== -1) {

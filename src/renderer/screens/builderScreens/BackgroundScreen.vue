@@ -73,6 +73,19 @@
             @click:row="handleRowClick"
             :row-props="rowProps"
           >
+            <!-- eslint-disable-next-line vue/valid-v-slot -->
+            <template #item.name="{ item }">
+              <div class="d-flex align-center">
+                {{ item.name }}
+                <v-icon
+                  v-if="characterStore.character.background && characterStore.character.background.name === item.name && characterStore.character.background.source === item.source"
+                  :icon="mdiCheck"
+                  color="success"
+                  class="ml-2"
+                  size="small"
+                />
+              </div>
+            </template>
             <template #[descriptionSlotName]="{ item }">
               <span class="text-italic text-grey">
                 {{ item.setters?.short || '' }}
@@ -137,6 +150,19 @@
             @click:row="(event, row) => handleSlotClick(slot, row.item)"
             :row-props="(data) => getRowPropsForSlot(slot, data)"
           >
+            <!-- eslint-disable-next-line vue/valid-v-slot -->
+            <template #item.name="{ item }">
+              <div class="d-flex align-center">
+                {{ item.name }}
+                <v-icon
+                  v-if="(slot.selectType === 'Background Variant' && characterStore.character.backgroundVariant === item.name && characterStore.character.backgroundVariantSource === item.source) || (slot.selectType !== 'Background Variant' && characterStore.character.backgroundFeature === item.name && characterStore.character.backgroundFeatureSource === item.source)"
+                  :icon="mdiCheck"
+                  color="success"
+                  class="ml-2"
+                  size="small"
+                />
+              </div>
+            </template>
             <template #[descriptionSlotName]="{ item }">
               <span class="text-italic text-grey">
                 {{ item.setters?.short || '' }}
@@ -188,7 +214,7 @@
 
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
-import { mdiChevronDown, mdiChevronUp, mdiFilterMenuOutline, mdiMagnify } from '@mdi/js'
+import { mdiChevronDown, mdiChevronUp, mdiFilterMenuOutline, mdiMagnify, mdiCheck } from '@mdi/js'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -366,6 +392,12 @@ watch(
   (newBg) => {
     textFieldValue.value = (newBg && newBg.name) || ''
     selectedSubItem.value = null
+    if (!newBg || !newBg.name) {
+      characterStore.character.backgroundVariant = ''
+      characterStore.character.backgroundVariantSource = ''
+      characterStore.character.backgroundFeature = ''
+      characterStore.character.backgroundFeatureSource = ''
+    }
     setTimeout(() => {
       if (backgroundSelectionSlots.value.length > 0) {
         expandedSlotIndex.value = 0
@@ -380,7 +412,9 @@ watch(
 const handleDoubleClick = (event: any, { item }: any) => {
   characterStore.character.background = item
   characterStore.character.backgroundVariant = ''
+  characterStore.character.backgroundVariantSource = ''
   characterStore.character.backgroundFeature = ''
+  characterStore.character.backgroundFeatureSource = ''
   textFieldValue.value = item.name
   isExpanded.value = false
 }
@@ -393,8 +427,10 @@ const handleRowClick = (event: any, { item }: any) => {
 const handleSlotDoubleClick = (slot: any, item: any) => {
   if (slot.selectType === 'Background Variant') {
     characterStore.character.backgroundVariant = item.name
+    characterStore.character.backgroundVariantSource = item.source
   } else {
     characterStore.character.backgroundFeature = item.name
+    characterStore.character.backgroundFeatureSource = item.source
   }
   expandedSlotIndex.value = null
 }
@@ -406,8 +442,10 @@ const handleSlotClick = (slot: any, item: any) => {
 const onClearSlot = (slot: any) => {
   if (slot.selectType === 'Background Variant') {
     characterStore.character.backgroundVariant = ''
+    characterStore.character.backgroundVariantSource = ''
   } else {
     characterStore.character.backgroundFeature = ''
+    characterStore.character.backgroundFeatureSource = ''
   }
 }
 
@@ -434,7 +472,9 @@ const onClear = (event: any) => {
     source: ''
   }
   characterStore.character.backgroundVariant = ''
+  characterStore.character.backgroundVariantSource = ''
   characterStore.character.backgroundFeature = ''
+  characterStore.character.backgroundFeatureSource = ''
   textFieldValue.value = ''
   selectedBackground.value = null
   selectedSubItem.value = null

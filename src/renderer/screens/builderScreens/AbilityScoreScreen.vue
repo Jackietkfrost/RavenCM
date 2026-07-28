@@ -115,6 +115,8 @@ const activeModifiers = computed(() => {
 
   const raceNameLower = raceName.toLowerCase()
   const subraceName = characterStore.character.subrace
+  const selectedRaceSource = characterStore.character.raceSource
+  const selectedSubraceSource = characterStore.character.subraceSource
 
   // Find matching Race / Sub Race / Race Variant in loaded elements
   const allRaceElements = [
@@ -125,10 +127,14 @@ const activeModifiers = computed(() => {
 
   const foundElements = allRaceElements.filter((el) => {
     if (el.type === 'Race' || el.type === 'Race Variant') {
-      return el.name.toLowerCase() === raceNameLower
+      const isMatchName = el.name.toLowerCase() === raceNameLower
+      const isMatchSource = !selectedRaceSource || (el.source && el.source.toLowerCase() === selectedRaceSource.toLowerCase())
+      return isMatchName && isMatchSource
     }
     if (el.type === 'Sub Race' && subraceName) {
-      return el.name.toLowerCase() === subraceName.toLowerCase()
+      const isMatchName = el.name.toLowerCase() === subraceName.toLowerCase()
+      const isMatchSource = !selectedSubraceSource || (el.source && el.source.toLowerCase() === selectedSubraceSource.toLowerCase())
+      return isMatchName && isMatchSource
     }
     return false
   })

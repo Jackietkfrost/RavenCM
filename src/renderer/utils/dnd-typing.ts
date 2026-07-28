@@ -41,15 +41,21 @@ export type CharacterInfo = {
   name: string
   avatar: string
   class: string
+  classSource?: string
   race: string
+  raceSource?: string
   subrace?: string
+  subraceSource?: string
   group?: string
   backgroundVariant?: string
+  backgroundVariantSource?: string
   backgroundFeature?: string
+  backgroundFeatureSource?: string
   pronouns: string
   level: number
   background: BackgroundInfo
   archetype: string
+  archetypeSource?: string
   alignment: string
   languages: string[]
   proficiency: string

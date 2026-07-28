@@ -69,6 +69,19 @@
             @click:row="handleRowClick"
             :row-props="rowProps"
           >
+            <!-- eslint-disable-next-line vue/valid-v-slot -->
+            <template #item.name="{ item }">
+              <div class="d-flex align-center">
+                {{ item.name }}
+                <v-icon
+                  v-if="characterStore.character.class === item.name && characterStore.character.classSource === item.source"
+                  :icon="mdiCheck"
+                  color="success"
+                  class="ml-2"
+                  size="small"
+                />
+              </div>
+            </template>
             <template #[descriptionSlotName]="{ item }">
               <span class="text-italic text-grey">
                 {{ item.setters?.short || '' }}
@@ -134,7 +147,21 @@
             @dblclick:row="handleSubclassDoubleClick"
             @click:row="handleSubclassClick"
             :row-props="subclassRowProps"
-          ></v-data-table-virtual>
+          >
+            <!-- eslint-disable-next-line vue/valid-v-slot -->
+            <template #item.name="{ item }">
+              <div class="d-flex align-center">
+                {{ item.name }}
+                <v-icon
+                  v-if="characterStore.character.archetype === item.name && characterStore.character.archetypeSource === item.source"
+                  :icon="mdiCheck"
+                  color="success"
+                  class="ml-2"
+                  size="small"
+                />
+              </div>
+            </template>
+          </v-data-table-virtual>
         </v-card>
       </v-col>
 
@@ -180,7 +207,7 @@
 
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
-import { mdiChevronDown, mdiChevronUp, mdiFilterMenuOutline, mdiMagnify } from '@mdi/js'
+import { mdiChevronDown, mdiChevronUp, mdiFilterMenuOutline, mdiMagnify, mdiCheck } from '@mdi/js'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -323,6 +350,7 @@ watch(
     textFieldValue.value = newClass || ''
     if (!newClass) {
       characterStore.character.archetype = ''
+      characterStore.character.archetypeSource = ''
       isExpanded.value = true
       isSubclassExpanded.value = false
     } else {
@@ -350,6 +378,9 @@ watch(
 // Main Class handlers
 const handleDoubleClick = (event: any, { item }: any) => {
   characterStore.character.class = item.name
+  characterStore.character.classSource = item.source
+  characterStore.character.archetype = ''
+  characterStore.character.archetypeSource = ''
   textFieldValue.value = item.name
   isExpanded.value = false
 }
@@ -368,6 +399,9 @@ const rowProps = (data: any) => {
 const onClear = (event: any) => {
   if (event && event.stopPropagation) event.stopPropagation()
   characterStore.character.class = ''
+  characterStore.character.classSource = ''
+  characterStore.character.archetype = ''
+  characterStore.character.archetypeSource = ''
   textFieldValue.value = ''
   selectedClass.value = null
   setTimeout(() => {
@@ -382,6 +416,7 @@ const handleSubclassClick = (event: any, { item }: any) => {
 
 const handleSubclassDoubleClick = (event: any, { item }: any) => {
   characterStore.character.archetype = item.name
+  characterStore.character.archetypeSource = item.source
   selectedClass.value = item
   isSubclassExpanded.value = false
 }
@@ -396,6 +431,7 @@ const subclassRowProps = (data: any) => {
 const onClearSubclass = (event: any) => {
   if (event && event.stopPropagation) event.stopPropagation()
   characterStore.character.archetype = ''
+  characterStore.character.archetypeSource = ''
   setTimeout(() => {
     isSubclassExpanded.value = true
   }, 50)

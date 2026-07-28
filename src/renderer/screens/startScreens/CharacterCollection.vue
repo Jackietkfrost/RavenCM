@@ -2,7 +2,13 @@
   <v-container fluid class="pa-0">
     <v-row>
       <!-- Left Column (Welcome, New Character, What's New) -->
-      <v-col cols="12" md="4" lg="3">
+      <v-col
+        cols="12"
+        md="4"
+        lg="3"
+        style="max-height: calc(100vh - 120px)"
+        class="overflow-y-auto"
+      >
         <div class="welcome-section mb-6">
           <h3 class="text-subtitle-1 font-weight-bold text-uppercase mb-2 text-primary">
             Welcome to Raven CM
@@ -41,7 +47,24 @@
       </v-col>
 
       <!-- Right Column (Characters List or Empty State) -->
-      <v-col cols="12" md="8" lg="9" class="ps-md-8">
+      <v-col
+        cols="12"
+        md="8"
+        lg="9"
+        class="ps-md-8 overflow-y-auto"
+        style="max-height: calc(100vh - 120px)"
+      >
+        <div class="d-flex justify-end mb-2">
+          <v-btn
+            variant="outlined"
+            size="small"
+            color="primary"
+            :icon="mdiRefresh"
+            @click="handleRefresh"
+            title="Refresh Characters List"
+          ></v-btn>
+        </div>
+
         <!-- Empty State -->
         <div v-if="!hasCharacters" class="text-center py-12">
           <v-icon :icon="mdiAccountGroup" size="200" class="mb-4 text-grey-darken-1 opacity-70" />
@@ -238,7 +261,7 @@
 
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
-import { mdiAccountGroup, mdiPlus, mdiPencil, mdiClose } from '@mdi/js'
+import { mdiAccountGroup, mdiPlus, mdiPencil, mdiClose, mdiRefresh } from '@mdi/js'
 import { computed, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -257,6 +280,10 @@ onMounted(async () => {
 })
 
 const hasCharacters = computed(() => characterStore.getCharacters.length > 0)
+
+const handleRefresh = async () => {
+  await characterStore.loadCharacters()
+}
 
 const showMenu = ref(false)
 const menuX = ref(0)

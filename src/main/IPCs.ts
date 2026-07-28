@@ -23,9 +23,13 @@ export default class IPCs {
   <display-properties favorite="true">
     <name>${data.characterName || data.name || ''}</name>
     <race>${data.race || ''}</race>
+    <raceSource>${data.raceSource || ''}</raceSource>
     <subrace>${data.subrace || ''}</subrace>
+    <subraceSource>${data.subraceSource || ''}</subraceSource>
     <class>${data.class || ''}</class>
+    <classSource>${data.classSource || ''}</classSource>
     <archetype>${data.archetype || ''}</archetype>
+    <archetypeSource>${data.archetypeSource || ''}</archetypeSource>
     <background>${data.background || ''}</background>
     <background-variant>${data.backgroundVariant || ''}</background-variant>
     <background-feature>${data.backgroundFeature || ''}</background-feature>
@@ -1002,6 +1006,8 @@ export default class IPCs {
 
           const char = parsed.character
           const displayProps = char['display-properties'] ? char['display-properties'][0] : {}
+          const raceSource = displayProps.raceSource ? displayProps.raceSource[0] : ''
+          const subraceSource = displayProps.subraceSource ? displayProps.subraceSource[0] : ''
           const infoProps = char.information ? char.information[0] : {}
           const abilitiesProps = char.abilities ? char.abilities[0] : {}
           const appearanceProps = char.appearance ? char.appearance[0] : {}
@@ -1063,12 +1069,16 @@ export default class IPCs {
               : 10
 
           // Apply race and subrace modifiers dynamically from parsed rules in XML compendiums
-          const applyStatRulesForName = (elementName: string, elementTypes: string[]) => {
+          const applyStatRulesForName = (elementName: string, elementTypes: string[], sourceName?: string) => {
             if (!elementName) return
             const nameLower = elementName.toLowerCase()
-            const foundElements = IPCs.cachedElements?.filter(
-              (el) => elementTypes.includes(el.type) && el.name.toLowerCase() === nameLower
-            )
+            const sourceLower = sourceName ? sourceName.toLowerCase() : ''
+            const foundElements = IPCs.cachedElements?.filter((el) => {
+              const isMatchName = el.name.toLowerCase() === nameLower
+              const isMatchType = elementTypes.includes(el.type)
+              const isMatchSource = !sourceLower || (el.source && el.source.toLowerCase() === sourceLower)
+              return isMatchName && isMatchType && isMatchSource
+            })
 
             if (foundElements) {
               foundElements.forEach((el) => {
@@ -1102,12 +1112,12 @@ export default class IPCs {
 
           // Apply stats for the base race
           if (displayProps.race && displayProps.race[0]) {
-            applyStatRulesForName(displayProps.race[0], ['Race', 'Race Variant'])
+            applyStatRulesForName(displayProps.race[0], ['Race', 'Race Variant'], raceSource)
           }
 
           // Apply stats for the selected subrace
           if (displayProps.subrace && displayProps.subrace[0]) {
-            applyStatRulesForName(displayProps.subrace[0], ['Sub Race', 'Race Variant'])
+            applyStatRulesForName(displayProps.subrace[0], ['Sub Race', 'Race Variant'], subraceSource)
           }
 
           // Apply ASI improvements

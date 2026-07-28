@@ -29,8 +29,11 @@ export const useAppStore = defineStore('appstore', {
         name: '',
         avatar: '',
         class: '',
+        classSource: '',
         race: '',
+        raceSource: '',
         subrace: '',
+        subraceSource: '',
         group: '',
         pronouns: '',
         level: 1,
@@ -41,8 +44,11 @@ export const useAppStore = defineStore('appstore', {
           source: ''
         },
         backgroundVariant: '',
+        backgroundVariantSource: '',
         backgroundFeature: '',
+        backgroundFeatureSource: '',
         archetype: '',
+        archetypeSource: '',
         alignment: '',
         languages: [],
         proficiency: '',
@@ -428,6 +434,14 @@ export const useAppStore = defineStore('appstore', {
       } catch (e) {
         console.error('Error saving character in store:', e)
         return { success: false, error: e }
+      }
+    },
+    async loadCharacters() {
+      try {
+        const chars = await window.mainApi.invoke('msgGetCharacters')
+        this.characters = chars
+      } catch (e) {
+        console.error('Failed to load characters:', e)
       }
     },
     async addIndexUrl(url: string) {
