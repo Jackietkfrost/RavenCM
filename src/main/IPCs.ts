@@ -133,7 +133,7 @@ export default class IPCs {
     return subXml.slice(descContentStart, descEndIdx).trim()
   }
 
-  public static loadElements(): any[] {
+  public static async loadElements(): Promise<any[]> {
     if (this.cachedElements !== null) {
       return this.cachedElements
     }
@@ -142,135 +142,140 @@ export default class IPCs {
     const customFolder = Constants.CUSTOM_FOLDER
 
     if (!fs.existsSync(customFolder)) {
-      fs.mkdirSync(customFolder, { recursive: true })
+      await fs.promises.mkdir(customFolder, { recursive: true })
     }
 
-    const searchForElements = (folderPath: string) => {
-      fs.readdirSync(folderPath).forEach((file: string) => {
-        const filePath = path.join(folderPath, file)
-        const stat = fs.statSync(filePath)
-        if (stat.isDirectory()) {
-          searchForElements(filePath)
-        } else {
-          for (const elementType of Constants.ALL_ELEMENTS) {
-            if (file.endsWith('.xml')) {
-              try {
-                const xml = fs.readFileSync(filePath, 'utf8')
-                const parser = new xml2js.Parser()
-                parser.parseString(xml, (err, result) => {
-                  if (err) {
-                    console.error(err)
-                  } else if (result && result.elements && result.elements.element) {
-                    const elements = result.elements.element
-                    elements.forEach((element: any) => {
-                      if (element.$ && element.$.type === elementType) {
-                        let descriptionText = ''
-                        if (element.setters && element.setters[0] && element.setters[0].set) {
-                          const shortSet = element.setters[0].set.find(
-                            (s: any) => s.$ && s.$.name === 'short'
-                          )
-                          if (shortSet) {
-                            descriptionText = IPCs.extractText(shortSet)
-                          }
-                        }
-                        if (
-                          !descriptionText &&
-                          element.sheet &&
-                          element.sheet[0] &&
-                          element.sheet[0].description
-                        ) {
-                          descriptionText = IPCs.extractText(element.sheet[0].description)
-                        }
-                        if (!descriptionText && element.description) {
-                          descriptionText = IPCs.extractText(element.description)
-                        }
+    const searchForElements = async (folderPath: string): Promise<void> => {
+      try {
+        const files = await fs.promises.readdir(folderPath)
+        const tasks = files.map(async (file: string) => {
+          const filePath = path.join(folderPath, file)
+          try {
+            const stat = await fs.promises.stat(filePath)
+            if (stat.isDirectory()) {
+              await searchForElements(filePath)
+            } else if (file.endsWith('.xml')) {
+              const xml = await fs.promises.readFile(filePath, 'utf8')
+              const parser = new xml2js.Parser()
+              const result = await new Promise<any>((resolve, reject) => {
+                parser.parseString(xml, (err, res) => {
+                  if (err) reject(err)
+                  else resolve(res)
+                })
+              })
 
-                        const settersObj: Record<string, string> = {}
-                        if (element.setters && element.setters[0] && element.setters[0].set) {
-                          element.setters[0].set.forEach((set: any) => {
-                            if (set.$ && set.$.name) {
-                              settersObj[set.$.name] = IPCs.extractText(set)
-                            }
-                          })
-                        }
-
-                        const rulesList: any[] = []
-                        if (element.rules && element.rules[0]) {
-                          const rulesNode = element.rules[0]
-                          if (rulesNode.stat) {
-                            rulesNode.stat.forEach((statNode: any) => {
-                              if (statNode.$) {
-                                rulesList.push({
-                                  type: 'stat',
-                                  name: statNode.$.name,
-                                  value: statNode.$.value,
-                                  requirements: statNode.$.requirements || ''
-                                })
-                              }
-                            })
-                          }
-                          if (rulesNode.grant) {
-                            rulesNode.grant.forEach((grantNode: any) => {
-                              if (grantNode.$) {
-                                rulesList.push({
-                                  type: 'grant',
-                                  grantType: grantNode.$.type,
-                                  id: grantNode.$.id,
-                                  requirements: grantNode.$.requirements || ''
-                                })
-                              }
-                            })
-                          }
-                          if (rulesNode.select) {
-                            rulesNode.select.forEach((selectNode: any) => {
-                              if (selectNode.$) {
-                                rulesList.push({
-                                  type: 'select',
-                                  selectType: selectNode.$.type,
-                                  name: selectNode.$.name,
-                                  number: selectNode.$.number || '1',
-                                  supports: selectNode.$.supports || '',
-                                  requirements: selectNode.$.requirements || '',
-                                  optional: selectNode.$.optional || ''
-                                })
-                              }
-                            })
-                          }
-                        }
-
-                        let supportsText = ''
-                        if (element.supports) {
-                          supportsText = IPCs.extractText(element.supports[0])
-                        }
-
-                        const elementObject = {
-                          name: element.$.name,
-                          type: element.$.type,
-                          source: element.$.source,
-                          id: element.$.id || '',
-                          description: descriptionText,
-                          htmlDescription: IPCs.extractRawDescription(xml, element.$.id || ''),
-                          setters: settersObj,
-                          rules: rulesList,
-                          supports: supportsText
-                        }
-
-                        parsedElements.push(elementObject)
+              if (result && result.elements && result.elements.element) {
+                const elements = result.elements.element
+                elements.forEach((element: any) => {
+                  if (element.$ && element.$.type && Constants.ALL_ELEMENTS.includes(element.$.type)) {
+                    let descriptionText = ''
+                    if (element.setters && element.setters[0] && element.setters[0].set) {
+                      const shortSet = element.setters[0].set.find(
+                        (s: any) => s.$ && s.$.name === 'short'
+                      )
+                      if (shortSet) {
+                        descriptionText = IPCs.extractText(shortSet)
                       }
-                    })
+                    }
+                    if (
+                      !descriptionText &&
+                      element.sheet &&
+                      element.sheet[0] &&
+                      element.sheet[0].description
+                    ) {
+                      descriptionText = IPCs.extractText(element.sheet[0].description)
+                    }
+                    if (!descriptionText && element.description) {
+                      descriptionText = IPCs.extractText(element.description)
+                    }
+
+                    const settersObj: Record<string, string> = {}
+                    if (element.setters && element.setters[0] && element.setters[0].set) {
+                      element.setters[0].set.forEach((set: any) => {
+                        if (set.$ && set.$.name) {
+                          settersObj[set.$.name] = IPCs.extractText(set)
+                        }
+                      })
+                    }
+
+                    const rulesList: any[] = []
+                    if (element.rules && element.rules[0]) {
+                      const rulesNode = element.rules[0]
+                      if (rulesNode.stat) {
+                        rulesNode.stat.forEach((statNode: any) => {
+                          if (statNode.$) {
+                            rulesList.push({
+                              type: 'stat',
+                              name: statNode.$.name,
+                              value: statNode.$.value,
+                              requirements: statNode.$.requirements || ''
+                            })
+                          }
+                        })
+                      }
+                      if (rulesNode.grant) {
+                        rulesNode.grant.forEach((grantNode: any) => {
+                          if (grantNode.$) {
+                            rulesList.push({
+                              type: 'grant',
+                              grantType: grantNode.$.type,
+                              id: grantNode.$.id,
+                              requirements: grantNode.$.requirements || ''
+                            })
+                          }
+                        })
+                      }
+                      if (rulesNode.select) {
+                        rulesNode.select.forEach((selectNode: any) => {
+                          if (selectNode.$) {
+                            rulesList.push({
+                              type: 'select',
+                              selectType: selectNode.$.type,
+                              name: selectNode.$.name,
+                              number: selectNode.$.number || '1',
+                              supports: selectNode.$.supports || '',
+                              requirements: selectNode.$.requirements || '',
+                              optional: selectNode.$.optional || ''
+                            })
+                          }
+                        })
+                      }
+                    }
+
+                    let supportsText = ''
+                    if (element.supports) {
+                      supportsText = IPCs.extractText(element.supports[0])
+                    }
+
+                    const elementObject = {
+                      name: element.$.name,
+                      type: element.$.type,
+                      source: element.$.source,
+                      id: element.$.id || '',
+                      description: descriptionText,
+                      htmlDescription: IPCs.extractRawDescription(xml, element.$.id || ''),
+                      setters: settersObj,
+                      rules: rulesList,
+                      supports: supportsText
+                    }
+
+                    parsedElements.push(elementObject)
                   }
                 })
-              } catch (e) {
-                console.error(`Error parsing file ${filePath}:`, e)
               }
             }
+          } catch (e) {
+            console.error(`Error processing file ${filePath}:`, e)
           }
-        }
-      })
+        })
+        await Promise.all(tasks)
+      } catch (e) {
+        console.error(`Error scanning folder ${folderPath}:`, e)
+      }
     }
 
     try {
-      searchForElements(customFolder)
+      await searchForElements(customFolder)
     } catch (e) {
       console.error(e)
     }
@@ -324,9 +329,6 @@ export default class IPCs {
         console.error('Error writing pdf fields file on initialize:', e)
       }
     }
-
-    // Load elements once on startup
-    IPCs.loadElements()
 
     ipcMain.handle('msgGetAllElements', async (event: IpcMainEvent) => {
       return IPCs.loadElements()
@@ -608,129 +610,197 @@ export default class IPCs {
       return characters
     })
 
-    // Index Downloader (Double check for redundancy)
+    const sendUpdateStatus = (data: {
+      status: 'checking' | 'updating' | 'up-to-date' | 'updated' | 'offline' | 'error'
+      indexName?: string
+      version?: string
+      error?: string
+    }) => {
+      BrowserWindow.getAllWindows().forEach((win) => {
+        if (!win.isDestroyed()) {
+          win.webContents.send('msgUpdateStatus', data)
+        }
+      })
+    }
+
+    const isHigherVersion = (remote: string, local: string): boolean => {
+      const remoteParts = remote.split('.').map(Number)
+      const localParts = local.split('.').map(Number)
+      for (let i = 0; i < Math.max(remoteParts.length, localParts.length); i++) {
+        const r = remoteParts[i] || 0
+        const l = localParts[i] || 0
+        if (r > l) return true
+        if (r < l) return false
+      }
+      return false
+    }
+
+    const downloadIndexRecursive = async (
+      url: string,
+      targetDir: string,
+      indexName: string
+    ): Promise<void> => {
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true })
+      }
+      const indexFilePath = path.join(targetDir, `${indexName}.index`)
+
+      // Download index content as text to prevent automatic parsing issues
+      const response = await axios.get(url, { timeout: 10000, responseType: 'text' })
+      const indexFileContent =
+        typeof response.data === 'string' ? response.data : JSON.stringify(response.data)
+
+      fs.writeFileSync(indexFilePath, indexFileContent, 'utf8')
+
+      // Parse XML content
+      const parser = new xml2js.Parser()
+      const result = await new Promise<any>((resolve, reject) => {
+        parser.parseString(indexFileContent, (err, res) => {
+          if (err) reject(err)
+          else resolve(res)
+        })
+      })
+
+      // If there are files listed, download them into a subfolder with indexName
+      if (result?.index?.files?.[0]?.file) {
+        const files = result.index.files[0].file
+        const subFolder = path.join(targetDir, indexName)
+        if (!fs.existsSync(subFolder)) {
+          fs.mkdirSync(subFolder, { recursive: true })
+        }
+
+        for (const file of files) {
+          const fileName = file.$.name
+          const fileUrl = file.$.url
+
+          if (fileName.endsWith('.index')) {
+            const nameWithoutExt = path.basename(fileName, '.index')
+            await downloadIndexRecursive(fileUrl, subFolder, nameWithoutExt)
+          } else {
+            const fileResponse = await axios.get(fileUrl, { timeout: 10000, responseType: 'text' })
+            const fileContent =
+              typeof fileResponse.data === 'string'
+                ? fileResponse.data
+                : JSON.stringify(fileResponse.data)
+            const destPath = path.join(subFolder, fileName)
+            fs.writeFileSync(destPath, fileContent, 'utf8')
+          }
+        }
+      }
+    }
+
+    // Index Downloader
     ipcMain.handle('msgDownloadIndex', async (event: IpcMainEvent, url: string) => {
       IPCs.cachedElements = null
       const ravenCMFolder = Constants.RAVEN_FOLDER
       const customFolder = Constants.CUSTOM_FOLDER
 
-      // Make the ravenCM and custom directories if they don't exist
       if (!fs.existsSync(ravenCMFolder)) {
-        // Do we need recursiveness?
         fs.mkdirSync(ravenCMFolder, { recursive: true })
       }
       if (!fs.existsSync(customFolder)) {
         fs.mkdirSync(customFolder, { recursive: true })
       }
 
-      // Download the index file
-      const parsedUrl = new URL(url)
-      const indexFileName = path.basename(parsedUrl.pathname)
-
-      // Gets the index file from the url, and then with the response, we save it to the custom folder.
-      axios
-        .get(url)
-        .then((response) => {
-          const indexFileContent = response.data
-          const indexFilePath = path.join(customFolder, indexFileName)
-
-          fs.writeFile(indexFilePath, indexFileContent, (err) => {
-            if (err) {
-              console.error(err)
-            }
-          })
-
-          // Parse XML content and extract URLs
-          const parser = new xml2js.Parser()
-          parser.parseString(indexFileContent, (err, result) => {
-            if (err) {
-              console.error(err)
-            } else {
-              // Make the folder from the index file name
-              const files = result.index.files[0].file
-              const fileName = path.basename(indexFileName, path.extname(indexFileName))
-              const downloadsFolder = path.join(customFolder, fileName)
-
-              if (!fs.existsSync(downloadsFolder)) {
-                fs.mkdirSync(downloadsFolder, { recursive: true })
-              }
-
-              const urls = files.map((file) => file.$.url)
-
-              // Download files from URLs
-              urls.forEach((url) => {
-                const fileContentUrl = path.basename(url)
-
-                const downloadFilePath = path.join(downloadsFolder, fileContentUrl)
-
-                axios
-                  .get(url)
-                  .then((response) => {
-                    const fileContent = response.data
-                    fs.writeFile(downloadFilePath, fileContent, (err) => {
-                      if (err) {
-                        console.error(err)
-                      }
-                    })
-
-                    // Check if the downloaded file is an index file
-                    if (path.extname(url) === '.index') {
-                      // Parse the index file and extract URLs
-                      const parser = new xml2js.Parser()
-                      parser.parseString(fileContent, (err, result) => {
-                        if (err) {
-                          console.error(err)
-                        } else {
-                          const files = result.index.files[0].file
-                          const indexFileName = path.basename(url, path.extname(url))
-                          const indexFolder = path.join(downloadsFolder, indexFileName)
-
-                          if (!fs.existsSync(indexFolder)) {
-                            fs.mkdirSync(indexFolder, { recursive: true })
-                          }
-
-                          const urls = files.map((file) => file.$.url)
-
-                          // Download files from URLs
-                          urls.forEach((url) => {
-                            const fileContentUrl = path.basename(url)
-                            const downloadFilePath = path.join(indexFolder, fileContentUrl)
-
-                            axios
-                              .get(url)
-                              .then((response) => {
-                                const fileContent = response.data
-                                fs.writeFile(downloadFilePath, fileContent, (err) => {
-                                  if (err) {
-                                    console.error(err)
-                                  }
-                                })
-
-                                if (path.extname(url) === '.index') {
-                                }
-                              })
-                              .catch((error) => {
-                                console.error(error)
-                              })
-                          })
-                        }
-                      })
-                    }
-                  })
-                  .catch((error) => {
-                    console.error(error)
-                  })
-              })
-            }
-          })
-        })
-        .catch((error) => {
-          console.error(error)
-        })
+      try {
+        const parsedUrl = new URL(url)
+        const indexFileName = path.basename(parsedUrl.pathname, '.index')
+        await downloadIndexRecursive(url, customFolder, indexFileName)
+      } catch (e) {
+        console.error('Error downloading index:', e)
+        throw e
+      }
     })
 
-    ipcMain.on('msgOpenContentFolder', async (event: IpcMainEvent) => {
-      shell.openPath(Constants.RAVEN_FOLDER)
+    // Boot Update Checker
+    ipcMain.handle('msgTriggerUpdateCheck', async (event: IpcMainEvent) => {
+      const customFolder = Constants.CUSTOM_FOLDER
+      if (!fs.existsSync(customFolder)) {
+        fs.mkdirSync(customFolder, { recursive: true })
+      }
+
+      const files = fs.readdirSync(customFolder)
+      const indexFiles = files.filter((f) => f.endsWith('.index'))
+
+      if (indexFiles.length === 0) {
+        sendUpdateStatus({ status: 'up-to-date' })
+        return
+      }
+
+      for (const indexFile of indexFiles) {
+        const indexName = path.basename(indexFile, '.index')
+        const localPath = path.join(customFolder, indexFile)
+
+        try {
+          const localContent = fs.readFileSync(localPath, 'utf8')
+          const parser = new xml2js.Parser()
+          const localResult = await new Promise<any>((resolve, reject) => {
+            parser.parseString(localContent, (err, res) => {
+              if (err) reject(err)
+              else resolve(res)
+            })
+          })
+
+          const localVersion = localResult?.index?.info?.[0]?.update?.[0]?.$?.version || '0.0.0'
+          const updateUrl = localResult?.index?.info?.[0]?.update?.[0]?.file?.[0]?.$?.url
+
+          if (!updateUrl) {
+            console.log(`No update URL found for ${indexFile}`)
+            continue
+          }
+
+          sendUpdateStatus({ status: 'checking', indexName })
+
+          let remoteContent: string
+          try {
+            const remoteRes = await axios.get(updateUrl, { timeout: 10000, responseType: 'text' })
+            remoteContent = remoteRes.data
+          } catch (e) {
+            console.error(`Offline or unable to reach update URL for ${indexName}:`, e)
+            sendUpdateStatus({ status: 'offline', indexName })
+            return // Stop trying to update
+          }
+
+          const remoteResult = await new Promise<any>((resolve, reject) => {
+            parser.parseString(remoteContent, (err, res) => {
+              if (err) reject(err)
+              else resolve(res)
+            })
+          })
+
+          const remoteVersion = remoteResult?.index?.info?.[0]?.update?.[0]?.$?.version || '0.0.0'
+          const relatedFolder = path.join(customFolder, indexName)
+          const folderExists = fs.existsSync(relatedFolder)
+
+          if (isHigherVersion(remoteVersion, localVersion) || !folderExists) {
+            sendUpdateStatus({ status: 'updating', indexName, version: remoteVersion })
+            await downloadIndexRecursive(updateUrl, customFolder, indexName)
+            sendUpdateStatus({ status: 'updated', indexName, version: remoteVersion })
+          } else {
+            sendUpdateStatus({ status: 'up-to-date', indexName })
+          }
+        } catch (e) {
+          console.error(`Error checking update for ${indexFile}:`, e)
+          sendUpdateStatus({ status: 'error', indexName, error: String(e) })
+          return // Stop trying to update
+        }
+      }
+    })
+
+    ipcMain.handle('msgOpenContentFolder', async (event: IpcMainEvent) => {
+      const customFolder = Constants.CUSTOM_FOLDER
+      if (!fs.existsSync(customFolder)) {
+        fs.mkdirSync(customFolder, { recursive: true })
+      }
+      shell.openPath(customFolder)
+    })
+
+    ipcMain.handle('msgOpenUserFolder', async (event: IpcMainEvent) => {
+      const userFolder = path.join(Constants.CUSTOM_FOLDER, 'user')
+      if (!fs.existsSync(userFolder)) {
+        fs.mkdirSync(userFolder, { recursive: true })
+      }
+      shell.openPath(userFolder)
     })
 
     // Get local portrait files

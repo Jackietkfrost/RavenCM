@@ -430,8 +430,8 @@ export const useAppStore = defineStore('appstore', {
         return { success: false, error: e }
       }
     },
-    addIndexUrl(url: string) {
-      window.mainApi.invoke('msgDownloadIndex', url)
+    async addIndexUrl(url: string) {
+      await window.mainApi.invoke('msgDownloadIndex', url)
     },
     triggerAutoGeneratePreview() {
       this.autoGenerateTrigger += 1

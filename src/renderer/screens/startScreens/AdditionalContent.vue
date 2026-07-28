@@ -40,7 +40,7 @@
       through the index files. Then click 'Update Content Files' to download the latest files new..
       You should place your personal homebrew files in the specific 'custom\user' folder.</p
     >
-    <v-btn class="mx-1" color="button" :prepend-icon="mdiFolderDownload"
+    <v-btn class="mx-1" color="button" :prepend-icon="mdiFolderDownload" @click="handleUpdateContentFiles"
       >Update Content Files</v-btn
     >
     <v-btn class="mx-1" color="button" :prepend-icon="mdiFolderRemove"
@@ -61,6 +61,10 @@
       @click="handleOpenUserFolder"
       >User Content Folder</v-btn
     >
+
+    <v-snackbar v-model="showError" color="error" timeout="3000">
+      No index file found
+    </v-snackbar>
   </v-container>
 </template>
 <script setup lang="tsx">
@@ -76,9 +80,31 @@ import { ref } from 'vue'
 
 const useCharacterStore = useAppStore()
 const indexUrl = ref('')
+const showError = ref(false)
 
-const handleUploadingContent = () => {
-  useCharacterStore.addIndexUrl(indexUrl.value)
+const handleUploadingContent = async () => {
+  let rawUrl = indexUrl.value.trim()
+  if (!rawUrl) return
+
+  if (!/^https?:\/\//i.test(rawUrl)) {
+    rawUrl = 'https://' + rawUrl
+  }
+
+  try {
+    const urlObj = new URL(rawUrl)
+    if (!urlObj.pathname.endsWith('.index')) {
+      showError.value = true
+      return
+    }
+    await useCharacterStore.addIndexUrl(rawUrl)
+    window.mainApi.invoke('msgTriggerUpdateCheck')
+  } catch {
+    showError.value = true
+  }
+}
+
+const handleUpdateContentFiles = () => {
+  window.mainApi.invoke('msgTriggerUpdateCheck')
 }
 
 const handleOpenContentFolder = () => {

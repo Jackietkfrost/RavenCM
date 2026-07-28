@@ -24,9 +24,10 @@ const mainAvailChannels: string[] = [
   'msgGeneratePreview',
   'msgSavePdf',
   'msgGetReleaseNotes',
-  'msgShowConfirmDialog'
+  'msgShowConfirmDialog',
+  'msgTriggerUpdateCheck'
 ]
-const rendererAvailChannels: string[] = []
+const rendererAvailChannels: string[] = ['msgUpdateStatus']
 
 contextBridge.exposeInMainWorld('mainApi', {
   send: (channel: string, ...data: any[]): void => {
