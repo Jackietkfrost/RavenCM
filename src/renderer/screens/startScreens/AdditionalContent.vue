@@ -65,6 +65,10 @@
     <v-snackbar v-model="showError" color="error" timeout="3000">
       No index file found
     </v-snackbar>
+
+    <v-snackbar v-model="showAlreadyUpToDate" color="success" timeout="3000">
+      Already up to date
+    </v-snackbar>
   </v-container>
 </template>
 <script setup lang="tsx">
@@ -81,6 +85,7 @@ import { ref } from 'vue'
 const useCharacterStore = useAppStore()
 const indexUrl = ref('')
 const showError = ref(false)
+const showAlreadyUpToDate = ref(false)
 
 const handleUploadingContent = async () => {
   let rawUrl = indexUrl.value.trim()
@@ -96,8 +101,14 @@ const handleUploadingContent = async () => {
       showError.value = true
       return
     }
-    await useCharacterStore.addIndexUrl(rawUrl)
-    window.mainApi.invoke('msgTriggerUpdateCheck')
+    const res = await useCharacterStore.addIndexUrl(rawUrl)
+    if (res && res.status === 'up-to-date') {
+      showAlreadyUpToDate.value = true
+    } else if (res && (res.status === 'offline' || res.status === 'error')) {
+      showError.value = true
+    } else {
+      window.mainApi.invoke('msgTriggerUpdateCheck')
+    }
   } catch {
     showError.value = true
   }

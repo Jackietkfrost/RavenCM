@@ -704,11 +704,58 @@ export default class IPCs {
 
       try {
         const parsedUrl = new URL(url)
-        const indexFileName = path.basename(parsedUrl.pathname, '.index')
-        await downloadIndexRecursive(url, customFolder, indexFileName)
+        const indexFileName = path.basename(parsedUrl.pathname)
+        const indexName = path.basename(parsedUrl.pathname, '.index')
+        const localPath = path.join(customFolder, indexFileName)
+        const relatedFolder = path.join(customFolder, indexName)
+        const folderExists = fs.existsSync(relatedFolder)
+
+        let shouldDownload = true
+        let remoteVersion = '0.0.0'
+
+        // Fetch remote index content first to check its version
+        let remoteContent: string
+        try {
+          const remoteRes = await axios.get(url, { timeout: 10000, responseType: 'text' })
+          remoteContent = remoteRes.data
+        } catch (e) {
+          console.error(`Offline or unable to reach URL for upload:`, e)
+          return { status: 'offline' }
+        }
+
+        const parser = new xml2js.Parser()
+        const remoteResult = await new Promise<any>((resolve, reject) => {
+          parser.parseString(remoteContent, (err, res) => {
+            if (err) reject(err)
+            else resolve(res)
+          })
+        })
+        remoteVersion = remoteResult?.index?.info?.[0]?.update?.[0]?.$?.version || '0.0.0'
+
+        if (fs.existsSync(localPath)) {
+          const localContent = fs.readFileSync(localPath, 'utf8')
+          const localResult = await new Promise<any>((resolve, reject) => {
+            parser.parseString(localContent, (err, res) => {
+              if (err) reject(err)
+              else resolve(res)
+            })
+          })
+          const localVersion = localResult?.index?.info?.[0]?.update?.[0]?.$?.version || '0.0.0'
+
+          if (!isHigherVersion(remoteVersion, localVersion) && folderExists) {
+            shouldDownload = false
+          }
+        }
+
+        if (shouldDownload) {
+          await downloadIndexRecursive(url, customFolder, indexName)
+          return { status: 'updated', version: remoteVersion }
+        } else {
+          return { status: 'up-to-date', version: remoteVersion }
+        }
       } catch (e) {
         console.error('Error downloading index:', e)
-        throw e
+        return { status: 'error', error: String(e) }
       }
     })
 
