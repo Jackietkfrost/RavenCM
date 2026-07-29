@@ -17,37 +17,62 @@
 
               <!-- Total Score (Big Number) -->
               <span class="total-score-text">
-                {{ (characterStore.character[stat.key] || 10) + activeModifiers[stat.key] }}
+                {{ (characterStore.character[stat.key] || 10) + activeModifiers[stat.key].value }}
               </span>
 
               <!-- Modifier Badge (Oval overlapping bottom border) -->
               <div class="modifier-oval">
                 {{
                   getModifierStr(
-                    (characterStore.character[stat.key] || 10) + activeModifiers[stat.key]
+                    (characterStore.character[stat.key] || 10) + activeModifiers[stat.key].value
                   )
                 }}
               </div>
             </div>
 
-            <!-- Racial Bonus Info Centered Below the Card -->
-            <div
-              v-if="activeModifiers[stat.key] !== 0"
-              class="text-center mt-5"
-              style="min-height: 38px"
-            >
-              <div class="text-caption text-success font-weight-bold">
-                +{{ activeModifiers[stat.key] }} (Racial)
+            <!-- If custom ASI is active: show shuffle icon and optional text -->
+            <template v-if="asiSelectRules.length > 0">
+              <div class="d-flex flex-column align-center mt-5" style="min-height: 48px">
+                <v-icon :icon="mdiShuffle" size="18" class="text-grey-darken-1 mb-1" />
+                <span
+                  v-if="customAsiBonusForStat(stat.key)"
+                  class="text-caption text-grey text-center font-weight-medium"
+                  style="font-size: 0.68rem !important; line-height: 1.1"
+                >
+                  {{ customAsiBonusForStat(stat.key) }}
+                </span>
               </div>
+            </template>
+            <!-- If custom ASI is NOT active: show standard racial bonus info -->
+            <template v-else>
               <div
-                class="text-caption text-grey text-truncate"
-                style="font-size: 0.72rem !important; line-height: 1.1; max-width: 95px"
-                :title="characterStore.character.subrace || characterStore.character.race"
+                v-if="activeModifiers[stat.key].value !== 0"
+                class="text-center mt-5"
+                style="min-height: 48px; max-width: 105px"
               >
-                {{ characterStore.character.subrace || characterStore.character.race }}
+                <div
+                  v-for="(src, idx) in activeModifiers[stat.key].sources"
+                  :key="idx"
+                  class="mb-1 text-center"
+                  style="line-height: 1.1"
+                >
+                  <div
+                    class="text-caption text-success font-weight-bold"
+                    style="font-size: 0.72rem !important"
+                  >
+                    +{{ src.value }} ({{ src.name }})
+                  </div>
+                  <div
+                    class="text-caption text-grey text-truncate px-1"
+                    style="font-size: 0.65rem !important"
+                    :title="src.source"
+                  >
+                    ({{ src.source }})
+                  </div>
+                </div>
               </div>
-            </div>
-            <div v-else class="mt-5" style="min-height: 38px"></div>
+              <div v-else class="mt-5" style="min-height: 48px"></div>
+            </template>
           </div>
 
           <!-- Right side: Base Score Controls (Up/Down Chevrons and value) -->
@@ -81,15 +106,171 @@
         </div>
       </v-col>
     </v-row>
+
+    <!-- ASI Selectors Section -->
+    <v-divider class="my-6" v-if="asiSelectRules.length > 0" />
+    <v-row class="justify-center mt-2" v-if="asiSelectRules.length > 0">
+      <v-col cols="12" md="8" lg="6">
+        <div v-for="rule in asiSelectRules" :key="rule.name" class="mb-5">
+          <div class="d-flex align-center mb-1">
+            <span class="text-subtitle-2 font-weight-bold text-uppercase text-grey">
+              {{ rule.name }}
+            </span>
+            <v-icon
+              v-if="characterStore.character.asiChoices?.[rule.name]"
+              :icon="mdiCheck"
+              color="success"
+              size="16"
+              class="ml-2"
+            />
+          </div>
+          <v-select
+            v-model="characterStore.character.asiChoices[rule.name]"
+            :items="getOptionsForRule(rule)"
+            item-title="name"
+            item-value="id"
+            density="compact"
+            variant="outlined"
+            placeholder="Select Option..."
+            clearable
+            hide-details
+          ></v-select>
+        </div>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
-import { computed } from 'vue'
-import { mdiChevronUp, mdiChevronDown } from '@mdi/js'
+import { computed, watch, onMounted } from 'vue'
+import { mdiChevronUp, mdiChevronDown, mdiCheck, mdiShuffle } from '@mdi/js'
 
 const characterStore = useAppStore()
+
+const getActiveASIRules = () => {
+  const activeIds = new Set<string>()
+  const activeRules: any[] = []
+
+  const character = characterStore.character
+  if (character.race) {
+    const el = characterStore.elements.races?.find((r: any) => r.name === character.race)
+    if (el) {
+      activeIds.add(el.id)
+      if (el.rules) activeRules.push(...el.rules)
+    }
+  }
+  if (character.subrace) {
+    const el = characterStore.elements.subRaces?.find((s: any) => s.name === character.subrace)
+    if (el) {
+      activeIds.add(el.id)
+      if (el.rules) activeRules.push(...el.rules)
+    }
+  }
+
+  // Include chosen ASI selections in activeIds so their rules/requirements are evaluated reactively
+  if (character.asiChoices) {
+    Object.values(character.asiChoices).forEach((choiceVal: string) => {
+      const foundEl = characterStore.elements.abilityScoreImprovements?.find(
+        (el: any) => el.id === choiceVal || el.name === choiceVal
+      )
+      if (foundEl) {
+        activeIds.add(foundEl.id)
+        if (foundEl.rules) activeRules.push(...foundEl.rules)
+      }
+    })
+  }
+
+  const isRuleActive = (rule: any) => {
+    if (!rule.requirements) return true
+    const reqs = rule.requirements.split(',').map((r: string) => r.trim())
+    return reqs.every((req: string) => {
+      if (req.startsWith('!')) {
+        return !activeIds.has(req.slice(1))
+      } else {
+        return activeIds.has(req)
+      }
+    })
+  }
+
+  return activeRules.filter(
+    (rule: any) =>
+      rule.type === 'select' &&
+      rule.selectType === 'Ability Score Improvement' &&
+      isRuleActive(rule)
+  )
+}
+
+const asiSelectRules = computed(() => {
+  return getActiveASIRules()
+})
+
+watch(
+  asiSelectRules,
+  (newRules) => {
+    if (characterStore.character.asiChoices) {
+      const activeNames = new Set(newRules.map((r: any) => r.name))
+      Object.keys(characterStore.character.asiChoices).forEach((key) => {
+        if (!activeNames.has(key)) {
+          delete characterStore.character.asiChoices[key]
+        }
+      })
+    }
+  },
+  { deep: true }
+)
+
+const getOptionsForRule = (rule: any) => {
+  const list = characterStore.elements.abilityScoreImprovements || []
+  if (!rule.supports) return list
+
+  const allowed = rule.supports.split(/\|\||,/).map((s: string) => s.trim().toLowerCase())
+  return list.filter((item: any) => {
+    if (!item.supports) return false
+    const itemSupports = item.supports.split(/\|\||,/).map((s: string) => s.trim().toLowerCase())
+    return itemSupports.some((sup: string) => allowed.includes(sup))
+  })
+}
+
+onMounted(() => {
+  characterStore.fetchElementsIfNeeded()
+  if (!characterStore.character.asiChoices) {
+    characterStore.character.asiChoices = {}
+  }
+})
+
+const customAsiBonusForStat = (statKey: string) => {
+  const selectedAsiIds = Object.values(characterStore.character.asiChoices || {})
+  const chosenAsiElements = (characterStore.elements.abilityScoreImprovements || []).filter(
+    (el: any) => selectedAsiIds.includes(el.id) || selectedAsiIds.includes(el.name)
+  )
+
+  let totalVal = 0
+  const statNameMap = {
+    str: 'strength',
+    dex: 'dexterity',
+    con: 'constitution',
+    int: 'intelligence',
+    wis: 'wisdom',
+    cha: 'charisma'
+  }
+  const fullStatName = statNameMap[statKey as keyof typeof statNameMap]
+
+  chosenAsiElements.forEach((el) => {
+    if (el.rules) {
+      el.rules.forEach((rule: any) => {
+        if (rule.type === 'stat' && rule.name.toLowerCase() === fullStatName) {
+          totalVal += parseInt(rule.value, 10) || 0
+        }
+      })
+    }
+  })
+
+  if (totalVal > 0) {
+    return `Ability Score Increase (${totalVal})`
+  }
+  return ''
+}
 
 const statList = [
   { key: 'str', label: 'Strength' },
@@ -101,17 +282,17 @@ const statList = [
 ] as const
 
 const activeModifiers = computed(() => {
-  const mods = {
-    str: 0,
-    dex: 0,
-    con: 0,
-    int: 0,
-    wis: 0,
-    cha: 0
+  const stats = {
+    str: { value: 0, sources: [] as { name: string; source: string; value: number }[] },
+    dex: { value: 0, sources: [] as { name: string; source: string; value: number }[] },
+    con: { value: 0, sources: [] as { name: string; source: string; value: number }[] },
+    int: { value: 0, sources: [] as { name: string; source: string; value: number }[] },
+    wis: { value: 0, sources: [] as { name: string; source: string; value: number }[] },
+    cha: { value: 0, sources: [] as { name: string; source: string; value: number }[] }
   }
 
   const raceName = characterStore.character.race
-  if (!raceName) return mods
+  if (!raceName) return stats
 
   const raceNameLower = raceName.toLowerCase()
   const subraceName = characterStore.character.subrace
@@ -125,21 +306,57 @@ const activeModifiers = computed(() => {
     ...(characterStore.elements.raceVariants || [])
   ]
 
-  const foundElements = allRaceElements.filter((el) => {
+  const matchingRaces = allRaceElements.filter((el) => {
     if (el.type === 'Race' || el.type === 'Race Variant') {
       const isMatchName = el.name.toLowerCase() === raceNameLower
-      const isMatchSource = !selectedRaceSource || (el.source && el.source.toLowerCase() === selectedRaceSource.toLowerCase())
-      return isMatchName && isMatchSource
-    }
-    if (el.type === 'Sub Race' && subraceName) {
-      const isMatchName = el.name.toLowerCase() === subraceName.toLowerCase()
-      const isMatchSource = !selectedSubraceSource || (el.source && el.source.toLowerCase() === selectedSubraceSource.toLowerCase())
-      return isMatchName && isMatchSource
+      const isMatchSource =
+        selectedRaceSource &&
+        el.source &&
+        el.source.toLowerCase() === selectedRaceSource.toLowerCase()
+      return isMatchName && (selectedRaceSource ? isMatchSource : true)
     }
     return false
   })
 
-  foundElements.forEach((el) => {
+  const matchingSubraces = subraceName
+    ? allRaceElements.filter((el) => {
+        if (el.type === 'Sub Race') {
+          const isMatchName = el.name.toLowerCase() === subraceName.toLowerCase()
+          const isMatchSource =
+            selectedSubraceSource &&
+            el.source &&
+            el.source.toLowerCase() === selectedSubraceSource.toLowerCase()
+          return isMatchName && (selectedSubraceSource ? isMatchSource : true)
+        }
+        return false
+      })
+    : []
+
+  const foundElements: any[] = []
+  if (matchingRaces.length > 0) {
+    if (selectedRaceSource) {
+      foundElements.push(...matchingRaces)
+    } else {
+      foundElements.push(matchingRaces[0])
+    }
+  }
+  if (matchingSubraces.length > 0) {
+    if (selectedSubraceSource) {
+      foundElements.push(...matchingSubraces)
+    } else {
+      foundElements.push(matchingSubraces[0])
+    }
+  }
+
+  // Apply stats for the chosen ASI elements
+  const selectedAsiIds = Object.values(characterStore.character.asiChoices || {})
+  const chosenAsiElements = (characterStore.elements.abilityScoreImprovements || []).filter(
+    (el: any) => selectedAsiIds.includes(el.id) || selectedAsiIds.includes(el.name)
+  )
+
+  const elementsToProcess = [...foundElements, ...chosenAsiElements]
+
+  elementsToProcess.forEach((el) => {
     if (el.rules) {
       el.rules.forEach((rule: any) => {
         if (rule.type === 'stat') {
@@ -154,18 +371,28 @@ const activeModifiers = computed(() => {
             return
           }
 
-          if (statName === 'strength') mods.str += val
-          else if (statName === 'dexterity') mods.dex += val
-          else if (statName === 'constitution') mods.con += val
-          else if (statName === 'intelligence') mods.int += val
-          else if (statName === 'wisdom') mods.wis += val
-          else if (statName === 'charisma') mods.cha += val
+          let targetKey: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha' | null = null
+          if (statName === 'strength') targetKey = 'str'
+          else if (statName === 'dexterity') targetKey = 'dex'
+          else if (statName === 'constitution') targetKey = 'con'
+          else if (statName === 'intelligence') targetKey = 'int'
+          else if (statName === 'wisdom') targetKey = 'wis'
+          else if (statName === 'charisma') targetKey = 'cha'
+
+          if (targetKey && val !== 0) {
+            stats[targetKey].value += val
+            stats[targetKey].sources.push({
+              name: el.name,
+              source: el.source || '',
+              value: val
+            })
+          }
         }
       })
     }
   })
 
-  return mods
+  return stats
 })
 
 const getModifierStr = (score?: number) => {

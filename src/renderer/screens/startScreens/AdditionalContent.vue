@@ -25,8 +25,8 @@
           color="button"
           small
           variant="flat"
-          @click="handleUploadingContent"
-          text="Upload"
+          @click="handleDownloadingContent"
+          text="Download"
         />
       </template>
     </v-text-field>
@@ -40,7 +40,11 @@
       through the index files. Then click 'Update Content Files' to download the latest files new..
       You should place your personal homebrew files in the specific 'custom\user' folder.</p
     >
-    <v-btn class="mx-1" color="button" :prepend-icon="mdiFolderDownload" @click="handleUpdateContentFiles"
+    <v-btn
+      class="mx-1"
+      color="button"
+      :prepend-icon="mdiFolderDownload"
+      @click="handleUpdateContentFiles"
       >Update Content Files</v-btn
     >
     <v-btn class="mx-1" color="button" :prepend-icon="mdiFolderRemove"
@@ -62,9 +66,7 @@
       >User Content Folder</v-btn
     >
 
-    <v-snackbar v-model="showError" color="error" timeout="3000">
-      No index file found
-    </v-snackbar>
+    <v-snackbar v-model="showError" color="error" timeout="3000"> No index file found </v-snackbar>
 
     <v-snackbar v-model="showAlreadyUpToDate" color="success" timeout="3000">
       Already up to date
@@ -87,7 +89,7 @@ const indexUrl = ref('')
 const showError = ref(false)
 const showAlreadyUpToDate = ref(false)
 
-const handleUploadingContent = async () => {
+const handleDownloadingContent = async () => {
   let rawUrl = indexUrl.value.trim()
   if (!rawUrl) return
 

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { CharacterInfo, ElementsInfo } from '../utils/dnd-typing'
+import Constants from '../utils/Constants'
 
 interface State {
   count: number
@@ -81,7 +82,8 @@ export const useAppStore = defineStore('appstore', {
         hp: 10,
         speed: 30,
         proficientSkills: [],
-        proficientSavingThrows: []
+        proficientSavingThrows: [],
+        asiChoices: {}
       },
       characters: [],
       elements: {
@@ -108,7 +110,8 @@ export const useAppStore = defineStore('appstore', {
         subRaces: [],
         raceVariants: [],
         backgroundVariants: [],
-        backgroundFeatures: []
+        backgroundFeatures: [],
+        abilityScoreImprovements: []
       },
       createCharacter: false,
       drawerMode: 'create',
@@ -126,6 +129,51 @@ export const useAppStore = defineStore('appstore', {
     getCharacters: (state) => state.characters
   },
   actions: {
+    setAllElements(elements: any[]) {
+      Object.keys(this.elements).forEach((key) => {
+        const k = key as keyof typeof this.elements
+        this.elements[k] = []
+      })
+
+      elements.forEach((element: any) => {
+        const elementType = Object.keys(Constants.ELEMENTS_PLURAL).find((key) => {
+          return (
+            key.replace(/\s+/g, '').toLowerCase() === element.type.replace(/\s+/g, '').toLowerCase()
+          )
+        })
+        if (elementType) {
+          const pluralName =
+            Constants.ELEMENTS_PLURAL[elementType as keyof typeof Constants.ELEMENTS_PLURAL]
+          const storeKey = (pluralName.split(' ')[0].toLowerCase() +
+            pluralName
+              .split(' ')
+              .slice(1)
+              .map((p: string) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+              .join('')) as keyof typeof this.elements
+
+          if (this.elements[storeKey]) {
+            this.elements[storeKey].push(element)
+          }
+        }
+      })
+    },
+    async fetchElementsIfNeeded(force = false) {
+      const isLoaded =
+        !force &&
+        Object.values(this.elements).some((arr: any) => arr.length > 0) &&
+        this.elements.races &&
+        this.elements.races.length > 0 &&
+        this.elements.races[0].rules !== undefined &&
+        this.elements.abilityScoreImprovements &&
+        this.elements.abilityScoreImprovements.length > 0
+
+      if (!isLoaded) {
+        const elements = await window.mainApi.invoke('msgGetAllElements')
+        if (elements) {
+          this.setAllElements(elements)
+        }
+      }
+    },
     getCharacterPayload() {
       if (!this.character) return null
       return JSON.parse(
@@ -289,7 +337,8 @@ export const useAppStore = defineStore('appstore', {
           hp: 10,
           speed: 30,
           proficientSkills: [],
-          proficientSavingThrows: []
+          proficientSavingThrows: [],
+          asiChoices: {}
         }
         this.originalCharacter = null
         this.validateSelectedElements()
@@ -365,6 +414,13 @@ export const useAppStore = defineStore('appstore', {
       const bg2 = this.originalCharacter.background?.name || ''
       if (bg1 !== bg2) {
         console.log(`Unsaved change detected in background: "${bg2}" -> "${bg1}"`)
+        return true
+      }
+
+      const asi1 = JSON.stringify(this.character.asiChoices || {})
+      const asi2 = JSON.stringify(this.originalCharacter.asiChoices || {})
+      if (asi1 !== asi2) {
+        console.log(`Unsaved change detected in asiChoices: ${asi2} -> ${asi1}`)
         return true
       }
 

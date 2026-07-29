@@ -35,7 +35,6 @@ import { onMounted, ref } from 'vue'
 import CharacterCollection from './startScreens/CharacterCollection.vue'
 import AdditionalContent from './startScreens/AdditionalContent.vue'
 import SourcesScreen from './startScreens/SourcesScreen.vue'
-import Constants from '@/renderer/utils/Constants'
 
 const { t, availableLocales } = useI18n()
 
@@ -54,43 +53,7 @@ onMounted(
         characterStore.characters = characters
       })
     }
-    const isElementsLoaded =
-      Object.values(characterStore.elements).some((arr: any) => arr.length > 0) &&
-      characterStore.elements.races &&
-      characterStore.elements.races.length > 0 &&
-      characterStore.elements.races[0].rules !== undefined
-    if (!isElementsLoaded) {
-      window.mainApi.invoke('msgGetAllElements').then((elements) => {
-        if (!elements) return
-
-        Object.keys(characterStore.elements).forEach((key) => {
-          const k = key as keyof typeof characterStore.elements
-          characterStore.elements[k] = []
-        })
-
-        elements.forEach((element) => {
-          const elementType = Object.keys(Constants.ELEMENTS_PLURAL).find((key) => {
-            return (
-              key.replace(' ', '').toLowerCase() === element.type.replace(' ', '').toLowerCase()
-            )
-          })
-          if (elementType) {
-            const pluralName =
-              Constants.ELEMENTS_PLURAL[elementType as keyof typeof Constants.ELEMENTS_PLURAL]
-            const storeKey = (pluralName.split(' ')[0].toLowerCase() +
-              pluralName
-                .split(' ')
-                .slice(1)
-                .map((p: string) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
-                .join('')) as keyof typeof characterStore.elements
-
-            if (characterStore.elements[storeKey]) {
-              characterStore.elements[storeKey].push(element)
-            }
-          }
-        })
-      })
-    }
+    characterStore.fetchElementsIfNeeded()
   }
   // }
 )

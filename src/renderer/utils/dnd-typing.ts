@@ -23,6 +23,7 @@ export type ElementsInfo = {
   raceVariants?: any[]
   backgroundVariants?: any[]
   backgroundFeatures?: any[]
+  abilityScoreImprovements?: any[]
 }
 
 export type ItemInfo = {
@@ -90,6 +91,7 @@ export type CharacterInfo = {
   speed?: number
   proficientSkills?: string[]
   proficientSavingThrows?: string[]
+  asiChoices: Record<string, string>
 }
 
 export type SubRaceInfo = {

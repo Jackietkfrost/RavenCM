@@ -12,8 +12,19 @@ export default class IPCs {
   private static cachedElements: any[] | null = null
 
   private static getCharacterXmlContent(data: any): string {
+    let asiChoicesXml = ''
+    if (data.asiChoices) {
+      asiChoicesXml = '\n  <asiChoices>\n'
+      Object.entries(data.asiChoices).forEach(([name, val]) => {
+        if (name && val) {
+          asiChoicesXml += `    <choice name="${name}">${val}</choice>\n`
+        }
+      })
+      asiChoicesXml += '  </asiChoices>'
+    }
+
     return `<?xml version="1.0" encoding="UTF-8"?>
-<character version="1.0.0">
+<character version="1.0.0">${asiChoicesXml}
   <!-- information -->
   <information>
     <group>${data.group || 'Characters'}</group>
@@ -137,6 +148,57 @@ export default class IPCs {
     return subXml.slice(descContentStart, descEndIdx).trim()
   }
 
+  private static extractAsiChoicesFromXml(char: any): Record<string, string> {
+    const asiChoices: Record<string, string> = {}
+
+    // 1. Direct <asiChoices><choice name="...">id</choice></asiChoices>
+    const choicesGroup = char.asiChoices ? char.asiChoices[0] : {}
+    if (choicesGroup && choicesGroup.choice) {
+      choicesGroup.choice.forEach((c: any) => {
+        if (c && c.$ && c.$.name) {
+          asiChoices[c.$.name] = String(c._ || c).trim()
+        }
+      })
+    }
+
+    // 2. Recursive scan of element trees (Aurora .dnd5e format)
+    const scanElementsTree = (elementsList: any[]) => {
+      if (!elementsList || !Array.isArray(elementsList)) return
+      elementsList.forEach((el: any) => {
+        if (el && el.$) {
+          if (
+            el.$.type === 'Ability Score Improvement' &&
+            el.$.name &&
+            (el.$.registered || el.$.id)
+          ) {
+            asiChoices[el.$.name] = el.$.registered || el.$.id
+          }
+          if (el.element) {
+            scanElementsTree(el.element)
+          }
+        }
+      })
+    }
+
+    if (char.elements && char.elements[0] && char.elements[0].element) {
+      scanElementsTree(char.elements[0].element)
+    }
+    if (char.build && char.build[0]) {
+      if (
+        char.build[0].elements &&
+        char.build[0].elements[0] &&
+        char.build[0].elements[0].element
+      ) {
+        scanElementsTree(char.build[0].elements[0].element)
+      }
+      if (char.build[0].sum && char.build[0].sum[0] && char.build[0].sum[0].element) {
+        scanElementsTree(char.build[0].sum[0].element)
+      }
+    }
+
+    return asiChoices
+  }
+
   public static async loadElements(): Promise<any[]> {
     if (this.cachedElements !== null) {
       return this.cachedElements
@@ -158,7 +220,7 @@ export default class IPCs {
             const stat = await fs.promises.stat(filePath)
             if (stat.isDirectory()) {
               await searchForElements(filePath)
-            } else if (file.endsWith('.xml')) {
+            } else if (file.toLowerCase().endsWith('.xml')) {
               const xml = await fs.promises.readFile(filePath, 'utf8')
               const parser = new xml2js.Parser()
               const result = await new Promise<any>((resolve, reject) => {
@@ -171,7 +233,11 @@ export default class IPCs {
               if (result && result.elements && result.elements.element) {
                 const elements = result.elements.element
                 elements.forEach((element: any) => {
-                  if (element.$ && element.$.type && Constants.ALL_ELEMENTS.includes(element.$.type)) {
+                  if (
+                    element.$ &&
+                    element.$.type &&
+                    Constants.ALL_ELEMENTS.includes(element.$.type)
+                  ) {
                     let descriptionText = ''
                     if (element.setters && element.setters[0] && element.setters[0].set) {
                       const shortSet = element.setters[0].set.find(
@@ -247,7 +313,9 @@ export default class IPCs {
                     }
 
                     let supportsText = ''
-                    if (element.supports) {
+                    if (element.$ && element.$.supports) {
+                      supportsText = element.$.supports
+                    } else if (element.supports) {
                       supportsText = IPCs.extractText(element.supports[0])
                     }
 
@@ -507,13 +575,21 @@ export default class IPCs {
                       }
                     }
 
+                    const asiChoices = IPCs.extractAsiChoicesFromXml(char)
+
                     const characterObject = {
+                      asiChoices,
                       name: displayProps.name ? displayProps.name[0] : 'Unnamed',
                       avatar: avatar || '/images/icon-64px.png',
                       level: displayProps.level ? parseInt(displayProps.level[0], 10) : 1,
                       race: displayProps.race ? displayProps.race[0] : '',
+                      raceSource: displayProps.raceSource ? displayProps.raceSource[0] : '',
                       subrace: displayProps.subrace ? displayProps.subrace[0] : '',
+                      subraceSource: displayProps.subraceSource
+                        ? displayProps.subraceSource[0]
+                        : '',
                       class: displayProps.class ? displayProps.class[0] : '',
+                      classSource: displayProps.classSource ? displayProps.classSource[0] : '',
                       group: infoProps.group ? infoProps.group[0] : 'Characters',
                       alignment: displayProps.alignment ? displayProps.alignment[0] : '',
                       background: {
@@ -529,6 +605,9 @@ export default class IPCs {
                         ? displayProps['background-feature'][0]
                         : '',
                       archetype: displayProps.archetype ? displayProps.archetype[0] : '',
+                      archetypeSource: displayProps.archetypeSource
+                        ? displayProps.archetypeSource[0]
+                        : '',
                       pronouns: displayProps.gender
                         ? displayProps.gender[0]
                         : char.build && char.build[0].input && char.build[0].input[0].gender
@@ -639,6 +718,56 @@ export default class IPCs {
       return false
     }
 
+    const verifyIndexFilesExist = async (
+      indexFilePath: string,
+      targetDir: string,
+      indexName: string
+    ): Promise<boolean> => {
+      try {
+        if (!fs.existsSync(indexFilePath)) return false
+
+        const content = fs.readFileSync(indexFilePath, 'utf8')
+        const parser = new xml2js.Parser()
+        const result = await new Promise<any>((resolve) => {
+          parser.parseString(content, (err, res) => {
+            if (err) resolve(null)
+            else resolve(res)
+          })
+        })
+
+        if (!result) return false
+
+        if (
+          result.index &&
+          result.index.files &&
+          result.index.files[0] &&
+          result.index.files[0].file
+        ) {
+          const files = result.index.files[0].file
+          const subFolder = path.join(targetDir, indexName)
+
+          for (const file of files) {
+            const fileName = file.$.name
+            if (fileName.endsWith('.index')) {
+              const subIndexName = path.basename(fileName, '.index')
+              const subIndexPath = path.join(subFolder, fileName)
+              const subExists = await verifyIndexFilesExist(subIndexPath, subFolder, subIndexName)
+              if (!subExists) return false
+            } else {
+              const filePath = path.join(subFolder, fileName)
+              if (!fs.existsSync(filePath)) {
+                return false
+              }
+            }
+          }
+        }
+        return true
+      } catch (e) {
+        console.error('Error verifying index files:', e)
+        return false
+      }
+    }
+
     const downloadIndexRecursive = async (
       url: string,
       targetDir: string,
@@ -746,7 +875,8 @@ export default class IPCs {
           })
           const localVersion = localResult?.index?.info?.[0]?.update?.[0]?.$?.version || '0.0.0'
 
-          if (!isHigherVersion(remoteVersion, localVersion) && folderExists) {
+          const allFilesExist = await verifyIndexFilesExist(localPath, customFolder, indexName)
+          if (!isHigherVersion(remoteVersion, localVersion) && folderExists && allFilesExist) {
             shouldDownload = false
           }
         }
@@ -822,8 +952,9 @@ export default class IPCs {
           const remoteVersion = remoteResult?.index?.info?.[0]?.update?.[0]?.$?.version || '0.0.0'
           const relatedFolder = path.join(customFolder, indexName)
           const folderExists = fs.existsSync(relatedFolder)
+          const allFilesExist = await verifyIndexFilesExist(localPath, customFolder, indexName)
 
-          if (isHigherVersion(remoteVersion, localVersion) || !folderExists) {
+          if (isHigherVersion(remoteVersion, localVersion) || !folderExists || !allFilesExist) {
             sendUpdateStatus({ status: 'updating', indexName, version: remoteVersion })
             await downloadIndexRecursive(updateUrl, customFolder, indexName)
             sendUpdateStatus({ status: 'updated', indexName, version: remoteVersion })
@@ -1012,6 +1143,8 @@ export default class IPCs {
           const abilitiesProps = char.abilities ? char.abilities[0] : {}
           const appearanceProps = char.appearance ? char.appearance[0] : {}
 
+          const asiChoices = IPCs.extractAsiChoicesFromXml(char)
+
           // Gather all elements registered in the character's sum or elements list
           const elementIds = new Set<string>()
           if (char.elements && char.elements[0] && char.elements[0].element) {
@@ -1069,19 +1202,25 @@ export default class IPCs {
               : 10
 
           // Apply race and subrace modifiers dynamically from parsed rules in XML compendiums
-          const applyStatRulesForName = (elementName: string, elementTypes: string[], sourceName?: string) => {
+          const applyStatRulesForName = (
+            elementName: string,
+            elementTypes: string[],
+            sourceName?: string
+          ) => {
             if (!elementName) return
             const nameLower = elementName.toLowerCase()
             const sourceLower = sourceName ? sourceName.toLowerCase() : ''
             const foundElements = IPCs.cachedElements?.filter((el) => {
               const isMatchName = el.name.toLowerCase() === nameLower
               const isMatchType = elementTypes.includes(el.type)
-              const isMatchSource = !sourceLower || (el.source && el.source.toLowerCase() === sourceLower)
-              return isMatchName && isMatchType && isMatchSource
+              const isMatchSource =
+                sourceLower && el.source && el.source.toLowerCase() === sourceLower
+              return isMatchName && isMatchType && (sourceLower ? isMatchSource : true)
             })
 
-            if (foundElements) {
-              foundElements.forEach((el) => {
+            if (foundElements && foundElements.length > 0) {
+              const elementsToProcess = sourceLower ? foundElements : [foundElements[0]]
+              elementsToProcess.forEach((el) => {
                 if (el.rules) {
                   el.rules.forEach((rule: any) => {
                     if (rule.type === 'stat') {
@@ -1117,8 +1256,36 @@ export default class IPCs {
 
           // Apply stats for the selected subrace
           if (displayProps.subrace && displayProps.subrace[0]) {
-            applyStatRulesForName(displayProps.subrace[0], ['Sub Race', 'Race Variant'], subraceSource)
+            applyStatRulesForName(
+              displayProps.subrace[0],
+              ['Sub Race', 'Race Variant'],
+              subraceSource
+            )
           }
+
+          // Apply custom ASI choices
+          const selectedAsiIds = Object.values(asiChoices)
+          selectedAsiIds.forEach((choiceVal) => {
+            const foundEl = IPCs.cachedElements?.find(
+              (el: any) =>
+                el.type === 'Ability Score Improvement' &&
+                (el.id === choiceVal || el.name === choiceVal)
+            )
+            if (foundEl && foundEl.rules) {
+              foundEl.rules.forEach((rule: any) => {
+                if (rule.type === 'stat') {
+                  const statName = rule.name.toLowerCase()
+                  const val = parseInt(rule.value, 10) || 0
+                  if (statName === 'strength') str += val
+                  else if (statName === 'dexterity') dex += val
+                  else if (statName === 'constitution') con += val
+                  else if (statName === 'intelligence') int += val
+                  else if (statName === 'wisdom') wis += val
+                  else if (statName === 'charisma') cha += val
+                }
+              })
+            }
+          })
 
           // Apply ASI improvements
           elementIds.forEach((id) => {
