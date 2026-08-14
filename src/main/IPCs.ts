@@ -1110,6 +1110,7 @@ export default class IPCs {
       async (event: IpcMainEvent, filePathOrData: string | any, armorClassOverride?: string) => {
         let tempFilePathToDelete: string | null = null
         try {
+          await IPCs.loadElements()
           let filePath = ''
           if (typeof filePathOrData === 'string') {
             filePath = filePathOrData

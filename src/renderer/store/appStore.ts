@@ -180,11 +180,15 @@ export const useAppStore = defineStore('appstore', {
         JSON.stringify({
           characterName: this.character.name,
           race: this.character.race || '',
+          raceSource: this.character.raceSource || '',
           subrace: this.character.subrace || '',
+          subraceSource: this.character.subraceSource || '',
           backgroundVariant: this.character.backgroundVariant || '',
           backgroundFeature: this.character.backgroundFeature || '',
           class: this.character.class || '',
+          classSource: this.character.classSource || '',
           archetype: this.character.archetype || '',
+          archetypeSource: this.character.archetypeSource || '',
           background: this.character.background?.name || '',
           level: this.character.level || 1,
           group: this.character.group || '',
@@ -212,7 +216,8 @@ export const useAppStore = defineStore('appstore', {
           hp: this.character.hp || 10,
           speed: this.character.speed || 30,
           proficientSkills: this.character.proficientSkills || [],
-          proficientSavingThrows: this.character.proficientSavingThrows || []
+          proficientSavingThrows: this.character.proficientSavingThrows || [],
+          asiChoices: this.character.asiChoices || {}
         })
       )
     },
@@ -285,6 +290,9 @@ export const useAppStore = defineStore('appstore', {
     setCharacter(data: CharacterInfo) {
       if (data && data.name) {
         this.character = JSON.parse(JSON.stringify(data))
+        if (!this.character.asiChoices) {
+          this.character.asiChoices = {}
+        }
         this.validateSelectedElements()
         this.originalCharacter = JSON.parse(JSON.stringify(this.character))
       } else {

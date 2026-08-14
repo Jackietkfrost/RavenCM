@@ -129,8 +129,21 @@ const selectedSpellsHeaders = ref([
   { title: 'Source', key: 'source', align: 'end' as const }
 ])
 
-const allSpells = computed(() => characterStore.elements.spells || [])
-const selectedSpells = computed(() => characterStore.character.spells || [])
+const allSpells = computed(() => {
+  return (characterStore.elements.spells || []).map((spell: any) => ({
+    ...spell,
+    level: spell.level ?? spell.setters?.level ?? '',
+    school: spell.school ?? spell.setters?.school ?? ''
+  }))
+})
+
+const selectedSpells = computed(() => {
+  return (characterStore.character.spells || []).map((spell: any) => ({
+    ...spell,
+    level: spell.level ?? spell.setters?.level ?? '',
+    school: spell.school ?? spell.setters?.school ?? ''
+  }))
+})
 
 const filteredSpells = computed(() => {
   const activeOnly = (allSpells.value || []).filter((item: any) =>
