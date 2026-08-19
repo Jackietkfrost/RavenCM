@@ -111,7 +111,9 @@ export const useAppStore = defineStore('appstore', {
         raceVariants: [],
         backgroundVariants: [],
         backgroundFeatures: [],
-        abilityScoreImprovements: []
+        abilityScoreImprovements: [],
+        options: [],
+        racialTraits: []
       },
       createCharacter: false,
       drawerMode: 'create',
@@ -509,7 +511,7 @@ export const useAppStore = defineStore('appstore', {
       }
     },
     async addIndexUrl(url: string) {
-      await window.mainApi.invoke('msgDownloadIndex', url)
+      return await window.mainApi.invoke('msgDownloadIndex', url)
     },
     triggerAutoGeneratePreview() {
       this.autoGenerateTrigger += 1

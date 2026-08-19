@@ -74,7 +74,10 @@
               <div class="d-flex align-center">
                 {{ item.name }}
                 <v-icon
-                  v-if="characterStore.character.class === item.name && characterStore.character.classSource === item.source"
+                  v-if="
+                    characterStore.character.class === item.name &&
+                    characterStore.character.classSource === item.source
+                  "
                   :icon="mdiCheck"
                   color="success"
                   class="ml-2"
@@ -153,7 +156,10 @@
               <div class="d-flex align-center">
                 {{ item.name }}
                 <v-icon
-                  v-if="characterStore.character.archetype === item.name && characterStore.character.archetypeSource === item.source"
+                  v-if="
+                    characterStore.character.archetype === item.name &&
+                    characterStore.character.archetypeSource === item.source
+                  "
                   :icon="mdiCheck"
                   color="success"
                   class="ml-2"

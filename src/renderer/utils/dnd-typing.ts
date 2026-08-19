@@ -24,6 +24,8 @@ export type ElementsInfo = {
   backgroundVariants?: any[]
   backgroundFeatures?: any[]
   abilityScoreImprovements?: any[]
+  options?: any[]
+  racialTraits?: any[]
 }
 
 export type ItemInfo = {

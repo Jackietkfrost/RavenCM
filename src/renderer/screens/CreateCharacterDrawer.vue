@@ -606,7 +606,8 @@ const handleCreateCharacter = async (): Promise<void> => {
     hp: 10,
     speed: 30,
     proficientSkills: [],
-    proficientSavingThrows: []
+    proficientSavingThrows: [],
+    asiChoices: {}
   }
   characterStore.setCharacter(data)
   handleRoute('/builder')

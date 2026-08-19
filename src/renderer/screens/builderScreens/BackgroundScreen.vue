@@ -78,7 +78,11 @@
               <div class="d-flex align-center">
                 {{ item.name }}
                 <v-icon
-                  v-if="characterStore.character.background && characterStore.character.background.name === item.name && characterStore.character.background.source === item.source"
+                  v-if="
+                    characterStore.character.background &&
+                    characterStore.character.background.name === item.name &&
+                    characterStore.character.background.source === item.source
+                  "
                   :icon="mdiCheck"
                   color="success"
                   class="ml-2"
@@ -129,17 +133,17 @@
               <v-col
                 class="d-flex justify-end cursor-pointer"
                 cols="1"
-                @click="() => toggleSlot(index)"
+                @click="() => toggleSlot(slot.key)"
               >
                 <v-icon
-                  :icon="expandedSlotIndex === index ? mdiChevronUp : mdiChevronDown"
+                  :icon="isSlotExpanded(slot.key) ? mdiChevronUp : mdiChevronDown"
                   class="ml-auto"
                 />
               </v-col>
             </v-row>
           </v-card-title>
           <v-data-table-virtual
-            v-if="expandedSlotIndex === index"
+            v-if="isSlotExpanded(slot.key)"
             :headers="subHeaders"
             :items="getFilteredItemsForSlot(slot)"
             :item-value="(item) => item.id"
@@ -155,7 +159,14 @@
               <div class="d-flex align-center">
                 {{ item.name }}
                 <v-icon
-                  v-if="(slot.selectType === 'Background Variant' && characterStore.character.backgroundVariant === item.name && characterStore.character.backgroundVariantSource === item.source) || (slot.selectType !== 'Background Variant' && characterStore.character.backgroundFeature === item.name && characterStore.character.backgroundFeatureSource === item.source)"
+                  v-if="
+                    (slot.selectType === 'Background Variant' &&
+                      characterStore.character.backgroundVariant === item.name &&
+                      characterStore.character.backgroundVariantSource === item.source) ||
+                    (slot.selectType !== 'Background Variant' &&
+                      characterStore.character.backgroundFeature === item.name &&
+                      characterStore.character.backgroundFeatureSource === item.source)
+                  "
                   :icon="mdiCheck"
                   color="success"
                   class="ml-2"
@@ -243,7 +254,15 @@ const items = ref(backgrounds)
 const searchQuery = ref('')
 const selectedBackground = ref<any>(null)
 const selectedSubItem = ref<any>(null)
-const expandedSlotIndex = ref<number | null>(null)
+const expandedSlots = ref<Record<string, boolean>>({})
+
+const isSlotExpanded = (key: string) => {
+  return expandedSlots.value[key] !== false
+}
+
+const toggleSlot = (key: string) => {
+  expandedSlots.value[key] = !isSlotExpanded(key)
+}
 const descriptionSlotName = 'item.short'
 
 const activeDetailsItem = computed(() => {
@@ -383,10 +402,6 @@ const getSlotValue = (slot: any) => {
   return isMatch ? currentVal : ''
 }
 
-const toggleSlot = (index: number | null) => {
-  expandedSlotIndex.value = expandedSlotIndex.value === index ? null : index
-}
-
 watch(
   () => characterStore.character.background,
   (newBg) => {
@@ -398,13 +413,6 @@ watch(
       characterStore.character.backgroundFeature = ''
       characterStore.character.backgroundFeatureSource = ''
     }
-    setTimeout(() => {
-      if (backgroundSelectionSlots.value.length > 0) {
-        expandedSlotIndex.value = 0
-      } else {
-        expandedSlotIndex.value = null
-      }
-    }, 50)
   },
   { deep: true }
 )
@@ -432,7 +440,7 @@ const handleSlotDoubleClick = (slot: any, item: any) => {
     characterStore.character.backgroundFeature = item.name
     characterStore.character.backgroundFeatureSource = item.source
   }
-  expandedSlotIndex.value = null
+  expandedSlots.value[slot.key] = false
 }
 
 const handleSlotClick = (slot: any, item: any) => {
@@ -447,6 +455,7 @@ const onClearSlot = (slot: any) => {
     characterStore.character.backgroundFeature = ''
     characterStore.character.backgroundFeatureSource = ''
   }
+  expandedSlots.value[slot.key] = true
 }
 
 const getRowPropsForSlot = (slot: any, data: any) => {
@@ -478,7 +487,6 @@ const onClear = (event: any) => {
   textFieldValue.value = ''
   selectedBackground.value = null
   selectedSubItem.value = null
-  expandedSlotIndex.value = null
   setTimeout(() => {
     isExpanded.value = true
   }, 50)
@@ -487,9 +495,6 @@ const onClear = (event: any) => {
 onMounted(() => {
   if (filteredItems.value && filteredItems.value.length > 0) {
     selectedBackground.value = filteredItems.value[0]
-  }
-  if (characterStore.character.background?.name && backgroundSelectionSlots.value.length > 0) {
-    expandedSlotIndex.value = 0
   }
 })
 </script>

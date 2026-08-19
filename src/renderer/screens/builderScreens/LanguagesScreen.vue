@@ -28,57 +28,58 @@
         >
           <div class="text-subtitle-1">No language choices granted by your current selections.</div>
         </div>
+        <!-- Dynamic Sub-Selection Accordion Cards (Custom Languages, Extra Languages) -->
         <v-card
-          v-for="(slot, index) in languageSelectionSlots"
+          v-for="slot in languageSelectionSlots"
           :key="slot.key"
           variant="outlined"
-          class="mb-4"
+          class="mt-4"
           style="border-color: rgba(128, 128, 128, 0.2)"
         >
           <v-card-title class="py-3">
             <v-row no-gutters class="align-center">
-              <v-col class="cursor-pointer" cols="6" @click="() => toggleSlot(index)">
+              <v-col class="cursor-pointer" cols="6" @click="() => toggleSlot(slot.key)">
                 {{ slot.name }}
               </v-col>
               <v-col class="text--secondary" cols="5">
                 <v-text-field
                   readonly
-                  class="languages-box cursor-pointer"
-                  :model-value="selectedLanguages[index] || ''"
+                  class="race-box cursor-pointer"
+                  :model-value="getSlotValue(slot.index)"
                   variant="plain"
                   density="compact"
                   clearable
                   single-line
                   persistent-clear
                   hide-details
-                  :dirty="!!selectedLanguages[index]"
-                  @click.stop="() => toggleSlot(index)"
-                  @click:clear="() => onClearSlot(index)"
+                  :dirty="!!getSlotValue(slot.index)"
+                  @click.stop="() => toggleSlot(slot.key)"
+                  @click:clear="() => onClearSlot(slot)"
                 ></v-text-field>
               </v-col>
               <v-col
                 class="d-flex justify-end cursor-pointer"
                 cols="1"
-                @click="() => toggleSlot(index)"
+                @click="() => toggleSlot(slot.key)"
               >
                 <v-icon
-                  :icon="expandedSlotIndex === index ? mdiChevronUp : mdiChevronDown"
+                  :icon="isSlotExpanded(slot.key) ? mdiChevronUp : mdiChevronDown"
                   class="ml-auto"
                 />
               </v-col>
             </v-row>
           </v-card-title>
           <v-data-table-virtual
-            v-if="expandedSlotIndex === index"
+            v-if="isSlotExpanded(slot.key)"
             :headers="headers"
             :items="getFilteredItemsForSlot(slot)"
             :item-value="(item) => item.id"
             hover
             fixed-header
             height="300px"
-            @dblclick:row="(event, row) => handleSlotDoubleClick(index, row.item)"
-            @click:row="(event, row) => handleSlotClick(index, row.item)"
-            :row-props="(data) => getRowPropsForSlot(index, data)"
+            @dblclick:row="(event, row) => handleSlotDoubleClick(slot, row.item)"
+            @click:row="(event, row) => handleSlotClick(slot, row.item)"
+            :row-props="(data) => getRowPropsForSlot(slot, data)"
           >
           </v-data-table-virtual>
         </v-card>
@@ -139,7 +140,19 @@ const headers = ref([
 ])
 const searchQuery = ref('')
 const selectedLanguage = ref<any>(null)
-const expandedSlotIndex = ref<number | null>(0)
+const expandedSlots = ref<Record<string, boolean>>({})
+
+const isSlotExpanded = (key: string) => {
+  return expandedSlots.value[key] !== false
+}
+
+const toggleSlot = (key: string) => {
+  expandedSlots.value[key] = !isSlotExpanded(key)
+}
+
+const getSlotValue = (index: number) => {
+  return selectedLanguages.value[index] || ''
+}
 
 // Calculate dynamic language choice slots based on active character build rules
 const languageSelectionSlots = computed(() => {
@@ -231,14 +244,15 @@ const languageSelectionSlots = computed(() => {
   )
 
   // Expand each rule into individual slots based on rule.number
-  const slots: { name: string; supports: string; key: string }[] = []
+  const slots: { name: string; supports: string; key: string; index: number }[] = []
   languageRules.forEach((rule, ruleIdx) => {
     const num = parseInt(rule.number, 10) || 1
     for (let i = 0; i < num; i++) {
       slots.push({
         name: rule.name || 'Language',
         supports: rule.supports || '',
-        key: `${rule.name || 'language'}-${ruleIdx}-${i}`
+        key: `${rule.name || 'language'}-${ruleIdx}-${i}`,
+        index: slots.length
       })
     }
   })
@@ -256,10 +270,6 @@ const selectedLanguages = computed({
     characterStore.character.languages = newVal
   }
 })
-
-const toggleSlot = (index: number) => {
-  expandedSlotIndex.value = expandedSlotIndex.value === index ? null : index
-}
 
 // Compute names of languages already granted by race or subrace rules
 const raceLanguages = computed(() => {
@@ -333,36 +343,36 @@ const getFilteredItemsForSlot = (slot: any) => {
   )
 }
 
-const handleSlotDoubleClick = (index: number, item: any) => {
+const handleSlotDoubleClick = (slot: any, item: any) => {
+  const index = slot.index
   const current = [...selectedLanguages.value]
   while (current.length <= index) {
     current.push('')
   }
   current[index] = item.name
   selectedLanguages.value = current
-  expandedSlotIndex.value = null
+  expandedSlots.value[slot.key] = false
 }
 
-const handleSlotClick = (index: number, item: any) => {
+const handleSlotClick = (slot: any, item: any) => {
   selectedLanguage.value = item
 }
 
-const getRowPropsForSlot = (index: number, data: any) => {
+const getRowPropsForSlot = (slot: any, data: any) => {
   const isSelected = selectedLanguage.value && selectedLanguage.value.id === data.item.id
   return {
     class: isSelected ? 'v-theme--selected' : ''
   }
 }
 
-const onClearSlot = (index: number) => {
+const onClearSlot = (slot: any) => {
+  const index = slot.index
   const current = [...selectedLanguages.value]
   if (current.length > index) {
     current[index] = ''
   }
   selectedLanguages.value = current
-  setTimeout(() => {
-    expandedSlotIndex.value = index
-  }, 50)
+  expandedSlots.value[slot.key] = true
 }
 
 onMounted(() => {

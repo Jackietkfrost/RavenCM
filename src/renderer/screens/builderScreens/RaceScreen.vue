@@ -75,7 +75,10 @@
               <div class="d-flex align-center">
                 {{ item.name }}
                 <v-icon
-                  v-if="characterStore.character.race === item.name && characterStore.character.raceSource === item.source"
+                  v-if="
+                    characterStore.character.race === item.name &&
+                    characterStore.character.raceSource === item.source
+                  "
                   :icon="mdiCheck"
                   color="success"
                   class="ml-2"
@@ -88,7 +91,7 @@
 
         <!-- Dynamic Sub-Selection Accordion Cards (Sub-Races, Variants, etc.) -->
         <v-card
-          v-for="(slot, index) in raceSelectionSlots"
+          v-for="slot in raceSelectionSlots"
           :key="slot.key"
           variant="outlined"
           class="mt-4"
@@ -96,7 +99,7 @@
         >
           <v-card-title class="py-3">
             <v-row no-gutters class="align-center">
-              <v-col class="cursor-pointer" cols="6" @click="() => toggleSlot(index)">
+              <v-col class="cursor-pointer" cols="6" @click="() => toggleSlot(slot.key)">
                 {{ slot.name }}
               </v-col>
               <v-col class="text--secondary" cols="5">
@@ -111,40 +114,40 @@
                   persistent-clear
                   hide-details
                   :dirty="!!getSlotValue(slot)"
-                  @click.stop="() => toggleSlot(index)"
+                  @click.stop="() => toggleSlot(slot.key)"
                   @click:clear="() => onClearSlot(slot)"
                 ></v-text-field>
               </v-col>
               <v-col
                 class="d-flex justify-end cursor-pointer"
                 cols="1"
-                @click="() => toggleSlot(index)"
+                @click="() => toggleSlot(slot.key)"
               >
                 <v-icon
-                  :icon="expandedSlotIndex === index ? mdiChevronUp : mdiChevronDown"
+                  :icon="isSlotExpanded(slot.key) ? mdiChevronUp : mdiChevronDown"
                   class="ml-auto"
                 />
               </v-col>
             </v-row>
           </v-card-title>
           <v-data-table-virtual
-            v-if="expandedSlotIndex === index"
+            v-if="isSlotExpanded(slot.key)"
             :headers="subraceHeaders"
             :items="getFilteredItemsForSlot(slot)"
             :item-value="(item) => item.id"
             hover
             fixed-header
             height="250px"
-            @dblclick:row="(event, row) => handleSlotDoubleClick(index, row.item)"
-            @click:row="(event, row) => handleSlotClick(index, row.item)"
-            :row-props="(data) => getRowPropsForSlot(index, data)"
+            @dblclick:row="(event, row) => handleSlotDoubleClick(slot, row.item)"
+            @click:row="(event, row) => handleSlotClick(slot, row.item)"
+            :row-props="(data) => getRowPropsForSlot(slot, data)"
           >
             <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template #item.name="{ item }">
               <div class="d-flex align-center">
                 {{ item.name }}
                 <v-icon
-                  v-if="characterStore.character.subrace === item.name && characterStore.character.subraceSource === item.source"
+                  v-if="isSlotItemSelected(slot, item)"
                   :icon="mdiCheck"
                   color="success"
                   class="ml-2"
@@ -198,6 +201,7 @@
 
 <script setup lang="tsx">
 import { useAppStore } from '@/renderer/store/appStore'
+import Constants from '@/renderer/utils/Constants'
 import { mdiChevronDown, mdiChevronUp, mdiFilterMenuOutline, mdiMagnify, mdiCheck } from '@mdi/js'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -220,34 +224,178 @@ const subraceHeaders = ref([
 const items = ref(races)
 const searchQuery = ref('')
 const selectedRace = ref<any>(null)
-const expandedSlotIndex = ref<number | null>(0)
+const expandedSlots = ref<Record<string, boolean>>({})
+
+const isSlotExpanded = (key: string) => {
+  return expandedSlots.value[key] !== false
+}
+
+const toggleSlot = (key: string) => {
+  expandedSlots.value[key] = !isSlotExpanded(key)
+}
+
+// Get the plural store key for dynamic element collections
+const getPluralStoreKey = (selectType: string) => {
+  const elementType = Object.keys(Constants.ELEMENTS_PLURAL).find(
+    (key) => key.replace(/\s+/g, '').toLowerCase() === selectType.replace(/\s+/g, '').toLowerCase()
+  )
+  if (elementType) {
+    const pluralName =
+      Constants.ELEMENTS_PLURAL[elementType as keyof typeof Constants.ELEMENTS_PLURAL]
+    return (
+      pluralName.split(' ')[0].toLowerCase() +
+      pluralName
+        .split(' ')
+        .slice(1)
+        .map((p: string) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+        .join('')
+    )
+  }
+  return null
+}
+
+const findElementById = (id: string) => {
+  for (const array of Object.values(characterStore.elements)) {
+    if (Array.isArray(array)) {
+      const found = array.find((el: any) => el.id === id)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+const getActiveSelectRules = () => {
+  const activeIds = new Set<string>()
+  const gatheredRules: any[] = []
+
+  const character = characterStore.character
+
+  // Helper to add element and its rules
+  const registerElement = (el: any) => {
+    if (!el || activeIds.has(el.id)) return
+    activeIds.add(el.id)
+    if (el.rules) {
+      gatheredRules.push(...el.rules)
+    }
+  }
+
+  // 1. Register main selections
+  if (character.race) {
+    const el = characterStore.elements.races?.find(
+      (r: any) =>
+        r.name === character.race &&
+        (!character.raceSource || r.source === character.raceSource)
+    )
+    registerElement(el)
+  }
+  if (character.subrace) {
+    const el = characterStore.elements.subRaces?.find(
+      (s: any) =>
+        s.name === character.subrace &&
+        (!character.subraceSource || s.source === character.subraceSource)
+    )
+    registerElement(el)
+  }
+  if (character.background?.name) {
+    const el = characterStore.elements.backgrounds?.find(
+      (b: any) => b.name === character.background.name
+    )
+    registerElement(el)
+  }
+  if (character.backgroundVariant) {
+    const el = characterStore.elements.backgroundVariants?.find(
+      (v: any) => v.name === character.backgroundVariant
+    )
+    registerElement(el)
+  }
+  if (character.backgroundFeature) {
+    const el = characterStore.elements.backgroundFeatures?.find(
+      (f: any) => f.name === character.backgroundFeature
+    )
+    registerElement(el)
+  }
+  if (character.class) {
+    const el = characterStore.elements.classes?.find((c: any) => c.name === character.class)
+    registerElement(el)
+  }
+  if (character.archetype) {
+    const el = characterStore.elements.archetypes?.find(
+      (a: any) => a.name === character.archetype
+    )
+    registerElement(el)
+  }
+
+  // Register all chosen custom options/ASIs from asiChoices
+  if (character.asiChoices) {
+    Object.values(character.asiChoices).forEach((choiceVal: string) => {
+      const foundEl = findElementById(choiceVal)
+      registerElement(foundEl)
+    })
+  }
+
+  // 2. Helper to check if a rule's requirements are met
+  const isRuleActive = (rule: any) => {
+    if (!rule.requirements) return true
+    const reqs = rule.requirements.split(',').map((r: string) => r.trim())
+    return reqs.every((req: string) => {
+      if (req.startsWith('!')) {
+        const targetId = req.slice(1)
+        return (
+          !activeIds.has(targetId) &&
+          character.race !== targetId &&
+          character.subrace !== targetId
+        )
+      } else {
+        return activeIds.has(req) || character.race === req || character.subrace === req
+      }
+    })
+  }
+
+  // 3. Iteratively resolve grants
+  let newGrantsFound = true
+  while (newGrantsFound) {
+    newGrantsFound = false
+    const currentRules = [...gatheredRules]
+    for (const rule of currentRules) {
+      if (rule.type === 'grant' && rule.id && isRuleActive(rule)) {
+        if (!activeIds.has(rule.id)) {
+          const grantedEl = findElementById(rule.id)
+          if (grantedEl) {
+            registerElement(grantedEl)
+            newGrantsFound = true
+          }
+        }
+      }
+    }
+  }
+
+  // 4. Return active select rules (excluding ASI and Languages)
+  return gatheredRules.filter(
+    (rule: any) =>
+      rule.type === 'select' &&
+      rule.selectType !== 'Ability Score Improvement' &&
+      rule.selectType !== 'Language' &&
+      isRuleActive(rule) &&
+      (!rule.level || (character.level || 1) >= parseInt(rule.level, 10))
+  )
+}
 
 // Calculate dynamic race sub-selection slots based on active character race rules
 const raceSelectionSlots = computed(() => {
   if (!characterStore.character.race) return []
   const currentRaceName = characterStore.character.race
 
-  const baseRace = characterStore.elements.races.find((r: any) => r.name === currentRaceName)
-
   const slots: { name: string; selectType: string; supports: string; key: string }[] = []
 
-  if (baseRace && baseRace.rules) {
-    // Filter for select rules where selectType is "Sub Race" or "Race Variant"
-    const selectRules = baseRace.rules.filter(
-      (rule: any) =>
-        rule.type === 'select' &&
-        (rule.selectType === 'Sub Race' || rule.selectType === 'Race Variant')
-    )
-
-    selectRules.forEach((rule: any, idx: number) => {
-      slots.push({
-        name: rule.name || (rule.selectType === 'Sub Race' ? 'Sub-Race' : 'Race Variant'),
-        selectType: rule.selectType,
-        supports: rule.supports || '',
-        key: `race-select-${rule.selectType}-${idx}`
-      })
+  const rules = getActiveSelectRules()
+  rules.forEach((rule: any, idx: number) => {
+    slots.push({
+      name: rule.name || (rule.selectType === 'Sub Race' ? 'Sub-Race' : rule.selectType),
+      selectType: rule.selectType,
+      supports: rule.supports || '',
+      key: `race-select-${rule.selectType}-${rule.name || idx}`
     })
-  }
+  })
 
   // General check: if no slots found from select rules, check database dynamically for related subraces or variants
   if (slots.length === 0) {
@@ -280,15 +428,30 @@ const raceSelectionSlots = computed(() => {
 })
 
 const getFilteredItemsForSlot = (slot: any) => {
-  const allEl =
-    slot.selectType === 'Sub Race'
-      ? characterStore.elements.subRaces || []
-      : characterStore.elements.raceVariants || []
+  const storeKey = getPluralStoreKey(slot.selectType)
+  const allEl = storeKey
+    ? characterStore.elements[storeKey as keyof typeof characterStore.elements] || []
+    : []
 
   // Filter items matching the supports restriction of the slot
-  const matched = allEl.filter(
-    (item: any) => item.supports && item.supports.toLowerCase() === slot.supports.toLowerCase()
-  )
+  const matched = allEl.filter((item: any) => {
+    if (!slot.supports) return true
+
+    // Check if the supports restriction is a pipe or comma-separated list of supports/tags or direct name/id match
+    const supportsList = slot.supports.split(/\|+|,/).map((s: string) => s.trim().toLowerCase())
+    const itemSupports = item.supports
+      ? item.supports.split(/\|+|,/).map((s: string) => s.trim().toLowerCase())
+      : []
+    const itemId = (item.id || '').toLowerCase()
+    const itemName = (item.name || '').toLowerCase()
+    const itemCategory = (item.category || '').toLowerCase()
+
+    return supportsList.some((sup: string) => {
+      return (
+        itemSupports.includes(sup) || itemId === sup || itemName === sup || itemCategory === sup
+      )
+    })
+  })
 
   // Filter by active sources
   const activeOnly = matched.filter((item: any) => characterStore.isSourceActive(item.source))
@@ -296,17 +459,21 @@ const getFilteredItemsForSlot = (slot: any) => {
 }
 
 const getSlotValue = (slot: any) => {
-  const currentVal = characterStore.character.subrace || ''
-  if (!currentVal) return ''
-  const isMatch = getFilteredItemsForSlot(slot).some((item: any) => item.name === currentVal)
-  return isMatch ? currentVal : ''
+  if (slot.selectType === 'Sub Race' || slot.selectType === 'Race Variant') {
+    const currentVal = characterStore.character.subrace || ''
+    if (!currentVal) return ''
+    const isMatch = getFilteredItemsForSlot(slot).some((item: any) => item.name === currentVal)
+    return isMatch ? currentVal : ''
+  }
+  const selectedVal = characterStore.character.asiChoices?.[slot.name]
+  if (!selectedVal) return ''
+  const isMatch = getFilteredItemsForSlot(slot).find(
+    (item: any) => item.id === selectedVal || item.name === selectedVal
+  )
+  return isMatch ? isMatch.name : ''
 }
 
-const toggleSlot = (index: number) => {
-  expandedSlotIndex.value = expandedSlotIndex.value === index ? null : index
-}
-
-// Watch character race changes to toggle slot expansions
+// Watch character race changes
 watch(
   () => characterStore.character.race,
   (newRace) => {
@@ -314,16 +481,8 @@ watch(
     if (!newRace) {
       characterStore.character.subrace = ''
       isExpanded.value = true
-      expandedSlotIndex.value = null
     } else {
       isExpanded.value = false
-      setTimeout(() => {
-        if (raceSelectionSlots.value.length > 0) {
-          expandedSlotIndex.value = 0
-        } else {
-          expandedSlotIndex.value = null
-        }
-      }, 50)
     }
   }
 )
@@ -377,18 +536,25 @@ const onClear = (event: any) => {
 }
 
 // Sub-selection slot handlers
-const handleSlotClick = (index: number, item: any) => {
+const handleSlotClick = (slot: any, item: any) => {
   selectedRace.value = item
 }
 
-const handleSlotDoubleClick = (index: number, item: any) => {
-  characterStore.character.subrace = item.name
-  characterStore.character.subraceSource = item.source
+const handleSlotDoubleClick = (slot: any, item: any) => {
+  if (slot.selectType === 'Sub Race' || slot.selectType === 'Race Variant') {
+    characterStore.character.subrace = item.name
+    characterStore.character.subraceSource = item.source
+  } else {
+    if (!characterStore.character.asiChoices) {
+      characterStore.character.asiChoices = {}
+    }
+    characterStore.character.asiChoices[slot.name] = item.id || item.name
+  }
   selectedRace.value = item
-  expandedSlotIndex.value = null
+  expandedSlots.value[slot.key] = false
 }
 
-const getRowPropsForSlot = (index: number, data: any) => {
+const getRowPropsForSlot = (slot: any, data: any) => {
   const isSelected = selectedRace.value && selectedRace.value.id === data.item.id
   return {
     class: isSelected ? 'v-theme--selected' : ''
@@ -396,15 +562,27 @@ const getRowPropsForSlot = (index: number, data: any) => {
 }
 
 const onClearSlot = (slot: any) => {
-  characterStore.character.subrace = ''
-  characterStore.character.subraceSource = ''
-  selectedRace.value = null
-  const idx = raceSelectionSlots.value.findIndex((s) => s.key === slot.key)
-  if (idx !== -1) {
-    setTimeout(() => {
-      expandedSlotIndex.value = idx
-    }, 50)
+  if (slot.selectType === 'Sub Race' || slot.selectType === 'Race Variant') {
+    characterStore.character.subrace = ''
+    characterStore.character.subraceSource = ''
+  } else {
+    if (characterStore.character.asiChoices) {
+      delete characterStore.character.asiChoices[slot.name]
+    }
   }
+  selectedRace.value = null
+  expandedSlots.value[slot.key] = true
+}
+
+const isSlotItemSelected = (slot: any, item: any) => {
+  if (slot.selectType === 'Sub Race' || slot.selectType === 'Race Variant') {
+    return (
+      characterStore.character.subrace === item.name &&
+      characterStore.character.subraceSource === item.source
+    )
+  }
+  const selectedVal = characterStore.character.asiChoices?.[slot.name]
+  return selectedVal === item.id || selectedVal === item.name
 }
 
 onMounted(() => {

@@ -31,7 +31,7 @@
             </div>
 
             <!-- If custom ASI is active: show shuffle icon and optional text -->
-            <template v-if="asiSelectRules.length > 0">
+            <template v-if="asiSelectRules.length > 0 && characterStore.character.asiChoices">
               <div class="d-flex flex-column align-center mt-5" style="min-height: 48px">
                 <v-icon :icon="mdiShuffle" size="18" class="text-grey-darken-1 mb-1" />
                 <span
@@ -108,8 +108,14 @@
     </v-row>
 
     <!-- ASI Selectors Section -->
-    <v-divider class="my-6" v-if="asiSelectRules.length > 0" />
-    <v-row class="justify-center mt-2" v-if="asiSelectRules.length > 0">
+    <v-divider
+      class="my-6"
+      v-if="asiSelectRules.length > 0 && characterStore.character.asiChoices"
+    />
+    <v-row
+      class="justify-center mt-2"
+      v-if="asiSelectRules.length > 0 && characterStore.character.asiChoices"
+    >
       <v-col cols="12" md="8" lg="6">
         <div v-for="rule in asiSelectRules" :key="rule.name" class="mb-5">
           <div class="d-flex align-center mb-1">
@@ -147,6 +153,10 @@ import { computed, watch, onMounted } from 'vue'
 import { mdiChevronUp, mdiChevronDown, mdiCheck, mdiShuffle } from '@mdi/js'
 
 const characterStore = useAppStore()
+
+if (!characterStore.character.asiChoices) {
+  characterStore.character.asiChoices = {}
+}
 
 const getActiveASIRules = () => {
   const activeIds = new Set<string>()
@@ -224,10 +234,10 @@ const getOptionsForRule = (rule: any) => {
   const list = characterStore.elements.abilityScoreImprovements || []
   if (!rule.supports) return list
 
-  const allowed = rule.supports.split(/\|\||,/).map((s: string) => s.trim().toLowerCase())
+  const allowed = rule.supports.split(/\|+|,/).map((s: string) => s.trim().toLowerCase())
   return list.filter((item: any) => {
     if (!item.supports) return false
-    const itemSupports = item.supports.split(/\|\||,/).map((s: string) => s.trim().toLowerCase())
+    const itemSupports = item.supports.split(/\|+|,/).map((s: string) => s.trim().toLowerCase())
     return itemSupports.some((sup: string) => allowed.includes(sup))
   })
 }

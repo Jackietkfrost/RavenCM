@@ -146,9 +146,7 @@ const generatePreview = async () => {
   pdfUrl.value = ''
   pdfBase64.value = ''
   try {
-    const previewInput = characterStore.character.filePath
-      ? characterStore.character.filePath
-      : characterStore.getCharacterPayload()
+    const previewInput = characterStore.getCharacterPayload()
 
     const res = await window.mainApi.invoke(
       'msgGeneratePreview',

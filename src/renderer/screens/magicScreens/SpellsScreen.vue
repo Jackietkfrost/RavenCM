@@ -94,9 +94,7 @@
             </div>
           </template>
           <template v-else>
-            <div
-              class="d-flex flex-column align-center justify-center fill-height text-grey py-12"
-            >
+            <div class="d-flex flex-column align-center justify-center fill-height text-grey py-12">
               <div class="text-subtitle-1">Select a spell to view details</div>
             </div>
           </template>
